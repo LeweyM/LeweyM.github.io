@@ -1,0 +1,76 @@
+/* GENERAL */
+
+body {
+    color: #777777;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.625em;
+    position: relative;
+}
+
+/* NAV BAR */
+
+.nav-menu {
+    padding: 0;
+    margin: 0;
+}
+
+.main-menu {
+    padding: 20px 0;
+}
+
+.nav-menu li {
+    display: inline-block;
+    list-style: none;
+}
+
+.nav-menu a {
+    padding: 0 8px 0px 8px;
+    text-decoration: none;
+    display: inline-block;
+    color: #222;
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    outline: none;
+}
+
+/* LANDING PAGE */
+
+.banner-area {
+    background-color: #9cc8fa;
+}
+
+.banner-left h1 {
+    font-family: "Poppins", sans-serif;
+    color: #ffffff;
+    line-height: 1.2em !important;
+    font-weight: 600;
+    font-size: 60px;
+    text-transform: uppercase;
+}
+
+.fullscreen {
+    height: 720px;
+}
+
+.keyboard-key {
+    opacity: 0;
+}
+
+/* ANIMATION PAGE */
+
+.animation-section {
+    padding: 20px;
+}
+
+.animations-banner {
+    background-color: #9cc8fa;
+}
+
+.animations-banner-content {
+    margin-top: 70px;
+    padding: 90px 0px;
+    text-align: center;
+}
