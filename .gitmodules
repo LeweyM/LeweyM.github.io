@@ -1,0 +1,9 @@
+[submodule "personal-site/themes/ananke"]
+	path = personal-site/themes/ananke
+	url = https://github.com/theNewDynamic/gohugo-theme-ananke.git
+[submodule "personal-site/themes/archie"]
+	path = personal-site/themes/archie
+	url = https://github.com/athul/archie.git
+[submodule "personal-site/themes/hugo-theme-console"]
+	path = personal-site/themes/hugo-theme-console
+	url = https://github.com/mrmierzejewski/hugo-theme-console.git

@@ -1,0 +1,7 @@
+baseURL = 'http://lewismetcalf.com/'
+languageCode = 'en-us'
+title = 'Lewis Metcalf'
+theme = "ananke"
+[Params]
+  subtitle = "my subtitle"
+
