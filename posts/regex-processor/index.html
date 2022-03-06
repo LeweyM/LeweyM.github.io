@@ -56,9 +56,9 @@ POSTS
 <p>You start in some state, then you decide the next state to go to based on some input. After processing all the input, you see which state you&rsquo;re in.</p>
 </blockquote>
 <p>One of the cool things about FSMs is that they can be drawn as lovely little circles and arrows representing <strong>states</strong> and <strong>transitions</strong></p>
-<p><img src=/static/img/Pasted-image-20220119151322.png alt=Pasted-image-20220119151322.png></p>
+<p><img src=/img/Pasted-image-20220119151322.png alt=Pasted-image-20220119151322.png></p>
 <p>This is the simplest. It&rsquo;s just a single state. The red circle in the middle means that we&rsquo;re currently in that state. It doesn&rsquo;t mean much yet.</p>
-<p><img src=/static/img/Pasted-image-20220119151437.png alt=Pasted-image-20220119151437.png></p>
+<p><img src=/img/Pasted-image-20220119151437.png alt=Pasted-image-20220119151437.png></p>
 <p>This is the next simplest. It&rsquo;s a two state system. From the state on the left, we&rsquo;ll call it <code>state[0]</code>, we travel to the state on the right, <code>state[1]</code>, if we process the character <code>c</code> from the input.</p>
 <p>Two things to note here:</p>
 <ol>
@@ -75,7 +75,7 @@ POSTS
 <li><code>""</code> - no match</li>
 </ul>
 <p>The state machine to check for is as follows:</p>
-<p><img src=/static/img/Pasted-image-20220119180620.png alt=Pasted-image-20220119180620.png></p>
+<p><img src=/img/Pasted-image-20220119180620.png alt=Pasted-image-20220119180620.png></p>
 <p>let&rsquo;s break this down a bit. Really, each state is saying something.</p>
 <p>State 0 is saying: &ldquo;you have not yet seen anything interesting&rdquo;
 State 1 is saying: &ldquo;you&rsquo;ve just seen <code>'a'</code>&rdquo;
@@ -88,26 +88,26 @@ State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;
 <p>And at state 3, we know we&rsquo;ve seen <code>'abc'</code>, so we don&rsquo;t want to do anything from here!</p>
 <h2 id=wildcards>Wildcards</h2>
 <p>cool, so what about a regular expression like <code>'a*b'</code>. This means &ldquo;match any string that has an <code>'a'</code> followed by a <code>'b'</code>&rdquo;. What would the FSM look like for that?</p>
-<p><img src=/static/img/Pasted-image-20220119183708.png alt=Pasted-image-20220119183708.png></p>
+<p><img src=/img/Pasted-image-20220119183708.png alt=Pasted-image-20220119183708.png></p>
 <p>This is pretty straight forward, if you&rsquo;re at <code>state[1]</code>, that means &ldquo;you&rsquo;ve already seen <code>'a'</code>&rdquo;. Therefore, you never go back to the previous state. Then, if you&rsquo;ve already seen <code>'a'</code> and you later see <code>'b'</code>, you&rsquo;re done!</p>
 <p>Notice that this works for any number of chars between <code>a</code> and <code>b</code>, including zero.</p>
 <h2 id=or>OR</h2>
 <p>Consider a regular expression like <code>'dog|cat'</code>, which means &ldquo;match any string containing the substring <code>dog</code> or the substring <code>cat</code>&rdquo;.</p>
-<p><img src=/static/img/Pasted-image-20220119185302.png alt=Pasted-image-20220119185302.png></p>
+<p><img src=/img/Pasted-image-20220119185302.png alt=Pasted-image-20220119185302.png></p>
 <p>Hmm, although the structure is the same, we&rsquo;re starting to see some complexity here. It looks like most of the complexity comes from the cross arrows running between the upper and lower states. Also, we need to remember in our regex for <code>"cat"</code> that if we process a <code>'c'</code> somewhere during the the states along <code>"cat"</code>, we need to go back to the &ldquo;you&rsquo;ve seen <code>'c'</code>&rdquo; state instead of the beginning. In fact, most of the arrows point to the <code>'d'</code> and <code>'c'</code> states, the first letters of <code>cat</code> and <code>dog</code>. Let&rsquo;s think about how we can reduce some of the complexity here.</p>
 <p>What&rsquo;s happening here is that we&rsquo;re trying to replicate how <code>grep</code> works, not how regular expressions work. A regular expression would just say &ldquo;the string starts with &ldquo;cat&rdquo; or &ldquo;dog&rdquo;, otherwise it doesn&rsquo;t match&rdquo;. Doing it this way simplifies our diagram quite a lot.</p>
-<p><img src=/static/img/Pasted-image-20220128175219.png alt=Pasted-image-20220128175219.png></p>
+<p><img src=/img/Pasted-image-20220128175219.png alt=Pasted-image-20220128175219.png></p>
 <p>We can still use this to get grep-like behaviour by simply resetting the finite state machine every time it lands in a &ldquo;Failed&rdquo; state (or a &ldquo;Passed&rdquo; state if we want to count multiple matches).</p>
 <h1 id=branches>Branches</h1>
 <p>This is all hunky-dory when we know exactly where to go in our finite state machine, but that&rsquo;s not always the case. Consider the regex <code>"dog|dot"</code>. We might draw our FSM like so:</p>
-<p><img src=/static/img/Pasted-image-20220128175308.png alt=Pasted-image-20220128175308.png></p>
+<p><img src=/img/Pasted-image-20220128175308.png alt=Pasted-image-20220128175308.png></p>
 <p>so, what happens when we come across our first &rsquo;d' character? Which way do we go? Having choices in our state machine makes into a Nondeterministic State Automata (NFA), and there&rsquo;s a load of study into these things, study I&rsquo;m far too lazy to actually do. What I do know, however, is that we can still use these to solve regular expression problems.</p>
 <p>I&rsquo;m picking an easy way. Branching.</p>
 <p>Basically, when I come across more than one path in my state machine, the runner (the little red dot in our pictures) will split in two and go down both paths. If one of the runners reaches a success state, it&rsquo;s a match. If all runners enter a fail state, no match. This does sacrifice some performance as we can no longer guarantee the finite state machine to determine a match in linear time, but it does make our diagrams simpler, which is good enough for now.</p>
-<p><img src=/static/img/Pasted-image-20220128180045.png alt=Pasted-image-20220128180045.png></p>
-<p><img src=/static/img/Pasted-image-20220128180055.png alt=Pasted-image-20220128180055.png></p>
-<p><img src=/static/img/Pasted-image-20220128180104.png alt=Pasted-image-20220128180104.png></p>
-<p><img src=/static/img/Pasted-image-20220128180114.png alt=Pasted-image-20220128180114.png></p>
+<p><img src=/img/Pasted-image-20220128180045.png alt=Pasted-image-20220128180045.png></p>
+<p><img src=/img/Pasted-image-20220128180055.png alt=Pasted-image-20220128180055.png></p>
+<p><img src=/img/Pasted-image-20220128180104.png alt=Pasted-image-20220128180104.png></p>
+<p><img src=/img/Pasted-image-20220128180114.png alt=Pasted-image-20220128180114.png></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">

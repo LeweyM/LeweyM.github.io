@@ -66,25 +66,25 @@ POSTS
 <h1 class="f1 athelas mt3 mb1">Optimizing the regex parser</h1>
 </header>
 <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>before</p>
-<p><img src=/static/img/Pasted-image-20220212160121.png alt=Pasted-image-20220212160121.png></p>
-<p><img src=/static/img/Pasted-image-20220212160132.png alt=Pasted-image-20220212160132.png></p>
-<p><img src=/static/img/Pasted-image-20220212160154.png alt=Pasted-image-20220212160154.png></p>
-<p><img src=/static/img/Pasted-image-20220212160229.png alt=Pasted-image-20220212160229.png></p>
-<p><img src=/static/img/Pasted-image-20220212160309.png alt=Pasted-image-20220212160309.png></p>
+<p><img src=/img/Pasted-image-20220212160121.png alt=Pasted-image-20220212160121.png></p>
+<p><img src=/img/Pasted-image-20220212160132.png alt=Pasted-image-20220212160132.png></p>
+<p><img src=/img/Pasted-image-20220212160154.png alt=Pasted-image-20220212160154.png></p>
+<p><img src=/img/Pasted-image-20220212160229.png alt=Pasted-image-20220212160229.png></p>
+<p><img src=/img/Pasted-image-20220212160309.png alt=Pasted-image-20220212160309.png></p>
 <pre tabindex=0><code>... Searching       2    696948604 ns/op
 </code></pre><pre tabindex=0><code>➜  search git:(master) ✗ go test -bench=BenchmarkList -cpuprofile p.out                     
 ➜  search git:(master) ✗ go tool pprof -http localhost:8080 --nodecount=20 search.test p.out
 
 </code></pre><p>now a memory profile</p>
-<p><img src=/static/img/Pasted-image-20220212160501.png alt=Pasted-image-20220212160501.png></p>
-<p><img src=/static/img/Pasted-image-20220212160526.png alt=Pasted-image-20220212160526.png></p>
-<p><img src=/static/img/Pasted-image-20220212160544.png alt=Pasted-image-20220212160544.png></p>
-<p><img src=/static/img/Pasted-image-20220212160638.png alt=Pasted-image-20220212160638.png></p>
-<p><img src=/static/img/Pasted-image-20220212160655.png alt=Pasted-image-20220212160655.png></p>
-<p><img src=/static/img/Pasted-image-20220212160715.png alt=Pasted-image-20220212160715.png></p>
-<p><img src=/static/img/Pasted-image-20220212160732.png alt=Pasted-image-20220212160732.png></p>
+<p><img src=/img/Pasted-image-20220212160501.png alt=Pasted-image-20220212160501.png></p>
+<p><img src=/img/Pasted-image-20220212160526.png alt=Pasted-image-20220212160526.png></p>
+<p><img src=/img/Pasted-image-20220212160544.png alt=Pasted-image-20220212160544.png></p>
+<p><img src=/img/Pasted-image-20220212160638.png alt=Pasted-image-20220212160638.png></p>
+<p><img src=/img/Pasted-image-20220212160655.png alt=Pasted-image-20220212160655.png></p>
+<p><img src=/img/Pasted-image-20220212160715.png alt=Pasted-image-20220212160715.png></p>
+<p><img src=/img/Pasted-image-20220212160732.png alt=Pasted-image-20220212160732.png></p>
 <p>now with tracing</p>
-<p><img src=/static/img/Pasted-image-20220212171700.png alt=Pasted-image-20220212171700.png></p>
+<p><img src=/img/Pasted-image-20220212171700.png alt=Pasted-image-20220212171700.png></p>
 <p>noticing a growth in go routines and heap allocation</p>
 <p>after change:</p>
 <pre tabindex=0><code>func FindAllAsync(ctx context.Context, finiteStateMachine Machine, searchString string, out chan Result) {  
@@ -103,11 +103,11 @@ POSTS
       }  
    }  
 }
-</code></pre><p><img src=/static/img/Pasted-image-20220212172515.png alt=Pasted-image-20220212172515.png></p>
+</code></pre><p><img src=/img/Pasted-image-20220212172515.png alt=Pasted-image-20220212172515.png></p>
 <pre tabindex=0><code>... SearchingBenchmarkList-8   	       4	 280088490 ns/op
-</code></pre><p><img src=/static/img/Pasted-image-20220212172957.png alt=Pasted-image-20220212172957.png></p>
-<p><img src=/static/img/Pasted-image-20220212173115.png alt=Pasted-image-20220212173115.png>
-<img src=/static/img/Pasted-image-20220212173142.png alt=Pasted-image-20220212173142.png></p>
+</code></pre><p><img src=/img/Pasted-image-20220212172957.png alt=Pasted-image-20220212172957.png></p>
+<p><img src=/img/Pasted-image-20220212173115.png alt=Pasted-image-20220212173115.png>
+<img src=/img/Pasted-image-20220212173142.png alt=Pasted-image-20220212173142.png></p>
 <p>simple optimization</p>
 <pre tabindex=0><code>func BenchmarkCompiler(b *testing.B) {  
    for i := 0; i &lt; b.N; i++ {  
@@ -115,7 +115,7 @@ POSTS
  }  
 }
 </code></pre><pre tabindex=0><code>BenchmarkCompiler-8   	  356442	      3275 ns/op
-</code></pre><p><img src=/static/img/Pasted-image-20220213084104.png alt=Pasted-image-20220213084104.png></p>
+</code></pre><p><img src=/img/Pasted-image-20220213084104.png alt=Pasted-image-20220213084104.png></p>
 <p>concat string doing alot of work</p>
 <pre tabindex=0><code>// concatenation  
 case Character:  
@@ -135,7 +135,7 @@ case Character:
    return desc  
 }
 </code></pre><pre tabindex=0><code>BenchmarkCompiler-8   	  409524	      2492 ns/op
-</code></pre><p><img src=/static/img/Pasted-image-20220213084331.png alt=Pasted-image-20220213084331.png></p>
+</code></pre><p><img src=/img/Pasted-image-20220213084331.png alt=Pasted-image-20220213084331.png></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
