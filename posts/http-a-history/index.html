@@ -4,28 +4,28 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <title>Http - A History | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="Based on this great video 
+<meta name=description content="A few notes based on this great video 
 HTTP/1 TCP/IP The first and most simple approach, making a TCP handshake for each resource which has to be shared.
-The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake everytime, which is costly and time consuming. This was alieviated in a later version HTTP/1.">
+The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake every-time, which is costly and time consuming. This was alleviated in a later version HTTP/1.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="Http - A History">
-<meta property="og:description" content="Based on this great video 
+<meta property="og:description" content="A few notes based on this great video 
 HTTP/1 TCP/IP The first and most simple approach, making a TCP handshake for each resource which has to be shared.
-The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake everytime, which is costly and time consuming. This was alieviated in a later version HTTP/1.">
+The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake every-time, which is costly and time consuming. This was alleviated in a later version HTTP/1.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/http-a-history/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Http - A History">
-<meta itemprop=description content="Based on this great video 
+<meta itemprop=description content="A few notes based on this great video 
 HTTP/1 TCP/IP The first and most simple approach, making a TCP handshake for each resource which has to be shared.
-The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake everytime, which is costly and time consuming. This was alieviated in a later version HTTP/1.">
-<meta itemprop=wordCount content="299">
+The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake every-time, which is costly and time consuming. This was alleviated in a later version HTTP/1.">
+<meta itemprop=wordCount content="302">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Http - A History">
-<meta name=twitter:description content="Based on this great video 
+<meta name=twitter:description content="A few notes based on this great video 
 HTTP/1 TCP/IP The first and most simple approach, making a TCP handshake for each resource which has to be shared.
-The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake everytime, which is costly and time consuming. This was alieviated in a later version HTTP/1.">
+The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake every-time, which is costly and time consuming. This was alleviated in a later version HTTP/1.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -53,20 +53,20 @@ POSTS
 </div>
 <h1 class="f1 athelas mt3 mb1">Http - A History</h1>
 </header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Based on this <a href="https://www.youtube.com/watch?v=ai8cf0hZ9cQ&t=536s">great video </a></p>
+<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>A few notes based on this <a href="https://www.youtube.com/watch?v=ai8cf0hZ9cQ&t=536s">great video </a></p>
 <h2 id=http1>HTTP/1</h2>
 <h4 id=tcpip>TCP/IP</h4>
 <p>The first and most simple approach, making a TCP handshake for each resource which has to be shared.</p>
-<p>The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake everytime, which is costly and time consuming. This was alieviated in a later version HTTP/1.1 which enabled the <code>keep-alive</code> option so that mutliple calls could share the same connection handshake.</p>
-<p>However, muitiple calls still had to be serialized one by one, and the only way to make concurrent calls was with multiple TCP connections. Even though the cost of the handshake is saved, concurrency is still not achieved.</p>
+<p>The downsides to this approach is that in order to speed up transfer rates, we want to send many resource pieces in parallel. With HTTP/1, this means doing a new TCP handshake every-time, which is costly and time consuming. This was alleviated in a later version HTTP/1.1 which enabled the <code>keep-alive</code> option so that multiple calls could share the same connection handshake.</p>
+<p>However, multiple calls still had to be serialised one by one, and the only way to make concurrent calls was with multiple TCP connections. Even though the cost of the handshake is saved, concurrency is still not achieved.</p>
 <h2 id=http2>HTTP/2</h2>
 <h4 id=tcpip-multiplexing>TCP/IP, multiplexing</h4>
-<p>HTTP/2 introduced mulitplexing of streams of data over a single tcp connection. This meant true concurrency at the network level as the client could request multple tcp connections in parallel.</p>
-<p>However, this also brougth a downside when it comes to packet loss. This is because the HTTP/2 protocol is not aware of <em>where</em> in the stream of data the data is lost; only that <em>some</em> data was lost. The only solution available is to resend all of the tcp connections data streams, this is known as <code>head of line blocking</code>.</p>
+<p>HTTP/2 introduced multiplexing of streams of data over a single tcp connection. This meant true concurrency at the network level as the client could request multiple tcp connections in parallel.</p>
+<p>However, this also brought a downside when it comes to packet loss. This is because the HTTP/2 protocol is not aware of <em>where</em> in the stream of data the data is lost; only that <em>some</em> data was lost. The only solution available is to resend all of the tcp connections data streams, this is known as <code>head of line blocking</code>.</p>
 <h2 id=http3>HTTP/3</h2>
 <h4 id=quicip-fast-handshake-udp-connections>QUIC/IP, fast handshake, UDP connections</h4>
 <p>HTTP/3 streams packets concurrently over UDP connections. This is an unsigned and so unreliable protocol, but the client is able to resend packets with data loss without effecting the other concurrent connections.</p>
-<p>Also, because of the UDP connections, the handshake protocal has been creatly reduced to carry out all necessary passing of keys, encyrption, etc, in a single back-and-forth, creatly reducing round trip time over HTTP/2 which needed to carry out 2 or more back-and-forths.</p>
+<p>Also, because of the UDP connections, the handshake protocol has been greatly reduced to carry out all necessary passing of keys, encryption, etc, in a single back-and-forth, greatly reducing round trip time over HTTP/2 which needed to carry out 2 or more back-and-forths.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
