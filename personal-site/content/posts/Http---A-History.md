@@ -1,10 +1,8 @@
 ---
-title: Http
+title: Http - A History
 draft: false
 ---
-# HTTP - a history
-
-Based on this [great video ](https://www.youtube.com/watch?v=ai8cf0hZ9cQ&t=536s)
+Based on this [great video ](https://www.youtube.com/watch?v=ai8cf0hZ9cQ&t=536s)
 
 ## HTTP/1
 #### TCP/IP
