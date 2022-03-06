@@ -1,4 +1,4 @@
-baseURL = 'http://lewismetcalf.com/'
+baseURL = 'https://LeweyM.github.io'
 languageCode = 'en-us'
 title = 'Lewis Metcalf'
 theme = "ananke"
