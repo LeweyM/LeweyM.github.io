@@ -4,15 +4,15 @@ draft: false
 ---
 before
 
-![Pasted-image-20220212160121.png](/static/img/Pasted-image-20220212160121.png)
+![Pasted-image-20220212160121.png](/img/Pasted-image-20220212160121.png)
 
-![Pasted-image-20220212160132.png](/static/img/Pasted-image-20220212160132.png)
+![Pasted-image-20220212160132.png](/img/Pasted-image-20220212160132.png)
 
-![Pasted-image-20220212160154.png](/static/img/Pasted-image-20220212160154.png)
+![Pasted-image-20220212160154.png](/img/Pasted-image-20220212160154.png)
 
-![Pasted-image-20220212160229.png](/static/img/Pasted-image-20220212160229.png)
+![Pasted-image-20220212160229.png](/img/Pasted-image-20220212160229.png)
 
-![Pasted-image-20220212160309.png](/static/img/Pasted-image-20220212160309.png)
+![Pasted-image-20220212160309.png](/img/Pasted-image-20220212160309.png)
 
 ```
 ... Searching       2    696948604 ns/op
@@ -25,23 +25,23 @@ draft: false
 
 now a memory profile
 
-![Pasted-image-20220212160501.png](/static/img/Pasted-image-20220212160501.png)
+![Pasted-image-20220212160501.png](/img/Pasted-image-20220212160501.png)
 
-![Pasted-image-20220212160526.png](/static/img/Pasted-image-20220212160526.png)
+![Pasted-image-20220212160526.png](/img/Pasted-image-20220212160526.png)
 
-![Pasted-image-20220212160544.png](/static/img/Pasted-image-20220212160544.png)
+![Pasted-image-20220212160544.png](/img/Pasted-image-20220212160544.png)
 
-![Pasted-image-20220212160638.png](/static/img/Pasted-image-20220212160638.png)
+![Pasted-image-20220212160638.png](/img/Pasted-image-20220212160638.png)
 
-![Pasted-image-20220212160655.png](/static/img/Pasted-image-20220212160655.png)
+![Pasted-image-20220212160655.png](/img/Pasted-image-20220212160655.png)
 
-![Pasted-image-20220212160715.png](/static/img/Pasted-image-20220212160715.png)
+![Pasted-image-20220212160715.png](/img/Pasted-image-20220212160715.png)
 
-![Pasted-image-20220212160732.png](/static/img/Pasted-image-20220212160732.png)
+![Pasted-image-20220212160732.png](/img/Pasted-image-20220212160732.png)
 
 now with tracing
 
-![Pasted-image-20220212171700.png](/static/img/Pasted-image-20220212171700.png)
+![Pasted-image-20220212171700.png](/img/Pasted-image-20220212171700.png)
 
 noticing a growth in go routines and heap allocation
 
@@ -67,16 +67,16 @@ func FindAllAsync(ctx context.Context, finiteStateMachine Machine, searchString 
 }
 ```
 
-![Pasted-image-20220212172515.png](/static/img/Pasted-image-20220212172515.png)
+![Pasted-image-20220212172515.png](/img/Pasted-image-20220212172515.png)
 
 ```
 ... SearchingBenchmarkList-8   	       4	 280088490 ns/op
 ```
 
-![Pasted-image-20220212172957.png](/static/img/Pasted-image-20220212172957.png)
+![Pasted-image-20220212172957.png](/img/Pasted-image-20220212172957.png)
 
-![Pasted-image-20220212173115.png](/static/img/Pasted-image-20220212173115.png)
-![Pasted-image-20220212173142.png](/static/img/Pasted-image-20220212173142.png)
+![Pasted-image-20220212173115.png](/img/Pasted-image-20220212173115.png)
+![Pasted-image-20220212173142.png](/img/Pasted-image-20220212173142.png)
 
 
 
@@ -96,7 +96,7 @@ func BenchmarkCompiler(b *testing.B) {
 BenchmarkCompiler-8   	  356442	      3275 ns/op
 ```
 
-![Pasted-image-20220213084104.png](/static/img/Pasted-image-20220213084104.png)
+![Pasted-image-20220213084104.png](/img/Pasted-image-20220213084104.png)
 
 concat string doing alot of work
 
@@ -130,4 +130,4 @@ func getDescription(symbol symbol) string {
 BenchmarkCompiler-8   	  409524	      2492 ns/op
 ```
 
-![Pasted-image-20220213084331.png](/static/img/Pasted-image-20220213084331.png)
+![Pasted-image-20220213084331.png](/img/Pasted-image-20220213084331.png)
