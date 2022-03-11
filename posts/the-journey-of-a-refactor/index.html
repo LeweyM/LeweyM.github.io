@@ -17,7 +17,7 @@ Problem I’m trying to write a test that makes sure that no other fields in the
 <meta itemprop=name content="The Journey of a Refactor">
 <meta itemprop=description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
 Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mixture.">
-<meta itemprop=wordCount content="568">
+<meta itemprop=wordCount content="569">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="The Journey of a Refactor">
 <meta name=twitter:description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
@@ -63,7 +63,7 @@ POSTS
 	knownFields map[string]bool `bson:&quot;knownFields&quot;` // known
 }
 type dbResponseUnknown map[string]interface{}
-</code></pre><p>then, try to combine these into a single datastructure:</p>
+</code></pre><p>then, try to combine these into a single data structure:</p>
 <pre tabindex=0><code>func getUsersFromDB(mongoMainURI string) []dbResponse {
 	mongoDB := fixtures.NewMongoDB(mongoMainURI)
 
