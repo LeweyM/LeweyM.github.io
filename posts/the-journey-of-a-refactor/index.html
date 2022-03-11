@@ -4,24 +4,24 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <title>The Journey of a Refactor | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mixture.">
+<meta name=description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="The Journey of a Refactor">
-<meta property="og:description" content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mixture.">
+<meta property="og:description" content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/the-journey-of-a-refactor/"><meta property="article:section" content="posts">
 <meta itemprop=name content="The Journey of a Refactor">
-<meta itemprop=description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mixture.">
-<meta itemprop=wordCount content="569">
+<meta itemprop=description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
+<meta itemprop=wordCount content="597">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="The Journey of a Refactor">
-<meta name=twitter:description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mixture.">
+<meta name=twitter:description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -49,21 +49,21 @@ POSTS
 </div>
 <h1 class="f1 athelas mt3 mb1">The Journey of a Refactor</h1>
 </header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all gets a lot better.</p>
+<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.</p>
 <h2 id=problem>Problem</h2>
-<p>I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use <strong>known</strong> fields with a struct, or <strong>unknown</strong> fields with a map, but you can’t do a mixture. So, I wanted;</p>
+<p>I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use <strong>known</strong> fields with a struct, or <strong>unknown</strong> fields with a map, but you can’t do a mix. So, I wanted;</p>
 <pre tabindex=0><code>type dbResponse struct {
 	Id          string                   `bson:&quot;_id&quot;`         // known
 	knownFields map[string]bool          `bson:&quot;knownFields&quot;` // known
 	otherFields map[string]interface{}                        // unknown
 }
-</code></pre><p>so, I started off down the path of trying to make this work. One way is to go to the db twice (not performant, but that’s not a big deal here) and marshal once for the known and again for the unknown. So two types:</p>
+</code></pre><p>I started off down the path of trying to make this work. One way is to go to the db twice (not performant, but that’s not a big deal here) and marshal once for the known and again for the unknown. So two new types:</p>
 <pre tabindex=0><code>type dbResponseKnown struct {
 	Id          string          `bson:&quot;_id&quot;`         // known
 	knownFields map[string]bool `bson:&quot;knownFields&quot;` // known
 }
 type dbResponseUnknown map[string]interface{}
-</code></pre><p>then, try to combine these into a single data structure:</p>
+</code></pre><p>Then, try to combine these into a single data structure:</p>
 <pre tabindex=0><code>func getUsersFromDB(mongoMainURI string) []dbResponse {
 	mongoDB := fixtures.NewMongoDB(mongoMainURI)
 
@@ -91,10 +91,11 @@ type dbResponseUnknown map[string]interface{}
 	return response
 }
 </code></pre><h2 id=complexity-spike>Complexity spike</h2>
-<p>This is where it’s a good point to take a deep breath and think about what happened to be lovely simple tests. Suddenly, I have two intermediate types on top of the actual type I need, plus my generic <code>getUsersFromDB</code>  logic is now littered with specifics about ids and known fields. Somewhere along the way my abstractions have gone wrong.</p>
+<p>This is where it’s a good point to take a deep breath and think about what happened to my lovely simple tests. Suddenly, I have two intermediate types on top of the actual type I need, plus my generic <code>getUsersFromDB</code>  logic is now littered with specifics about ids and knownFields. Somewhere along the way my abstractions went wrong.</p>
 <h2 id=diagnosis>Diagnosis</h2>
-<p>Simply put, <code>getUsersFromDB</code> is doing too much. It’s not <em>just</em> getting users from the db - it’s also doing some mapping and filtering between known and unknown fields. This is only necessary for some tests anyway, so each test should just provide the shape that it needs.</p>
+<p>Simply put, <code>getUsersFromDB</code> is doing too much. It’s not <em>just</em> getting users from the db - it’s also doing some mapping and filtering between known and unknown fields. This is only necessary for some tests anyway, so why complicate this function to work for every case?</p>
 <h2 id=solution>Solution</h2>
+<p>Each test provides the shape of the response that it needs.</p>
 <pre tabindex=0><code>func getUsersFromDBNEW(mongoMainURI string, response interface{}) {
    mongoDB := fixtures.NewMongoDB(mongoMainURI)
 
@@ -108,7 +109,7 @@ type dbResponseUnknown map[string]interface{}
       panic(err)
    }
 }
-</code></pre><p>the function receives the response shape that it needs, and the tests handle the rest. Now the tests look something like this:</p>
+</code></pre><p>The function receives the response shape that it needs, and the tests handle the rest. Now the tests look something like this:</p>
 <pre><code>```
 It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 		initCollection(mongoMainURI, map[string]interface{}{
@@ -130,7 +131,7 @@ It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 	})
 	```
 </code></pre>
-<p>and for an example where we would prefer known fields:</p>
+<p>And for an example where we would prefer known fields:</p>
 <pre><code>	It(&quot;sets a value&quot;, func() {
 		// arrange
 		initCollection(mongoMainURI, map[string]interface{}{
@@ -151,7 +152,9 @@ It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 	})
 </code></pre>
 <h2 id=conclusion>Conclusion</h2>
-<p>I like this because it looks stupidly obvious once it’s been written, and that it really shouldn’t have taken any thought to go this way. However, the reality is that coming to simple solutions is not as obvious as it seems, and can often be quite time and energy consuming.</p>
+<p>I like this because it looks stupidly obvious once it’s been written.</p>
+<p>When you show your work to someone, the best response you can hope for is &ldquo;what, this took you all day?&rdquo;. It should look so obvious that all the other stuff you were trying out should seem like the naive meandering of a madman&mldr; or something like that.</p>
+<p>Anyway, that&rsquo;s it for this little insight into my process!</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
