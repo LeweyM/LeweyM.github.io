@@ -25,7 +25,7 @@ type dbResponseKnown struct {
 type dbResponseUnknown map[string]interface{}
 ```
 
-then, try to combine these into a single datastructure:  
+then, try to combine these into a single data structure:  
 
 ```
 func getUsersFromDB(mongoMainURI string) []dbResponse {
