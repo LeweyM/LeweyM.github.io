@@ -1,6 +1,6 @@
 ---
 title: What's in the Ultimate Go Notebook?
-draft: false
+draft: true
 ---
 There's a whole heap of content in that book. Good content. I split it up into 4 main sections.
 
