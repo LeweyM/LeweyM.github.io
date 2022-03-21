@@ -75,19 +75,15 @@ The downsides to this approach is that in order to speed up transfer rates, we w
 <div class="flex flex-column flex-row-ns">
 <div class="blah w-100">
 <h1 class="f3 fw1 athelas mt0 lh-title">
-<a href=/posts/optimizing-the-regex-parser/ class="color-inherit dim link">
-Optimizing the regex parser
+<a href=/posts/regex-processor/ class="color-inherit dim link">
+Regex Processor
 </a>
 </h1>
 <div class="f6 f5-l lh-copy nested-copy-line-height nested-links">
-before
-... Searching 2 696948604 ns/op ➜ search git:(master) ✗ go test -bench=BenchmarkList -cpuprofile p.out ➜ search git:(master) ✗ go tool pprof -http localhost:8080 --nodecount=20 search.test p.out now a memory profile
-now with tracing
-noticing a growth in go routines and heap allocation
-after change:
-func FindAllAsync(ctx context.Context, finiteStateMachine Machine, searchString string, out chan Result) { defer close(out) lineCounter := 0 start := 0 end := 0 runes := append([]rune(searchString), 0) // we add a 'NULL' 0 rune at the End so that even empty string inputs are processed.
+So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
+Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;
 </div>
-<a href=/posts/optimizing-the-regex-parser/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+<a href=/posts/regex-processor/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
 </div>
 </div>
 </div>
@@ -99,39 +95,20 @@ func FindAllAsync(ctx context.Context, finiteStateMachine Machine, searchString 
 <div class="flex flex-column flex-row-ns">
 <div class="blah w-100">
 <h1 class="f3 fw1 athelas mt0 lh-title">
-<a href=/posts/parallelizing-a-raytracer/ class="color-inherit dim link">
-parallelizing a raytracer
+<a href=/posts/the-journey-of-a-refactor/ class="color-inherit dim link">
+The Journey of a Refactor
 </a>
 </h1>
 <div class="f6 f5-l lh-copy nested-copy-line-height nested-links">
-After reading through the excellent Ultimate Go Notebook by William Kennedy and Hoanh An, I got an itching to go back to another book project, the Ray Tracer Challenge and make some improvements. What&rsquo;s in the Ultimate Go Notebook?
-some new change.
+Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.
 </div>
-<a href=/posts/parallelizing-a-raytracer/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+<a href=/posts/the-journey-of-a-refactor/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
 </div>
 </div>
 </div>
 </article>
 </div>
-</section>
-<section class=w-100>
-<h1 class=f3>More</h1>
-<h2 class="f5 fw4 mb4 dib mr3">
-<a href=/posts/regex-processor/ class="link black dim">
-Regex Processor
-</a>
-</h2>
-<h2 class="f5 fw4 mb4 dib mr3">
-<a href=/posts/the-journey-of-a-refactor/ class="link black dim">
-The Journey of a Refactor
-</a>
-</h2>
-<h2 class="f5 fw4 mb4 dib mr3">
-<a href=/posts/whats-in-the-ultimate-go-notebook/ class="link black dim">
-What's in the Ultimate Go Notebook?
-</a>
-</h2>
-<a href=/posts/ class="link db f6 pa2 br3 bg-mid-gray white dim w4 tc">All Posts</a>
 </section>
 </div>
 </main>
