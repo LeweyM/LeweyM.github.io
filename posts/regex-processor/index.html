@@ -62,12 +62,12 @@ POSTS
 <p>This is the next simplest. It&rsquo;s a two state system. From the state on the left, we&rsquo;ll call it <code>state[0]</code>, we travel to the state on the right, <code>state[1]</code>, if we process the character <code>c</code> from the input.</p>
 <p>Two things to note here:</p>
 <ol>
-<li>What happens if we process a different character to <code>c</code>? From the picture, we don&rsquo;t know what to do. To be truely accurate, there should be an arrow for every possible input, every character in this case. For brevity, we say that if there is no arrow, it means &ldquo;go back to the starting state&rdquo;.</li>
+<li>What happens if we process a different character to <code>c</code>? From the picture, we don&rsquo;t know what to do. To be truly accurate, there should be an arrow for every possible input, every character in this case. For brevity, we say that if there is no arrow, it means &ldquo;go back to the starting state&rdquo;.</li>
 <li>The circle on the right is blue. This means, this is an <strong>end state</strong>. If we arrive at this state, we have finished, and the FSM can return <code>true</code>.</li>
 </ol>
 <p>All this is lovely and everything, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
 <h2 id=text-search>Text search</h2>
-<p>let&rsquo;s create a state machine which checks if a string matches against a simpe regular expression query <code>abc</code>. This means that any string containing the substring <code>abc</code> will match. For example:</p>
+<p>let&rsquo;s create a state machine which checks if a string matches against a simple regular expression query <code>abc</code>. This means that any string containing the substring <code>abc</code> will match. For example:</p>
 <ul>
 <li><code>"zabcz"</code> - match</li>
 <li><code>"abc"</code> - match</li>
