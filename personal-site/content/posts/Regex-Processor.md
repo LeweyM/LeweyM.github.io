@@ -20,14 +20,14 @@ This is the simplest. It's just a single state. The red circle in the middle mea
 This is the next simplest. It's a two state system. From the state on the left, we'll call it `state[0]`, we travel to the state on the right, `state[1]`, if we process the character `c` from the input.
 
 Two things to note here:
-1. What happens if we process a different character to `c`? From the picture, we don't know what to do. To be truely accurate, there should be an arrow for every possible input, every character in this case. For brevity, we say that if there is no arrow, it means "go back to the starting state".
+1. What happens if we process a different character to `c`? From the picture, we don't know what to do. To be truly accurate, there should be an arrow for every possible input, every character in this case. For brevity, we say that if there is no arrow, it means "go back to the starting state".
 2. The circle on the right is blue. This means, this is an **end state**. If we arrive at this state, we have finished, and the FSM can return `true`.
 
 All this is lovely and everything, but what can we actually do with this? We're going to use these machines to solve regular expressions.
 
 ## Text search
 
-let's create a state machine which checks if a string matches against a simpe regular expression query `abc`. This means that any string containing the substring `abc` will match. For example: 
+let's create a state machine which checks if a string matches against a simple regular expression query `abc`. This means that any string containing the substring `abc` will match. For example: 
 - `"zabcz"` - match
 - `"abc"` - match
 - `"abd"` - no match
