@@ -124,7 +124,11 @@ We'll call these steps `compile` and `evaluate`.
 
 `compile` means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
 
-There are many ways of making compilers
+
+
+
+(? too early for this?)
+There are many ways of making compilers, but the one we're going to look at uses a stack as it's main data structure.
 
 
 
