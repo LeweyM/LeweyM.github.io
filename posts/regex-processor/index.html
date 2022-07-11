@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="804">
+<meta itemprop=wordCount content="825">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -135,7 +135,8 @@ type State struct {
 </ol>
 <p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code>.</p>
 <p><code>compile</code> means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
-<p>There are many ways of making compilers</p>
+<p>(? too early for this?)
+There are many ways of making compilers, but the one we&rsquo;re going to look at uses a stack as it&rsquo;s main data structure.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
