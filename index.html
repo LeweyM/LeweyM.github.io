@@ -80,8 +80,9 @@ Regex Processor
 </a>
 </h1>
 <div class="f6 f5-l lh-copy nested-copy-line-height nested-links">
-So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;
+So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.
 </div>
 <a href=/posts/regex-processor/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
 </div>
@@ -95,20 +96,37 @@ Finite State Machines finite state machines are super simple and super useful. T
 <div class="flex flex-column flex-row-ns">
 <div class="blah w-100">
 <h1 class="f3 fw1 athelas mt0 lh-title">
-<a href=/posts/the-journey-of-a-refactor/ class="color-inherit dim link">
-The Journey of a Refactor
+<a href=/posts/regex-processor-part-2/ class="color-inherit dim link">
+Regex Processor - Part 2
 </a>
 </h1>
 <div class="f6 f5-l lh-copy nested-copy-line-height nested-links">
-Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.
+## One or more
+cool, so what about a regular expression like 'a+b'?
+This means &ldquo;match any string that has one or more 'a's, followed by a 'b'&rdquo;. So, for example:
+"ab" -> match "aaaaab" -> match "ba" -> no match "" -> no match What would the FSM look like for that? Well, it would look like the following;
+This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;you&rsquo;ve already seen 'a'&rdquo;.
 </div>
-<a href=/posts/the-journey-of-a-refactor/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
+<a href=/posts/regex-processor-part-2/ class="ba b--moon-gray bg-light-gray br2 color-inherit dib f7 hover-bg-moon-gray link mt2 ph2 pv1">read more</a>
 </div>
 </div>
 </div>
 </article>
 </div>
+</section>
+<section class=w-100>
+<h1 class=f3>More</h1>
+<h2 class="f5 fw4 mb4 dib mr3">
+<a href=/posts/regex-processor-part-3/ class="link black dim">
+Regex Processor - Part 3
+</a>
+</h2>
+<h2 class="f5 fw4 mb4 dib mr3">
+<a href=/posts/the-journey-of-a-refactor/ class="link black dim">
+The Journey of a Refactor
+</a>
+</h2>
+<a href=/posts/ class="link db f6 pa2 br3 bg-mid-gray white dim w4 tc">All Posts</a>
 </section>
 </div>
 </main>

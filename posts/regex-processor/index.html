@@ -4,24 +4,28 @@
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
 <title>Regex Processor | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;">
+<meta name=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="Regex Processor">
-<meta property="og:description" content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;">
+<meta property="og:description" content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Regex Processor">
-<meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;">
-<meta itemprop=wordCount content="1026">
+<meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+<meta itemprop=wordCount content="804">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
-<meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;">
+<meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -49,33 +53,34 @@ POSTS
 </div>
 <h1 class="f1 athelas mt3 mb1">Regex Processor</h1>
 </header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.</p>
+<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using <strong>finite state machines</strong>.</p>
 <h1 id=finite-state-machines>Finite State Machines</h1>
-<p>finite state machines are super simple and super useful. The simplest definition I can think of is something like this;</p>
+<p>finite state machines are both simple and useful. The simplest definition I can think of is something like this;</p>
 <blockquote>
-<p>You start in some state, then you decide the next state to go to based on some input. After processing all the input, you see which state you&rsquo;re in.</p>
+<p>A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.</p>
 </blockquote>
-<p>One of the cool things about FSMs is that they can be drawn as lovely little circles and arrows representing <strong>states</strong> and <strong>transitions</strong></p>
+<p>One of the cool things about FSMs is that they can be drawn as lovely little circles and arrows representing <strong>states</strong> and <strong>transitions</strong>:</p>
 <p><img src=/img/Pasted-image-20220119151322.png alt=Pasted-image-20220119151322.png></p>
-<p>This is the simplest. It&rsquo;s just a single state. The red circle in the middle means that we&rsquo;re currently in that state. It doesn&rsquo;t mean much yet.</p>
+<p>This is the simplest. It&rsquo;s just a single state. The red circle in the middle means that we&rsquo;re currently in that state, although that doesn&rsquo;t tell us much yet&mldr;</p>
+<p>For this to be useful, we need more than one state.</p>
 <p><img src=/img/Pasted-image-20220119151437.png alt=Pasted-image-20220119151437.png></p>
-<p>This is the next simplest. It&rsquo;s a two state system. From the state on the left, we&rsquo;ll call it <code>state[0]</code>, we travel to the state on the right, <code>state[1]</code>, if we process the character <code>c</code> from the input.</p>
+<p>This a two state system. Starting from the state on the left - we&rsquo;ll call it <code>state[0]</code> - we travel to the state on the right - <code>state[1]</code> - only if we see the character <code>c</code>.</p>
 <p>Two things to note here:</p>
 <ol>
-<li>What happens if we process a different character to <code>c</code>? From the picture, we don&rsquo;t know what to do. To be truly accurate, there should be an arrow for every possible input, every character in this case. For brevity, we say that if there is no arrow, it means &ldquo;go back to the starting state&rdquo;.</li>
-<li>The circle on the right is blue. This means, this is an <strong>end state</strong>. If we arrive at this state, we have finished, and the FSM can return <code>true</code>.</li>
+<li>What happens if we process a different character to <code>c</code>, such as <code>z</code>? From the picture, we don&rsquo;t know what to do as there is no arrow for the <code>z</code> case. To be truly accurate, we would need to have an arrow for every possible every character. For brevity, we say that if there is no arrow, it means that there was no match.</li>
+<li>The circle on the right is blue. This means, this is an <strong>end state</strong>. If we arrive at this state, we have finished and that a match has been found.</li>
 </ol>
-<p>All this is lovely and everything, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
+<p>This is all very lovely, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
 <h2 id=text-search>Text search</h2>
 <p>let&rsquo;s create a state machine which checks if a string matches against a simple regular expression query <code>abc</code>. This means that any string containing the substring <code>abc</code> will match. For example:</p>
 <ul>
-<li><code>"zabcz"</code> - match</li>
-<li><code>"abc"</code> - match</li>
-<li><code>"abd"</code> - no match</li>
-<li><code>""</code> - no match</li>
+<li><code>"zabcz"</code> -> match</li>
+<li><code>"abc"</code> -> match</li>
+<li><code>"abd"</code> -> no match</li>
+<li><code>""</code> -> no match</li>
 </ul>
-<p>The state machine to check for is as follows:</p>
-<p><img src=/img/Pasted-image-20220119180620.png alt=Pasted-image-20220119180620.png></p>
+<p>The finite state machine which represents this regular expression is as follows:</p>
+<p><img src=/img/Pasted-image-20220710201842.png alt=Pasted-image-20220710201842.png></p>
 <p>let&rsquo;s break this down a bit. Really, each state is saying something.</p>
 <p>State 0 is saying: &ldquo;you have not yet seen anything interesting&rdquo;
 State 1 is saying: &ldquo;you&rsquo;ve just seen <code>'a'</code>&rdquo;
@@ -83,31 +88,54 @@ State 2 is saying: &ldquo;you&rsquo;ve just seen <code>'ab'</code>&rdquo;
 State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;re done!&rdquo;</p>
 <p>let&rsquo;s get into these states and what they&rsquo;re saying a little more to try to understand all of these arrows.</p>
 <p>At state 0, I still haven&rsquo;t seen anything interesting until I see an <code>'a'</code>, that&rsquo;s pretty straight forward.</p>
-<p>At state 1, if I see another <code>'a'</code>, with the string <code>"aaabc"</code> for example, I still want to be in the state of &ldquo;you&rsquo;ve just seen <code>'a'</code>&rdquo;, therefore we need the little recursive arrow which points to itself.</p>
-<p>At state 2 we&rsquo;re saying &ldquo;you&rsquo;ve just seen <code>'ab'</code>. If we&rsquo;ve seen <code>ab</code> and we then see and <code>'a'</code>, we want our state to say &ldquo;you&rsquo;ve just seen <code>'a'</code>&rdquo;, rather than &ldquo;you haven&rsquo;t seen anything interesting yet&rdquo;, so therefore we need another little arrow to go to state 1.</p>
+<p>At state 1, I know that the first character I saw as <code>'a'</code></p>
+<p><img src=/img/Pasted-image-20220710202102.png alt=Pasted-image-20220710202102.png></p>
+<p>At state 2 we&rsquo;re saying &ldquo;you&rsquo;ve just seen <code>'ab'</code>.</p>
+<p><img src=/img/Pasted-image-20220710202144.png alt=Pasted-image-20220710202144.png></p>
 <p>And at state 3, we know we&rsquo;ve seen <code>'abc'</code>, so we don&rsquo;t want to do anything from here!</p>
-<h2 id=wildcards>Wildcards</h2>
-<p>cool, so what about a regular expression like <code>'a*b'</code>. This means &ldquo;match any string that has an <code>'a'</code> followed by a <code>'b'</code>&rdquo;. What would the FSM look like for that?</p>
-<p><img src=/img/Pasted-image-20220119183708.png alt=Pasted-image-20220119183708.png></p>
-<p>This is pretty straight forward, if you&rsquo;re at <code>state[1]</code>, that means &ldquo;you&rsquo;ve already seen <code>'a'</code>&rdquo;. Therefore, you never go back to the previous state. Then, if you&rsquo;ve already seen <code>'a'</code> and you later see <code>'b'</code>, you&rsquo;re done!</p>
-<p>Notice that this works for any number of chars between <code>a</code> and <code>b</code>, including zero.</p>
-<h2 id=or>OR</h2>
-<p>Consider a regular expression like <code>'dog|cat'</code>, which means &ldquo;match any string containing the substring <code>dog</code> or the substring <code>cat</code>&rdquo;.</p>
-<p><img src=/img/Pasted-image-20220119185302.png alt=Pasted-image-20220119185302.png></p>
-<p>Hmm, although the structure is the same, we&rsquo;re starting to see some complexity here. It looks like most of the complexity comes from the cross arrows running between the upper and lower states. Also, we need to remember in our regex for <code>"cat"</code> that if we process a <code>'c'</code> somewhere during the the states along <code>"cat"</code>, we need to go back to the &ldquo;you&rsquo;ve seen <code>'c'</code>&rdquo; state instead of the beginning. In fact, most of the arrows point to the <code>'d'</code> and <code>'c'</code> states, the first letters of <code>cat</code> and <code>dog</code>. Let&rsquo;s think about how we can reduce some of the complexity here.</p>
-<p>What&rsquo;s happening here is that we&rsquo;re trying to replicate how <code>grep</code> works, not how regular expressions work. A regular expression would just say &ldquo;the string starts with &ldquo;cat&rdquo; or &ldquo;dog&rdquo;, otherwise it doesn&rsquo;t match&rdquo;. Doing it this way simplifies our diagram quite a lot.</p>
-<p><img src=/img/Pasted-image-20220128175219.png alt=Pasted-image-20220128175219.png></p>
-<p>We can still use this to get grep-like behaviour by simply resetting the finite state machine every time it lands in a &ldquo;Failed&rdquo; state (or a &ldquo;Passed&rdquo; state if we want to count multiple matches).</p>
-<h1 id=branches>Branches</h1>
-<p>This is all hunky-dory when we know exactly where to go in our finite state machine, but that&rsquo;s not always the case. Consider the regex <code>"dog|dot"</code>. We might draw our FSM like so:</p>
-<p><img src=/img/Pasted-image-20220128175308.png alt=Pasted-image-20220128175308.png></p>
-<p>so, what happens when we come across our first &rsquo;d' character? Which way do we go? Having choices in our state machine makes into a Nondeterministic State Automata (NFA), and there&rsquo;s a load of study into these things, study I&rsquo;m far too lazy to actually do. What I do know, however, is that we can still use these to solve regular expression problems.</p>
-<p>I&rsquo;m picking an easy way. Branching.</p>
-<p>Basically, when I come across more than one path in my state machine, the runner (the little red dot in our pictures) will split in two and go down both paths. If one of the runners reaches a success state, it&rsquo;s a match. If all runners enter a fail state, no match. This does sacrifice some performance as we can no longer guarantee the finite state machine to determine a match in linear time, but it does make our diagrams simpler, which is good enough for now.</p>
-<p><img src=/img/Pasted-image-20220128180045.png alt=Pasted-image-20220128180045.png></p>
-<p><img src=/img/Pasted-image-20220128180055.png alt=Pasted-image-20220128180055.png></p>
-<p><img src=/img/Pasted-image-20220128180104.png alt=Pasted-image-20220128180104.png></p>
-<p><img src=/img/Pasted-image-20220128180114.png alt=Pasted-image-20220128180114.png></p>
+<p><img src=/img/Pasted-image-20220710202159.png alt=Pasted-image-20220710202159.png></p>
+<p>That&rsquo;s really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.</p>
+<h2 id=getting-into-some-code>Getting into some code</h2>
+<h3 id=the-fsm-data-structure>The FSM data structure</h3>
+<p>We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects, which in go are structs.</p>
+<pre tabindex=0><code>type State struct {  
+	otherStates []State  
+}
+</code></pre><p>We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a <code>Transition</code> struct to represent this.</p>
+<p>The <code>Transition</code> struct contains two things:</p>
+<ol>
+<li>the next state</li>
+<li>the predicate that determines whether we can go to the next state</li>
+</ol>
+<pre tabindex=0><code>type Transition struct {  
+   // to: a pointer to the next state   
+   to *State  
+   // predicate: a function to determine if the runner should move to the next state
+   predicate func(input rune) bool  
+}  
+</code></pre><p>The <code>Predicate</code> is a simple function that takes in a character (here we&rsquo;re using <code>rune</code> to avoid multi-byte character issues).</p>
+<pre tabindex=0><code>type Predicate func(input rune) bool
+</code></pre><p>Putting that together;</p>
+<pre tabindex=0><code>type Predicate func(input rune) bool
+  
+type Transition struct {  
+   to          *State  
+   predicate   Predicate  
+}  
+  
+type State struct {  
+   transitions []Transition  
+}
+
+</code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
+<p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
+<ol>
+<li>take <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
+<li>process the input and move through the states.</li>
+</ol>
+<p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code>.</p>
+<p><code>compile</code> means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
+<p>There are many ways of making compilers</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">

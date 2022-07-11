@@ -71,8 +71,45 @@ Regex Processor
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
-So, one of the things I&rsquo;ve wanted to play around with is search and regex. Regex always seemed like a bit of a mystery to me, and then one day I watched a lecture on finite state machines and it opened up a thriving vein of curiosity to follow.
-Finite State Machines finite state machines are super simple and super useful. The simplest definition I can think of is something like this;
+So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.
+</div>
+</div>
+</div>
+</div>
+<div class="relative w-100 w-30-l mb4 bg-white">
+<div class="relative w-100 mb4 bg-white nested-copy-line-height">
+<div class="bg-white mb3 pa4 gray overflow-hidden">
+<span class="f6 db">Posts</span>
+<h1 class="f3 near-black">
+<a href=/posts/regex-processor-part-2/ class="link black dim">
+Regex Processor - Part 2
+</a>
+</h1>
+<div class="nested-links f5 lh-copy nested-copy-line-height">
+## One or more
+cool, so what about a regular expression like 'a+b'?
+This means &ldquo;match any string that has one or more 'a's, followed by a 'b'&rdquo;. So, for example:
+"ab" -> match "aaaaab" -> match "ba" -> no match "" -> no match What would the FSM look like for that? Well, it would look like the following;
+This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;you&rsquo;ve already seen 'a'&rdquo;.
+</div>
+</div>
+</div>
+</div>
+<div class="relative w-100 w-30-l mb4 bg-white">
+<div class="relative w-100 mb4 bg-white nested-copy-line-height">
+<div class="bg-white mb3 pa4 gray overflow-hidden">
+<span class="f6 db">Posts</span>
+<h1 class="f3 near-black">
+<a href=/posts/regex-processor-part-3/ class="link black dim">
+Regex Processor - Part 3
+</a>
+</h1>
+<div class="nested-links f5 lh-copy nested-copy-line-height">
+## OR
+Consider a regular expression like 'dog|cat', which means &ldquo;match any string containing the substring dog or the substring cat&rdquo;.
+Hmm, although the structure is the same, we&rsquo;re starting to see some complexity here. It looks like most of the complexity comes from the cross arrows running between the upper and lower states. Also, we need to remember in our regex for "cat" that if we process a 'c' somewhere during the the states along "cat", we need to go back to the &ldquo;you&rsquo;ve seen 'c'&rdquo; state instead of the beginning.
 </div>
 </div>
 </div>
