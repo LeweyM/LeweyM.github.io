@@ -314,6 +314,9 @@ func TestHandmadeFSM(t *testing.T) {
 
 ```
 
+Note: One might take a look at this test and say "The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another." and I would totally agree. The only reason we're getting away with it here is because our State Machines are **stateless**, meaning they don't contain any information about the state of the process. On the other hand, our `runner` instance is **stateful**, so we want to create a new instance for every test case.
+
+
 ### Compiling a Finite State Machine
 
 We can break down the previous example of writing a FSM for the regular expression `abc` into a few at least 2 discrete steps;
