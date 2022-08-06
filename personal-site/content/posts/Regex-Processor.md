@@ -23,10 +23,10 @@ For this to be useful, we need more than one state.
 This a two state system. Starting from the state on the left - we'll call it `state[0]` - we travel to the state on the right - `state[1]` - only if we see the character `c`.
 
 Two things to note here:
-1. What happens if we process a different character to `c`, such as `z`? From the picture, we don't know what to do as there is no arrow for the `z` case. To be truly accurate, we would need to have an arrow for every possible every character. For brevity, we say that if there is no arrow, it means that there was no match.
-2. The circle on the right is blue. This means, this is an **end state**. If we arrive at this state, we have finished and that a match has been found.
+1. What happens if we process a different character to `c`, such as `z`? From the picture, we don't know what to do as there is no arrow for the `z` case. To be truly accurate, we would need to have an arrow for every possible character. For brevity, let's say that if there is no arrow, there was no match.
+2. The circle on the right is blue. This means this is an **end state**. If we arrive at this state we have finished and a match has been found.
 
-This is all very lovely, but what can we actually do with this? We're going to use these machines to solve regular expressions.
+This is all lovely, but what can we actually do with this? We're going to use these machines to solve regular expressions.
 
 ## Text search
 
