@@ -1,0 +1,118 @@
+<!doctype html><html lang=en-us>
+<head>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
+<title>Regex Processor - 1. Intro | Lewis Metcalf</title>
+<meta name=viewport content="width=device-width,minimum-scale=1">
+<meta name=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+<meta name=generator content="Hugo 0.91.2">
+<meta name=robots content="noindex, nofollow">
+<link rel=stylesheet href=/ananke/css/main.min.css>
+<meta property="og:title" content="Regex Processor - 1. Intro">
+<meta property="og:description" content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-1.-intro/"><meta property="article:section" content="posts">
+<meta itemprop=name content="Regex Processor - 1. Intro">
+<meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+<meta itemprop=wordCount content="511">
+<meta itemprop=keywords content><meta name=twitter:card content="summary">
+<meta name=twitter:title content="Regex Processor - 1. Intro">
+<meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
+Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+ A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+</head>
+<body class="ma0 avenir bg-near-white">
+<header>
+<div class=bg-black>
+<nav class="pv3 ph3 ph4-ns" role=navigation>
+<div class="flex-l justify-between items-center center">
+<a href=/ class="f3 fw2 hover-white no-underline white-90 dib">
+Lewis Metcalf
+</a>
+<div class="flex-l items-center">
+<div class=ananke-socials>
+</div>
+</div>
+</div>
+</nav>
+</div>
+</header>
+<main class=pb7 role=main>
+<article class="flex-l flex-wrap justify-between mw8 center ph3">
+<header class="mt4 w-100">
+<aside class="instapaper_ignoref b helvetica tracked">
+POSTS
+</aside>
+<div id=sharing class="mt3 ananke-socials">
+</div>
+<h1 class="f1 athelas mt3 mb1">Regex Processor - 1. Intro</h1>
+</header>
+<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using <strong>finite state machines</strong>.</p>
+<h1 id=finite-state-machines>Finite State Machines</h1>
+<p>finite state machines are both simple and useful. The simplest definition I can think of is something like this;</p>
+<blockquote>
+<p>A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.</p>
+</blockquote>
+<p>One of the cool things about FSMs is that they can be drawn as lovely little circles and arrows representing <strong>states</strong> and <strong>transitions</strong>:</p>
+<p><img src=/img/Pasted-image-20220119151322.png alt=Pasted-image-20220119151322.png></p>
+<p>This is the simplest. It&rsquo;s just a single state. The red circle in the middle means that we&rsquo;re currently in that state, although that doesn&rsquo;t tell us much yet&mldr;</p>
+<p>For this to be useful, we need more than one state.</p>
+<p><img src=/img/Pasted-image-20220119151437.png alt=Pasted-image-20220119151437.png></p>
+<p>This a two state system. Starting from the state on the left - we&rsquo;ll call it <code>state[0]</code> - we travel to the state on the right - <code>state[1]</code> - only if we see the character <code>c</code>.</p>
+<p>Two things to note here:</p>
+<ol>
+<li>What happens if we process a different character to <code>c</code>, such as <code>z</code>? From the picture, we don&rsquo;t know what to do as there is no arrow for the <code>z</code> case. To be truly accurate, we would need to have an arrow for every possible character. For brevity, let&rsquo;s say that if there is no arrow, there was no match.</li>
+<li>The circle on the right is blue. This means this is an <strong>end state</strong>. If we arrive at this state we have finished and a match has been found.</li>
+</ol>
+<p>This is all lovely, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
+<h2 id=text-search>Text search</h2>
+<p>let&rsquo;s create a state machine which checks if a string matches against a simple regular expression query <code>abc</code>. This means that any string containing the substring <code>abc</code> will match. For example:</p>
+<ul>
+<li><code>"zabcz"</code> -> match</li>
+<li><code>"abc"</code> -> match</li>
+<li><code>"abd"</code> -> no match</li>
+<li><code>""</code> -> no match</li>
+</ul>
+<p>The finite state machine which represents this regular expression is as follows:</p>
+<p><img src=/img/Pasted-image-20220710201842.png alt=Pasted-image-20220710201842.png></p>
+<p>let&rsquo;s break this down a bit. Really, each state is saying something.</p>
+<p>State 0 is saying: &ldquo;you have not yet seen anything interesting&rdquo;
+State 1 is saying: &ldquo;you&rsquo;ve just seen <code>'a'</code>&rdquo;
+State 2 is saying: &ldquo;you&rsquo;ve just seen <code>'ab'</code>&rdquo;
+State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;re done!&rdquo;</p>
+<p>let&rsquo;s get into these states and what they&rsquo;re saying a little more to try to understand all of these arrows.</p>
+<p>At state 0, I still haven&rsquo;t seen anything interesting until I see an <code>'a'</code>, that&rsquo;s pretty straight forward.</p>
+<p>At state 1, I know that the first character I saw as <code>'a'</code></p>
+<p><img src=/img/Pasted-image-20220710202102.png alt=Pasted-image-20220710202102.png></p>
+<p>At state 2 we&rsquo;re saying &ldquo;you&rsquo;ve just seen <code>'ab'</code>.</p>
+<p><img src=/img/Pasted-image-20220710202144.png alt=Pasted-image-20220710202144.png></p>
+<p>And at state 3, we know we&rsquo;ve seen <code>'abc'</code>, so we don&rsquo;t want to do anything from here!</p>
+<p><img src=/img/Pasted-image-20220710202159.png alt=Pasted-image-20220710202159.png></p>
+<p>That&rsquo;s really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.</p>
+<ul class=pa0>
+</ul>
+<div class="mt6 instapaper_ignoref">
+</div>
+</div>
+<aside class="w-30-l mt6-l">
+</aside>
+</article>
+</main>
+<footer class="bg-black bottom-0 w-100 pa3" role=contentinfo>
+<div class="flex justify-between">
+<a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=https://LeweyM.github.io>
+&copy; Lewis Metcalf 2022
+</a>
+<div>
+<div class=ananke-socials>
+</div></div>
+</div>
+</footer>
+</body>
+</html>
