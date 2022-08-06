@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="1692">
+<meta itemprop=wordCount content="1783">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -282,7 +282,8 @@ tests := []test{
    }  
 }
 
-</code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
+</code></pre><p>Note: One might take a look at this test and say &ldquo;The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another.&rdquo; and I would totally agree. The only reason we&rsquo;re getting away with it here is because our State Machines are <strong>stateless</strong>, meaning they don&rsquo;t contain any information about the state of the process. On the other hand, our <code>runner</code> instance is <strong>stateful</strong>, so we want to create a new instance for every test case.</p>
+<h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
 <ol>
 <li>take <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
