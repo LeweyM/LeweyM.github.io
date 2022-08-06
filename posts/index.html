@@ -66,8 +66,8 @@ The downsides to this approach is that in order to speed up transfer rates, we w
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-1.-intro/ class="link black dim">
-Regex Processor - 1. Intro
+<a href=/posts/regex-processor-1-intro/ class="link black dim">
+Regex Processor 1 Intro
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
@@ -83,12 +83,13 @@ A finite State Machine (FSM) is a series of states. The machine start in some st
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-2.-getting-into-some-code/ class="link black dim">
-Regex Processor - 2. Getting into some code
+<a href=/posts/regex-processor-2-getting-into-some-code/ class="link black dim">
+Regex Processor 2 Getting into some code
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
-### The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
+Let&rsquo;s start coding.
+The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:
 </div>
@@ -100,15 +101,14 @@ The Transition struct contains two things:
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-3.-starting-the-compiler/ class="link black dim">
-Regex Processor - 3. Starting the compiler
+<a href=/posts/regex-processor-3-starting-the-compiler/ class="link black dim">
+Regex Processor 3 Starting the compiler
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
-### Compiling a Finite State Machine
-We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
-take abc and create a linked list of 'states' with conditional transitions to other states. process the input and move through the states. We&rsquo;ll call these steps compile and evaluate.
-compile means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine.
+Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
+Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
+take abc and create a linked list of 'states' with conditional transitions to other states. process the input and move through the states.
 </div>
 </div>
 </div>
@@ -118,8 +118,8 @@ compile means turning a string of characters that represent a valid regular expr
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-4.-a-bit-more-theory/ class="link black dim">
-Regex Processor - 4. A bit more theory
+<a href=/posts/regex-processor-4-a-bit-more-theory/ class="link black dim">
+Regex Processor 4 A bit more theory
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
@@ -137,8 +137,8 @@ This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-5.-branches/ class="link black dim">
-Regex Processor - 5. Branches
+<a href=/posts/regex-processor-5-branches/ class="link black dim">
+Regex Processor 5 Branches
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">

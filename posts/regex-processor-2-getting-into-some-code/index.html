@@ -2,28 +2,32 @@
 <head>
 <meta charset=utf-8>
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Regex Processor - 2. Getting into some code | Lewis Metcalf</title>
+<title>Regex Processor 2 Getting into some code | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="### The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
+<meta name=description content="Let&rsquo;s start coding.
+The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
-<meta property="og:title" content="Regex Processor - 2. Getting into some code">
-<meta property="og:description" content="### The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
+<meta property="og:title" content="Regex Processor 2 Getting into some code">
+<meta property="og:description" content="Let&rsquo;s start coding.
+The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-2.-getting-into-some-code/"><meta property="article:section" content="posts">
-<meta itemprop=name content="Regex Processor - 2. Getting into some code">
-<meta itemprop=description content="### The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
+<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-2-getting-into-some-code/"><meta property="article:section" content="posts">
+<meta itemprop=name content="Regex Processor 2 Getting into some code">
+<meta itemprop=description content="Let&rsquo;s start coding.
+The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
-<meta itemprop=wordCount content="1553">
+<meta itemprop=wordCount content="1566">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
-<meta name=twitter:title content="Regex Processor - 2. Getting into some code">
-<meta name=twitter:description content="### The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
+<meta name=twitter:title content="Regex Processor 2 Getting into some code">
+<meta name=twitter:description content="Let&rsquo;s start coding.
+The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
 </head>
@@ -51,10 +55,11 @@ POSTS
 </aside>
 <div id=sharing class="mt3 ananke-socials">
 </div>
-<h1 class="f1 athelas mt3 mb1">Regex Processor - 2. Getting into some code</h1>
+<h1 class="f1 athelas mt3 mb1">Regex Processor 2 Getting into some code</h1>
 </header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>### The FSM data structure
-We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects.</p>
+<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Let&rsquo;s start coding.</p>
+<h3 id=the-fsm-data-structure>The FSM data structure</h3>
+<p>We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects.</p>
 <pre tabindex=0><code>type State struct {  
 	connectedStates []State  
 }
@@ -294,6 +299,7 @@ tests := []test{
 }
 </code></pre><p>Here we&rsquo;re using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it&rsquo;s useful for now.</p>
 <p>If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!</p>
+<p>Note: Check out this part of the project on github <a href=https://github.com/LeweyM/search/tree/master/src/v1>here</a></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
