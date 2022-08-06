@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="819">
+<meta itemprop=wordCount content="981">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -97,9 +97,9 @@ State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;
 <p>That&rsquo;s really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.</p>
 <h2 id=getting-into-some-code>Getting into some code</h2>
 <h3 id=the-fsm-data-structure>The FSM data structure</h3>
-<p>We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects, which in go are structs.</p>
+<p>We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects.</p>
 <pre tabindex=0><code>type State struct {  
-	otherStates []State  
+	connectedStates []State  
 }
 </code></pre><p>We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a <code>Transition</code> struct to represent this.</p>
 <p>The <code>Transition</code> struct contains two things:</p>
@@ -110,7 +110,7 @@ State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;
 <pre tabindex=0><code>type Transition struct {  
    // to: a pointer to the next state   
    to *State  
-   // predicate: a function to determine if the runner should move to the next state
+   // predicate: a function to determine if we should move to the next state
    predicate func(input rune) bool  
 }  
 </code></pre><p>The <code>Predicate</code> is a simple function that takes in a character (here we&rsquo;re using <code>rune</code> to avoid multi-byte character issues).</p>
@@ -127,6 +127,16 @@ type State struct {
    transitions []Transition  
 }
 
+</code></pre><h3 id=running-our-state-machine>Running Our State machine</h3>
+<p>Inorder to use our state machine, we&rsquo;ll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we&rsquo;ll call this a <strong>Runner</strong>.</p>
+<pre tabindex=0><code>type runner struct {  
+   head      *State  
+}
+</code></pre><p>For now, all our runner needs to have is a pointer to the root (or <code>head</code>) node of our FSM.</p>
+<h3 id=tests-first>Tests first</h3>
+<p>We&rsquo;ll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.</p>
+<p>Our first test will check the behaviour of a simple FSM which represents the regex expression <code>abc</code>. The first thing to do is contruct the FSM. We&rsquo;ll do this &lsquo;by hand&rsquo; for now, and later we&rsquo;ll work on a <strong>compiler</strong> that can take a string like <code>"abc"</code> and build an FSM automatically.</p>
+<pre tabindex=0><code>
 </code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
 <ol>
