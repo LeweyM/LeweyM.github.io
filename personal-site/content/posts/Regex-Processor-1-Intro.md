@@ -1,5 +1,5 @@
 ---
-title: Regex Processor - 1. Intro
+title: Regex Processor 1 Intro
 draft: false
 ---
 So, one of the things I've wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using **finite state machines**.

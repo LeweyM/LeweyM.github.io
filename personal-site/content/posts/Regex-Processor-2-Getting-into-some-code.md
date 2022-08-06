@@ -1,8 +1,10 @@
 ---
-title: Regex Processor - 2. Getting into some code
+title: Regex Processor 2 Getting into some code
 draft: false
 ---
-### The FSM data structure
+Let's start coding.
+
+### The FSM data structure
 We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects.
 
 ```
@@ -331,3 +333,5 @@ func (s *State) isSuccessState() bool {
 Here we're using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it's useful for now.
 
 If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!
+
+Note: Check out this part of the project on github [here](https://github.com/LeweyM/search/tree/master/src/v1)

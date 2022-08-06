@@ -1,8 +1,10 @@
 ---
-title: Regex Processor - 3. Starting the compiler
+title: Regex Processor 3 Starting the compiler
 draft: false
 ---
-### Compiling a Finite State Machine
+Now we have a working FSM and way to process strings, let's take a look at building FSMs automatically from regular expressions using a **compiler**.
+
+### Compiling a Finite State Machine
 
 We can break down the previous example of writing a FSM for the regular expression `abc` into a few at least 2 discrete steps;
 
