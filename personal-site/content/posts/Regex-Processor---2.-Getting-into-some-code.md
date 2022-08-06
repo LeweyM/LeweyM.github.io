@@ -1,73 +1,8 @@
 ---
-title: Regex Processor
+title: Regex Processor - 2. Getting into some code
 draft: false
 ---
-So, one of the things I've wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using **finite state machines**.
-
-# Finite State Machines
-finite state machines are both simple and useful. The simplest definition I can think of is something like this;
-
-> A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input. 
-
-One of the cool things about FSMs is that they can be drawn as lovely little circles and arrows representing **states** and **transitions**:
-
-![Pasted-image-20220119151322.png](/img/Pasted-image-20220119151322.png)
-
-This is the simplest. It's just a single state. The red circle in the middle means that we're currently in that state, although that doesn't tell us much yet...
-
-For this to be useful, we need more than one state.
-
-
-![Pasted-image-20220119151437.png](/img/Pasted-image-20220119151437.png)
-
-This a two state system. Starting from the state on the left - we'll call it `state[0]` - we travel to the state on the right - `state[1]` - only if we see the character `c`.
-
-Two things to note here:
-1. What happens if we process a different character to `c`, such as `z`? From the picture, we don't know what to do as there is no arrow for the `z` case. To be truly accurate, we would need to have an arrow for every possible character. For brevity, let's say that if there is no arrow, there was no match.
-2. The circle on the right is blue. This means this is an **end state**. If we arrive at this state we have finished and a match has been found.
-
-This is all lovely, but what can we actually do with this? We're going to use these machines to solve regular expressions.
-
-## Text search
-
-let's create a state machine which checks if a string matches against a simple regular expression query `abc`. This means that any string containing the substring `abc` will match. For example: 
-- `"zabcz"` -> match
-- `"abc"` -> match
-- `"abd"` -> no match
-- `""` -> no match
-
-The finite state machine which represents this regular expression is as follows:
-
-![Pasted-image-20220710201842.png](/img/Pasted-image-20220710201842.png)
-
-let's break this down a bit. Really, each state is saying something.
-
-State 0 is saying: "you have not yet seen anything interesting"
-State 1 is saying: "you've just seen `'a'`"
-State 2 is saying: "you've just seen `'ab'`"
-State 3 is saying "you've just seen `'abc'` so you're done!"
-
-let's get into these states and what they're saying a little more to try to understand all of these arrows.
-
-At state 0, I still haven't seen anything interesting until I see an `'a'`, that's pretty straight forward.
-
-At state 1, I know that the first character I saw as `'a'`
-
-![Pasted-image-20220710202102.png](/img/Pasted-image-20220710202102.png)
-
-At state 2 we're saying "you've just seen `'ab'`.
-
-![Pasted-image-20220710202144.png](/img/Pasted-image-20220710202144.png)
-
-And at state 3, we know we've seen `'abc'`, so we don't want to do anything from here!
-
-![Pasted-image-20220710202159.png](/img/Pasted-image-20220710202159.png)
-
-That's really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.
-
-## Getting into some code
-
-### The FSM data structure
+### The FSM data structure
 We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects.
 
 ```
@@ -323,26 +258,76 @@ Now that we have our first test, let's implement the missing methods and make th
 The first method we need to implement is a simple constructor function.
 
 ```
-
+func NewRunner(head *State) *runner {  
+   r := &runner{  
+      head:    head,  
+      current: head,  
+   }  
+  
+   return r  
+}
 ```
 
-### Compiling a Finite State Machine
+This is a simple constructor which requires that we store two pointers to the root `State`. The `head` state will remain constant incase we want to reset the `runner`. The `current` state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.
 
-We can break down the previous example of writing a FSM for the regular expression `abc` into a few at least 2 discrete steps;
+Note: This assumes that we can only be in one place at a time in our FSM, more on that later..
 
-1. take `abc` and create a linked list of `'states'` with conditional transitions to other states.
-2. process the input and move through the states.
+Now, the `Next` method.
 
-We'll call these steps `compile` and `evaluate`.
+```
+func (r *runner) Next(input rune) {  
+   // move along transitions  
+   r.current = r.current.firstMatchingTransition(input)  
+}
+```
 
-`compile` means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
+All this does is change the `r.current` state to the state pointed to by the first matching transition of the current state. This logic is implemented on a method of the `State` struct, so let's implement that now.
 
+```
+func (s *State) firstMatchingTransition(input rune) destination {  
+   for _, t := range s.transitions {  
+      if t.predicate(input) {  
+         return t.to  
+      }  
+   }  
+  
+   return nil  
+}
+```
 
+This is pretty simple also. The function loops over the transitions of the state and returns the `destination` state of the first transition which passes the `predicate` test function. Notice that if the state has no `transition` which matches the predicate, the function returns `nil` - this is the same as the red dot in our diagrams leaving the FSM and represents a `Fail` case.
 
+Finally, we just need to determine the status of the FSM at any time.
 
-(? too early for this?)
-There are many ways of making compilers, but the one we're going to look at uses a stack as it's main data structure.
+```
+func (r *runner) GetStatus() Status {  
+   // if the current state is nil, return Fail  
+   if r.current == nil {  
+      return Fail  
+   }  
+  
+   // if the current state has no transitions from it, return Success  
+   if r.current.isSuccessState() {  
+      return Success  
+   }  
+  
+   // else, return normal  
+   return Normal  
+}
+```
 
+Again, the logic for determining a `Success` status is implemented as a `State` struct method.
 
+```
+func (s *State) isSuccessState() bool {  
+   if len(s.transitions) == 0 {  
+      return true  
+   }  
+  
+   return false  
+}
+```
 
+Here we're using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it's useful for now.
 
+If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!
