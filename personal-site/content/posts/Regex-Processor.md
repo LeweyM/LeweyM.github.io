@@ -237,7 +237,82 @@ tests := []test{
 }
 ```
 
-The actual tests should simply create a runner using our hand-made FSM 
+The actual tests should simply create a runner using our hand-made FSM, iterate through the runes in the `input` string, and check that the `Status` of the runner is the same as our expected status.
+
+```
+for _, tt := range tests {  
+   t.Run(tt.name, func(t *testing.T) {  
+      testRunner := NewRunner(&startState)  
+  
+      for _, character := range tt.input {  
+         testRunner.Next(character)  
+      }  
+  
+      result := testRunner.getTotalState()  
+      if tt.expectedStatus != result {  
+         t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
+      }  
+   })  
+}
+```
+
+Notice that we had to invent a couple of methods to make this work, such as the `NewRunner`, `testRunner.Next` and `testRunner.getStatus`. This is fine, as we'll come back to implementing these in a moment. 
+
+All together, our first test looks like this;
+
+```
+func TestHandmadeFSM(t *testing.T) {  
+   // hand-made FSM
+   startState := State{}  
+   stateA := State{}  
+   stateB := State{}  
+   stateC := State{}  
+  
+   startState.transitions = append(startState.transitions, Transition{  
+      to:        &stateA,  
+      predicate: func(input rune) bool { return input == 'a' },  
+   })  
+  
+   stateA.transitions = append(stateA.transitions, Transition{  
+      to:        &stateB,  
+      predicate: func(input rune) bool { return input == 'b' },  
+   })  
+  
+   stateB.transitions = append(stateB.transitions, Transition{  
+      to:        &stateC,  
+      predicate: func(input rune) bool { return input == 'c' },  
+   })  
+  
+   type test struct {  
+      name           string  
+      input          string  
+      expectedStatus Status  
+   }  
+  
+   tests := []test{  
+      {"empty string", "", Normal},  
+      {"non matching string", "x", Fail},  
+      {"matching string", "abc", Success},  
+      {"partial matching string", "ab", Normal},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         testRunner := NewRunner(&startState)  
+  
+         for _, character := range tt.input {  
+            testRunner.Next(character)  
+         }  
+  
+         result := testRunner.getTotalState()  
+         if tt.expectedStatus != result {  
+            t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
+         }  
+      })  
+   }  
+}
+
+```
 
 ### Compiling a Finite State Machine
 
