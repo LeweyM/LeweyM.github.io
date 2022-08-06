@@ -237,7 +237,7 @@ tests := []test{
 }
 ```
 
-
+The actual tests should simply create a runner using our hand-made FSM 
 
 ### Compiling a Finite State Machine
 
