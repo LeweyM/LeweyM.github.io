@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="825">
+<meta itemprop=wordCount content="819">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -67,10 +67,10 @@ POSTS
 <p>This a two state system. Starting from the state on the left - we&rsquo;ll call it <code>state[0]</code> - we travel to the state on the right - <code>state[1]</code> - only if we see the character <code>c</code>.</p>
 <p>Two things to note here:</p>
 <ol>
-<li>What happens if we process a different character to <code>c</code>, such as <code>z</code>? From the picture, we don&rsquo;t know what to do as there is no arrow for the <code>z</code> case. To be truly accurate, we would need to have an arrow for every possible every character. For brevity, we say that if there is no arrow, it means that there was no match.</li>
-<li>The circle on the right is blue. This means, this is an <strong>end state</strong>. If we arrive at this state, we have finished and that a match has been found.</li>
+<li>What happens if we process a different character to <code>c</code>, such as <code>z</code>? From the picture, we don&rsquo;t know what to do as there is no arrow for the <code>z</code> case. To be truly accurate, we would need to have an arrow for every possible character. For brevity, let&rsquo;s say that if there is no arrow, there was no match.</li>
+<li>The circle on the right is blue. This means this is an <strong>end state</strong>. If we arrive at this state we have finished and a match has been found.</li>
 </ol>
-<p>This is all very lovely, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
+<p>This is all lovely, but what can we actually do with this? We&rsquo;re going to use these machines to solve regular expressions.</p>
 <h2 id=text-search>Text search</h2>
 <p>let&rsquo;s create a state machine which checks if a string matches against a simple regular expression query <code>abc</code>. This means that any string containing the substring <code>abc</code> will match. For example:</p>
 <ul>
