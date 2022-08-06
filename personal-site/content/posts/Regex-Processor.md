@@ -132,6 +132,70 @@ We'll be following TDD principles when convenient in order to make sure things a
 Our first test will check the behaviour of a simple FSM which represents the regex expression `abc`. The first thing to do is contruct the FSM. We'll do this 'by hand' for now, and later we'll work on a **compiler** that can take a string like `"abc"` and build an FSM automatically.
 
 ```
+func TestHandmadeFSM(t *testing.T) {
+	startState := State{}  
+	stateA := State{}  
+	stateB := State{}  
+	stateC := State{}  
+	  
+	startState.transitions = append(startState.transitions, Transition{  
+	   to:          &stateA,  
+	   predicate:   func(input rune) bool { return input == 'a' },  
+	})  
+	  
+	stateA.transitions = append(stateA.transitions, Transition{  
+	   to:          &stateB,  
+	   predicate:   func(input rune) bool { return input == 'b' },  
+	})  
+	  
+	stateB.transitions = append(stateB.transitions, Transition{  
+	   to:          &stateC,  
+	   predicate:   func(input rune) bool { return input == 'c' },  
+	})
+}
+```
+
+There's quite a bit going on here, so let's break it down a bit.
+
+First, let's remind ourselves of the FSM structure for the regex `abc`
+
+![Pasted-image-20220710201842.png](/img/Pasted-image-20220710201842.png)
+
+There are 4 states which we have to define first.
+
+```
+	startState := State{}  
+	stateA := State{}  
+	stateB := State{}  
+	stateC := State{} 
+```
+
+Once we have our states, we need to describe the transitions between them. The first is the transition from the `startState` to `stateA`. To do this, we simply append a `Transition` object to the `transitions` property of `startState`. This new transition must point to `stateA`, and take as it's predicate a function that returns `true` if the input rune is `'a'`. 
+
+```
+startState.transitions = append(startState.transitions, Transition{  
+   to:          &stateA,  
+   predicate:   func(input rune) bool { return input == 'a' },  
+})  
+```
+
+Same goes for the remaining states.
+
+```
+	stateA.transitions = append(stateA.transitions, Transition{  
+	   to:          &stateB,  
+	   predicate:   func(input rune) bool { return input == 'b' },  
+	})  
+	  
+	stateB.transitions = append(stateB.transitions, Transition{  
+	   to:          &stateC,  
+	   predicate:   func(input rune) bool { return input == 'c' },  
+	})
+```
+
+We now have our first FSM starting at the root node `startState`. Let's write a test which creates a `runner` and uses this FSM to check against a few different input cases.
+
+```
 
 ```
 
