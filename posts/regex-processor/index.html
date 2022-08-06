@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="981">
+<meta itemprop=wordCount content="1247">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -136,6 +136,51 @@ type State struct {
 <h3 id=tests-first>Tests first</h3>
 <p>We&rsquo;ll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.</p>
 <p>Our first test will check the behaviour of a simple FSM which represents the regex expression <code>abc</code>. The first thing to do is contruct the FSM. We&rsquo;ll do this &lsquo;by hand&rsquo; for now, and later we&rsquo;ll work on a <strong>compiler</strong> that can take a string like <code>"abc"</code> and build an FSM automatically.</p>
+<pre tabindex=0><code>func TestHandmadeFSM(t *testing.T) {
+	startState := State{}  
+	stateA := State{}  
+	stateB := State{}  
+	stateC := State{}  
+	  
+	startState.transitions = append(startState.transitions, Transition{  
+	   to:          &amp;stateA,  
+	   predicate:   func(input rune) bool { return input == 'a' },  
+	})  
+	  
+	stateA.transitions = append(stateA.transitions, Transition{  
+	   to:          &amp;stateB,  
+	   predicate:   func(input rune) bool { return input == 'b' },  
+	})  
+	  
+	stateB.transitions = append(stateB.transitions, Transition{  
+	   to:          &amp;stateC,  
+	   predicate:   func(input rune) bool { return input == 'c' },  
+	})
+}
+</code></pre><p>There&rsquo;s quite a bit going on here, so let&rsquo;s break it down a bit.</p>
+<p>First, let&rsquo;s remind ourselves of the FSM structure for the regex <code>abc</code></p>
+<p><img src=/img/Pasted-image-20220710201842.png alt=Pasted-image-20220710201842.png></p>
+<p>There are 4 states which we have to define first.</p>
+<pre tabindex=0><code>	startState := State{}  
+	stateA := State{}  
+	stateB := State{}  
+	stateC := State{} 
+</code></pre><p>Once we have our states, we need to describe the transitions between them. The first is the transition from the <code>startState</code> to <code>stateA</code>. To do this, we simply append a <code>Transition</code> object to the <code>transitions</code> property of <code>startState</code>. This new transition must point to <code>stateA</code>, and take as it&rsquo;s predicate a function that returns <code>true</code> if the input rune is <code>'a'</code>.</p>
+<pre tabindex=0><code>startState.transitions = append(startState.transitions, Transition{  
+   to:          &amp;stateA,  
+   predicate:   func(input rune) bool { return input == 'a' },  
+})  
+</code></pre><p>Same goes for the remaining states.</p>
+<pre tabindex=0><code>	stateA.transitions = append(stateA.transitions, Transition{  
+	   to:          &amp;stateB,  
+	   predicate:   func(input rune) bool { return input == 'b' },  
+	})  
+	  
+	stateB.transitions = append(stateB.transitions, Transition{  
+	   to:          &amp;stateC,  
+	   predicate:   func(input rune) bool { return input == 'c' },  
+	})
+</code></pre><p>We now have our first FSM starting at the root node <code>startState</code>. Let&rsquo;s write a test which creates a <code>runner</code> and uses this FSM to check against a few different input cases.</p>
 <pre tabindex=0><code>
 </code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
