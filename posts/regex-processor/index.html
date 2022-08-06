@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="1431">
+<meta itemprop=wordCount content="1692">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -214,8 +214,75 @@ tests := []test{
    {&quot;matching string&quot;, &quot;abc&quot;, Success},  
    {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
 }
-</code></pre><p>The actual tests should simply create a runner using our hand-made FSM</p>
-<h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
+</code></pre><p>The actual tests should simply create a runner using our hand-made FSM, iterate through the runes in the <code>input</code> string, and check that the <code>Status</code> of the runner is the same as our expected status.</p>
+<pre tabindex=0><code>for _, tt := range tests {  
+   t.Run(tt.name, func(t *testing.T) {  
+      testRunner := NewRunner(&amp;startState)  
+  
+      for _, character := range tt.input {  
+         testRunner.Next(character)  
+      }  
+  
+      result := testRunner.getTotalState()  
+      if tt.expectedStatus != result {  
+         t.Fatalf(&quot;Expected FSM to have final state of '%v', got '%v'&quot;, tt.expectedStatus, result)  
+      }  
+   })  
+}
+</code></pre><p>Notice that we had to invent a couple of methods to make this work, such as the <code>NewRunner</code>, <code>testRunner.Next</code> and <code>testRunner.getStatus</code>. This is fine, as we&rsquo;ll come back to implementing these in a moment.</p>
+<p>All together, our first test looks like this;</p>
+<pre tabindex=0><code>func TestHandmadeFSM(t *testing.T) {  
+   // hand-made FSM
+   startState := State{}  
+   stateA := State{}  
+   stateB := State{}  
+   stateC := State{}  
+  
+   startState.transitions = append(startState.transitions, Transition{  
+      to:        &amp;stateA,  
+      predicate: func(input rune) bool { return input == 'a' },  
+   })  
+  
+   stateA.transitions = append(stateA.transitions, Transition{  
+      to:        &amp;stateB,  
+      predicate: func(input rune) bool { return input == 'b' },  
+   })  
+  
+   stateB.transitions = append(stateB.transitions, Transition{  
+      to:        &amp;stateC,  
+      predicate: func(input rune) bool { return input == 'c' },  
+   })  
+  
+   type test struct {  
+      name           string  
+      input          string  
+      expectedStatus Status  
+   }  
+  
+   tests := []test{  
+      {&quot;empty string&quot;, &quot;&quot;, Normal},  
+      {&quot;non matching string&quot;, &quot;x&quot;, Fail},  
+      {&quot;matching string&quot;, &quot;abc&quot;, Success},  
+      {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         testRunner := NewRunner(&amp;startState)  
+  
+         for _, character := range tt.input {  
+            testRunner.Next(character)  
+         }  
+  
+         result := testRunner.getTotalState()  
+         if tt.expectedStatus != result {  
+            t.Fatalf(&quot;Expected FSM to have final state of '%v', got '%v'&quot;, tt.expectedStatus, result)  
+         }  
+      })  
+   }  
+}
+
+</code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
 <ol>
 <li>take <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
