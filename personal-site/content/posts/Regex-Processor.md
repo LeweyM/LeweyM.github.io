@@ -68,11 +68,11 @@ That's really all there is to it. The interesting thing is how we can combine ar
 ## Getting into some code
 
 ### The FSM data structure
-We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects, which in go are structs.
+We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects.
 
 ```
 type State struct {  
-	otherStates []State  
+	connectedStates []State  
 }
 ```
 
@@ -86,7 +86,7 @@ The `Transition` struct contains two things:
 type Transition struct {  
    // to: a pointer to the next state   
    to *State  
-   // predicate: a function to determine if the runner should move to the next state
+   // predicate: a function to determine if we should move to the next state
    predicate func(input rune) bool  
 }  
 ```
@@ -110,6 +110,28 @@ type Transition struct {
 type State struct {  
    transitions []Transition  
 }
+
+```
+
+### Running Our State machine
+
+Inorder to use our state machine, we'll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we'll call this a **Runner**.
+
+```
+type runner struct {  
+   head      *State  
+}
+```
+
+For now, all our runner needs to have is a pointer to the root (or `head`) node of our FSM.
+
+### Tests first
+
+We'll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.
+
+Our first test will check the behaviour of a simple FSM which represents the regex expression `abc`. The first thing to do is contruct the FSM. We'll do this 'by hand' for now, and later we'll work on a **compiler** that can take a string like `"abc"` and build an FSM automatically.
+
+```
 
 ```
 
