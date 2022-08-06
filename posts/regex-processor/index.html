@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="1419">
+<meta itemprop=wordCount content="1431">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -214,7 +214,8 @@ tests := []test{
    {&quot;matching string&quot;, &quot;abc&quot;, Success},  
    {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
 }
-</code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
+</code></pre><p>The actual tests should simply create a runner using our hand-made FSM</p>
+<h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
 <ol>
 <li>take <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
