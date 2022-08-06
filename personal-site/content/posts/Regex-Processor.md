@@ -195,9 +195,49 @@ Same goes for the remaining states.
 
 We now have our first FSM starting at the root node `startState`. Let's write a test which creates a `runner` and uses this FSM to check against a few different input cases.
 
-```
+The outcome of running a string through an FSM should result in one of 3 statuses;
+1. `Normal`. The FSM has not found a match yet, but neither has it found that there is no match. Another way of saying this is that the search is still 'in progress'.
+The cases we want to test are;
+2. `Success`. The FSM has found a match.
+3. `fail`. The FSM has found that the string does not match.
+
+We can define these as consts of a specific type.
 
 ```
+type Status string  
+  
+const (  
+   Success Status = "success"  
+   Fail           = "fail"  
+   Normal         = "normal"  
+)
+```
+
+With that in mind we can think of a few cases to test our FSM and runner logic;
+
+`""` -> `normal`
+`"x"` -> `fail`
+`"abc"` -> `success` 
+`"ab"` -> `normal` 
+
+Writing these up into table-style tests we get the following;
+
+```
+type test struct {  
+   name           string  
+   input          string  
+   expectedStatus Status  
+}  
+  
+tests := []test{  
+   {"empty string", "", Normal},  
+   {"non matching string", "x", Fail},  
+   {"matching string", "abc", Success},  
+   {"partial matching string", "ab", Normal},  
+}
+```
+
+
 
 ### Compiling a Finite State Machine
 
