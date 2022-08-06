@@ -20,7 +20,7 @@ Finite State Machines finite state machines are both simple and useful. The simp
 <meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="1247">
+<meta itemprop=wordCount content="1419">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
@@ -181,7 +181,39 @@ type State struct {
 	   predicate:   func(input rune) bool { return input == 'c' },  
 	})
 </code></pre><p>We now have our first FSM starting at the root node <code>startState</code>. Let&rsquo;s write a test which creates a <code>runner</code> and uses this FSM to check against a few different input cases.</p>
-<pre tabindex=0><code>
+<p>The outcome of running a string through an FSM should result in one of 3 statuses;</p>
+<ol>
+<li><code>Normal</code>. The FSM has not found a match yet, but neither has it found that there is no match. Another way of saying this is that the search is still &lsquo;in progress&rsquo;.
+The cases we want to test are;</li>
+<li><code>Success</code>. The FSM has found a match.</li>
+<li><code>fail</code>. The FSM has found that the string does not match.</li>
+</ol>
+<p>We can define these as consts of a specific type.</p>
+<pre tabindex=0><code>type Status string  
+  
+const (  
+   Success Status = &quot;success&quot;  
+   Fail           = &quot;fail&quot;  
+   Normal         = &quot;normal&quot;  
+)
+</code></pre><p>With that in mind we can think of a few cases to test our FSM and runner logic;</p>
+<p><code>""</code> -> <code>normal</code>
+<code>"x"</code> -> <code>fail</code>
+<code>"abc"</code> -> <code>success</code>
+<code>"ab"</code> -> <code>normal</code></p>
+<p>Writing these up into table-style tests we get the following;</p>
+<pre tabindex=0><code>type test struct {  
+   name           string  
+   input          string  
+   expectedStatus Status  
+}  
+  
+tests := []test{  
+   {&quot;empty string&quot;, &quot;&quot;, Normal},  
+   {&quot;non matching string&quot;, &quot;x&quot;, Fail},  
+   {&quot;matching string&quot;, &quot;abc&quot;, Success},  
+   {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
+}
 </code></pre><h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
 <p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
 <ol>
