@@ -6,16 +6,16 @@ draft: false
 
 ### Compiling a Finite State Machine
 
-We can break down the previous example of writing a FSM for the regular expression `abc` into a few at least 2 discrete steps;
+We can break down the previous example of writing an FSM for the regular expression `abc` into  at least 2 discrete steps;
 
-1. take the string `abc` and create a linked list of `'states'` with conditional transitions to other states.
-2. process the input and move through the states.
+1. Take the string `abc` and create a linked list of `'states'` with conditional transitions to other states.
+2. Process the input and move through the states.
 
 We'll call these steps `compile` and `evaluate`.
 
-So far, we've only looked at the `evaluate` step where we take an already made FSM and process an input string by moving through its states. Now we'll look at the `compile` step.
+So far, we've only looked at the `evaluate` step, where we take an already made FSM and process an input string by moving through its states. Now we'll look at the `compile` step.
 
-`compile` in this context means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
+`compile` in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
 
 We can break the compile step down into three more steps;
 
@@ -27,7 +27,7 @@ Let's go through these 3 steps in detail.
 
 ### Lexing
 
-Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the 'Lexing' stage, that's what we do. We simply convert the different types of characters into `tokens` which can be more easily interpretted by our program.
+Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the 'Lexing' stage, that's what we do. We simply convert the different types of characters into `tokens` which can be more easily interpreted by our program.
 
 ### Parsing
 
@@ -45,7 +45,7 @@ The important thing to know about this step is that here we are describing the *
 
 ### Compile
 
-Here we actually build the `States` from the `AST` we created in the previous step.
+Here, we actually build the `States` from the `AST` we created in the previous step.
 
 The trick to keeping this step simple (it can very quickly become **not** simple) is to let each node of the `AST` decide what it should compile to. 
 
@@ -70,4 +70,4 @@ That's really all there is to it. It's a two `State` system with a single transi
 
 The `Group` node represents a collection of `AST` nodes which need to appear consecutively in the input string. For example, `abc` would be a `Group` of 3 `CharacterLiteral` nodes. The inner nodes of `Group` do not have to be `CharacterLiterals`, however. For example, `(()()())` would be a `Group` of 3 `Group` nodes.
 
-Compiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child.
+Compiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child. 
