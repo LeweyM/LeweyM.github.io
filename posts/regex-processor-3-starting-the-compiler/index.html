@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
-<meta itemprop=wordCount content="622">
+<meta itemprop=wordCount content="786">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -101,7 +101,17 @@ POSTS
 <p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
 <p>Compiling a <code>Group</code> node is a case of merging together it&rsquo;s child nodes so that the last state of one child is merged with the first state of the next child.</p>
 <p>Let&rsquo;s look at this visually for our example of <code>abc</code></p>
-<p><img src=/img/Pasted-image-20220807181405.png alt=Pasted-image-20220807181405.png></p>
+<p><img src=/img/Pasted-image-20220807181511.png alt=Pasted-image-20220807181511.png></p>
+<p>The <code>group</code> contains three <code>characterLiteral</code> nodes, compiled into their two <code>State</code> form. We begin by merging the states from left to right. This means taking the tail of the first FSM and merging it with the head of the second FSM.</p>
+<p><img src=/img/Pasted-image-20220807181731.png alt=Pasted-image-20220807181731.png></p>
+<p>Which leaves us with;</p>
+<p><img src=/img/Pasted-image-20220807181749.png alt=Pasted-image-20220807181749.png></p>
+<p>We can repeat this process of merging the tail of the left-most FSM with the head of the second FSM until we are left with a single, compiled FSM.</p>
+<p><img src=/img/Pasted-image-20220807181855.png alt=Pasted-image-20220807181855.png></p>
+<p><img src=/img/Pasted-image-20220807181901.png alt=Pasted-image-20220807181901.png></p>
+<p>And there we have it, a successfully compiled state machine!</p>
+<h3 id=the-power-of-structure>The power of structure</h3>
+<p>Here, I hope it starts to become clear why we separate the <code>compiling</code> from the <code>lexing</code> and <code>parsing</code> stages. Once we have the <strong>structure</strong> of the expression, it&rsquo;s much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group its children, and tell leaf nodes the expected compiled form.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
