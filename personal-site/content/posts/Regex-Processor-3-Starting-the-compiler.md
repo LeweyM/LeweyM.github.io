@@ -74,4 +74,25 @@ Compiling a `Group` node is a case of merging together it's child nodes so that 
 
 Let's look at this visually for our example of `abc`
 
-![Pasted-image-20220807181405.png](/img/Pasted-image-20220807181405.png)
+![Pasted-image-20220807181511.png](/img/Pasted-image-20220807181511.png)
+
+The `group` contains three `characterLiteral` nodes, compiled into their two `State` form. We begin by merging the states from left to right. This means taking the tail of the first FSM and merging it with the head of the second FSM.
+
+![Pasted-image-20220807181731.png](/img/Pasted-image-20220807181731.png)
+
+Which leaves us with;
+
+![Pasted-image-20220807181749.png](/img/Pasted-image-20220807181749.png)
+
+We can repeat this process of merging the tail of the left-most FSM with the head of the second FSM until we are left with a single, compiled FSM.
+
+![Pasted-image-20220807181855.png](/img/Pasted-image-20220807181855.png)
+
+![Pasted-image-20220807181901.png](/img/Pasted-image-20220807181901.png)
+
+And there we have it, a successfully compiled state machine!
+
+### The power of structure
+
+Here, I hope it starts to become clear why we separate the `compiling` from the `lexing` and `parsing` stages. Once we have the **structure** of the expression, it's much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group its children, and tell leaf nodes the expected compiled form. 
+
