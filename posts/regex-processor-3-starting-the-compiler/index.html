@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
-<meta itemprop=wordCount content="612">
+<meta itemprop=wordCount content="622">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -100,6 +100,8 @@ POSTS
 </ol>
 <p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
 <p>Compiling a <code>Group</code> node is a case of merging together it&rsquo;s child nodes so that the last state of one child is merged with the first state of the next child.</p>
+<p>Let&rsquo;s look at this visually for our example of <code>abc</code></p>
+<p><img src=/img/Pasted-image-20220807181405.png alt=Pasted-image-20220807181405.png></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
