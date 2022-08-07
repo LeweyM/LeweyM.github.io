@@ -5,27 +5,27 @@
 <title>Regex Processor 3 Starting the compiler | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
 <meta name=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
-Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
- take the string abc and create a linked list of 'states' with conditional transitions to other states.">
+Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="Regex Processor 3 Starting the compiler">
 <meta property="og:description" content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
-Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
- take the string abc and create a linked list of 'states' with conditional transitions to other states.">
+Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Regex Processor 3 Starting the compiler">
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
-Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
- take the string abc and create a linked list of 'states' with conditional transitions to other states.">
-<meta itemprop=wordCount content="614">
+Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
+<meta itemprop=wordCount content="612">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
-Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
- take the string abc and create a linked list of 'states' with conditional transitions to other states.">
+Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -55,14 +55,14 @@ POSTS
 </header>
 <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a <strong>compiler</strong>.</p>
 <h3 id=compiling-a-finite-state-machine>Compiling a Finite State Machine</h3>
-<p>We can break down the previous example of writing a FSM for the regular expression <code>abc</code> into a few at least 2 discrete steps;</p>
+<p>We can break down the previous example of writing an FSM for the regular expression <code>abc</code> into at least 2 discrete steps;</p>
 <ol>
-<li>take the string <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
-<li>process the input and move through the states.</li>
+<li>Take the string <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
+<li>Process the input and move through the states.</li>
 </ol>
 <p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code>.</p>
-<p>So far, we&rsquo;ve only looked at the <code>evaluate</code> step where we take an already made FSM and process an input string by moving through its states. Now we&rsquo;ll look at the <code>compile</code> step.</p>
-<p><code>compile</code> in this context means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
+<p>So far, we&rsquo;ve only looked at the <code>evaluate</code> step, where we take an already made FSM and process an input string by moving through its states. Now we&rsquo;ll look at the <code>compile</code> step.</p>
+<p><code>compile</code> in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
 <p>We can break the compile step down into three more steps;</p>
 <ol>
 <li>lexing</li>
@@ -71,7 +71,7 @@ POSTS
 </ol>
 <p>Let&rsquo;s go through these 3 steps in detail.</p>
 <h3 id=lexing>Lexing</h3>
-<p>Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the &lsquo;Lexing&rsquo; stage, that&rsquo;s what we do. We simply convert the different types of characters into <code>tokens</code> which can be more easily interpretted by our program.</p>
+<p>Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the &lsquo;Lexing&rsquo; stage, that&rsquo;s what we do. We simply convert the different types of characters into <code>tokens</code> which can be more easily interpreted by our program.</p>
 <h3 id=parsing>Parsing</h3>
 <p>Once we have our <code>tokens</code>, we want to build something called an &lsquo;Abstract Syntax Tree&rsquo; - or an <code>AST</code> for short. The <code>AST</code> is a tree which represents the <em>hierarchical relationship</em> of the regular expression. In other words, in this stage we describe the <strong>structure</strong> of the expression.</p>
 <p>An example of the structure of regular expression <code>(cat)</code> might look like this;</p>
@@ -80,7 +80,7 @@ POSTS
 <p><img src=/img/Pasted-image-20220807173959.png alt=Pasted-image-20220807173959.png></p>
 <p>The important thing to know about this step is that here we are describing the <strong>structure</strong> of the expression - this will make our lives a lot easier in the next step.</p>
 <h3 id=compile>Compile</h3>
-<p>Here we actually build the <code>States</code> from the <code>AST</code> we created in the previous step.</p>
+<p>Here, we actually build the <code>States</code> from the <code>AST</code> we created in the previous step.</p>
 <p>The trick to keeping this step simple (it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide what it should compile to.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
