@@ -71,3 +71,7 @@ That's really all there is to it. It's a two `State` system with a single transi
 The `Group` node represents a collection of `AST` nodes which need to appear consecutively in the input string. For example, `abc` would be a `Group` of 3 `CharacterLiteral` nodes. The inner nodes of `Group` do not have to be `CharacterLiterals`, however. For example, `(()()())` would be a `Group` of 3 `Group` nodes.
 
 Compiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child. 
+
+Let's look at this visually for our example of `abc`
+
+![Pasted-image-20220807181405.png](/img/Pasted-image-20220807181405.png)
