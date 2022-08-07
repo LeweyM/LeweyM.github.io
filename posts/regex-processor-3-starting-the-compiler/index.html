@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
  take the string abc and create a linked list of 'states' with conditional transitions to other states.">
-<meta itemprop=wordCount content="581">
+<meta itemprop=wordCount content="614">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -92,12 +92,14 @@ POSTS
 <li><code>CharacterLiteral</code></li>
 </ol>
 <p>The <code>CharacterLiteral</code> node represents a single character. It does not contain any inner nodes, so it is a leaf node of the <code>AST</code>.</p>
-<p>Compiling a <code>CharacterLiteral</code> node is fairly straight forward. It should look something like this;</p>
+<p>Compiling a <code>CharacterLiteral</code> node is fairly straight forward. A character literal for the expression <code>a</code> should look like this;</p>
+<p><img src=/img/Pasted-image-20220807175929.png alt=Pasted-image-20220807175929.png></p>
+<p>That&rsquo;s really all there is to it. It&rsquo;s a two <code>State</code> system with a single transition between them, using the character of the <code>CharacterLiteral</code> as the transition predicate.</p>
 <ol start=2>
 <li><code>Group</code></li>
 </ol>
 <p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
-<p>Comiling a <code>Group</code> node is a case of merging together it&rsquo;s child nodes so that the last state of one child is merged with the first state of the next child.</p>
+<p>Compiling a <code>Group</code> node is a case of merging together it&rsquo;s child nodes so that the last state of one child is merged with the first state of the next child.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
