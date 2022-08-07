@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
  take the string abc and create a linked list of 'states' with conditional transitions to other states.">
-<meta itemprop=wordCount content="299">
+<meta itemprop=wordCount content="581">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -74,7 +74,30 @@ POSTS
 <p>Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the &lsquo;Lexing&rsquo; stage, that&rsquo;s what we do. We simply convert the different types of characters into <code>tokens</code> which can be more easily interpretted by our program.</p>
 <h3 id=parsing>Parsing</h3>
 <p>Once we have our <code>tokens</code>, we want to build something called an &lsquo;Abstract Syntax Tree&rsquo; - or an <code>AST</code> for short. The <code>AST</code> is a tree which represents the <em>hierarchical relationship</em> of the regular expression. In other words, in this stage we describe the <strong>structure</strong> of the expression.</p>
-<p>An example of the structure of regular expression <code>(ca(r|t)s)</code> might look like this;</p>
+<p>An example of the structure of regular expression <code>(cat)</code> might look like this;</p>
+<p><img src=/img/Pasted-image-20220807173722.png alt=Pasted-image-20220807173722.png></p>
+<p>This tree shows the relationship between a <code>group</code> (whatever is inside the parenthesis) and the three <code>char</code> literals which make up the expression <code>cat</code>. This hierarchy can become more complicated when things like nested groups or <code>branches</code> are involved. For example, the <code>AST</code> for <code>(ca(r|t)s)</code> looks like this;</p>
+<p><img src=/img/Pasted-image-20220807173959.png alt=Pasted-image-20220807173959.png></p>
+<p>The important thing to know about this step is that here we are describing the <strong>structure</strong> of the expression - this will make our lives a lot easier in the next step.</p>
+<h3 id=compile>Compile</h3>
+<p>Here we actually build the <code>States</code> from the <code>AST</code> we created in the previous step.</p>
+<p>The trick to keeping this step simple (it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide what it should compile to.</p>
+<p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
+<ol>
+<li><code>CharacterLiteral</code></li>
+<li><code>Group</code></li>
+</ol>
+<p>We saw these in the diagram above as &lsquo;group&rsquo; and &lsquo;char&rsquo; boxes. Let&rsquo;s go through them.</p>
+<ol>
+<li><code>CharacterLiteral</code></li>
+</ol>
+<p>The <code>CharacterLiteral</code> node represents a single character. It does not contain any inner nodes, so it is a leaf node of the <code>AST</code>.</p>
+<p>Compiling a <code>CharacterLiteral</code> node is fairly straight forward. It should look something like this;</p>
+<ol start=2>
+<li><code>Group</code></li>
+</ol>
+<p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
+<p>Comiling a <code>Group</code> node is a case of merging together it&rsquo;s child nodes so that the last state of one child is merged with the first state of the next child.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
