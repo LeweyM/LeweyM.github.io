@@ -23,7 +23,7 @@ The Transition struct contains two things:">
 The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
-<meta itemprop=wordCount content="1559">
+<meta itemprop=wordCount content="1595">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 2 Getting into some code">
 <meta name=twitter:description content="Let&rsquo;s start coding.
@@ -160,7 +160,7 @@ const (
 </code></pre><p>With that in mind we can think of a few cases to test our FSM and runner logic;</p>
 <ul>
 <li><code>""</code> -> <code>normal</code></li>
-<li><code>"x"</code> -> <code>fail</code></li>
+<li><code>"xxx"</code> -> <code>fail</code></li>
 <li><code>"abc"</code> -> <code>success</code></li>
 <li><code>"ab"</code> -> <code>normal</code></li>
 </ul>
@@ -224,7 +224,7 @@ tests := []test{
   
    tests := []test{  
       {&quot;empty string&quot;, &quot;&quot;, Normal},  
-      {&quot;non matching string&quot;, &quot;x&quot;, Fail},  
+      {&quot;non matching string&quot;, &quot;xxx, Fail},  
       {&quot;matching string&quot;, &quot;abc&quot;, Success},  
       {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
    }  
@@ -261,10 +261,15 @@ tests := []test{
 <p>Note: This assumes that we can only be in one place at a time in our FSM, more on that later..</p>
 <p>Now, the <code>Next</code> method.</p>
 <pre tabindex=0><code>func (r *runner) Next(input rune) {  
-   // move along transitions  
+   if r.current == nil {  
+      return  
+   }  
+  
+   // move to next matching transition  
    r.current = r.current.firstMatchingTransition(input)  
 }
-</code></pre><p>All this does is change the <code>r.current</code> state to the state pointed to by the first matching transition of the current state. This logic is implemented on a method of the <code>State</code> struct, so let&rsquo;s implement that now.</p>
+</code></pre><p>All this does is change the <code>r.current</code> state to the state pointed to by the first matching transition of the current state. If <code>r.current</code> is <code>nil</code>, that means that the FSM has already fallen into a <code>fail</code> state, and so should do nothing.</p>
+<p>The logic for finding the first matching transition is implemented on a method of the <code>State</code> struct, so let&rsquo;s implement that now.</p>
 <pre tabindex=0><code>func (s *State) firstMatchingTransition(input rune) destination {  
    for _, t := range s.transitions {  
       if t.predicate(input) {  
