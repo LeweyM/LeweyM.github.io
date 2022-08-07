@@ -152,7 +152,7 @@ const (
 With that in mind we can think of a few cases to test our FSM and runner logic;
 
 - `""` -> `normal`
-- `"x"` -> `fail`
+- `"xxx"` -> `fail`
 - `"abc"` -> `success` 
 - `"ab"` -> `normal` 
 
@@ -227,7 +227,7 @@ func TestHandmadeFSM(t *testing.T) {
   
    tests := []test{  
       {"empty string", "", Normal},  
-      {"non matching string", "x", Fail},  
+      {"non matching string", "xxx, Fail},  
       {"matching string", "abc", Success},  
       {"partial matching string", "ab", Normal},  
    }  
@@ -277,12 +277,18 @@ Now, the `Next` method.
 
 ```
 func (r *runner) Next(input rune) {  
-   // move along transitions  
+   if r.current == nil {  
+      return  
+   }  
+  
+   // move to next matching transition  
    r.current = r.current.firstMatchingTransition(input)  
 }
 ```
 
-All this does is change the `r.current` state to the state pointed to by the first matching transition of the current state. This logic is implemented on a method of the `State` struct, so let's implement that now.
+All this does is change the `r.current` state to the state pointed to by the first matching transition of the current state. If `r.current` is `nil`, that means that the FSM has already fallen into a `fail` state, and so should do nothing. 
+
+The logic for finding the first matching transition is implemented on a method of the `State` struct, so let's implement that now.
 
 ```
 func (s *State) firstMatchingTransition(input rune) destination {  
