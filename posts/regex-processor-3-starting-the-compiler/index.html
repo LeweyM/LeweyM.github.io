@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing a FSM for the regular expression abc into a few at least 2 discrete steps;
  take the string abc and create a linked list of 'states' with conditional transitions to other states.">
-<meta itemprop=wordCount content="193">
+<meta itemprop=wordCount content="299">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -63,8 +63,18 @@ POSTS
 <p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code>.</p>
 <p>So far, we&rsquo;ve only looked at the <code>evaluate</code> step where we take an already made FSM and process an input string by moving through its states. Now we&rsquo;ll look at the <code>compile</code> step.</p>
 <p><code>compile</code> in this context means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
-<p>(? too early for this?)
-There are many ways of making compilers, but the one we&rsquo;re going to look at uses a stack as it&rsquo;s main data structure.</p>
+<p>We can break the compile step down into three more steps;</p>
+<ol>
+<li>lexing</li>
+<li>parsing</li>
+<li>compiling</li>
+</ol>
+<p>Let&rsquo;s go through these 3 steps in detail.</p>
+<h3 id=lexing>Lexing</h3>
+<p>Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the &lsquo;Lexing&rsquo; stage, that&rsquo;s what we do. We simply convert the different types of characters into <code>tokens</code> which can be more easily interpretted by our program.</p>
+<h3 id=parsing>Parsing</h3>
+<p>Once we have our <code>tokens</code>, we want to build something called an &lsquo;Abstract Syntax Tree&rsquo; - or an <code>AST</code> for short. The <code>AST</code> is a tree which represents the <em>hierarchical relationship</em> of the regular expression. In other words, in this stage we describe the <strong>structure</strong> of the expression.</p>
+<p>An example of the structure of regular expression <code>(ca(r|t)s)</code> might look like this;</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
