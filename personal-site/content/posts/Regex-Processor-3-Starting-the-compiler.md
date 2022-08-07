@@ -17,12 +17,22 @@ So far, we've only looked at the `evaluate` step where we take an already made F
 
 `compile` in this context means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
 
+We can break the compile step down into three more steps;
 
+1. lexing
+2. parsing
+3. compiling
 
+Let's go through these 3 steps in detail.
 
-(? too early for this?)
-There are many ways of making compilers, but the one we're going to look at uses a stack as it's main data structure.
+### Lexing
 
+Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the 'Lexing' stage, that's what we do. We simply convert the different types of characters into `tokens` which can be more easily interpretted by our program.
 
+### Parsing
+
+Once we have our `tokens`, we want to build something called an 'Abstract Syntax Tree' - or an `AST` for short. The `AST` is a tree which represents the *hierarchical relationship* of the regular expression. In other words, in this stage we describe the **structure** of the expression.
+
+An example of the structure of regular expression `(ca(r|t)s)` might look like this;
 
 
