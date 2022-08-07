@@ -33,6 +33,39 @@ Before we start turning strings into complex abstract objects, it helps to turn 
 
 Once we have our `tokens`, we want to build something called an 'Abstract Syntax Tree' - or an `AST` for short. The `AST` is a tree which represents the *hierarchical relationship* of the regular expression. In other words, in this stage we describe the **structure** of the expression.
 
-An example of the structure of regular expression `(ca(r|t)s)` might look like this;
+An example of the structure of regular expression `(cat)` might look like this;
+
+![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
+
+This tree shows the relationship between a `group` (whatever is inside the parenthesis) and the three `char` literals which make up the expression `cat`. This hierarchy can become more complicated when things like nested groups or `branches` are involved. For example, the `AST` for `(ca(r|t)s)` looks like this;
+
+![Pasted-image-20220807173959.png](/img/Pasted-image-20220807173959.png)
+
+The important thing to know about this step is that here we are describing the **structure** of the expression - this will make our lives a lot easier in the next step.
+
+### Compile
+
+Here we actually build the `States` from the `AST` we created in the previous step.
+
+The trick to keeping this step simple (it can very quickly become **not** simple) is to let each node of the `AST` decide what it should compile to. 
+
+For our simple example of compiling the regular expression `abc`, we just need two types of `AST` node;
+
+1. `CharacterLiteral`
+2. `Group`
+
+We saw these in the diagram above as 'group' and 'char' boxes. Let's go through them.
+
+1. `CharacterLiteral`
+
+The `CharacterLiteral` node represents a single character. It does not contain any inner nodes, so it is a leaf node of the `AST`.
+
+Compiling a `CharacterLiteral` node is fairly straight forward. It should look something like this;
 
 
+
+2. `Group`
+
+The `Group` node represents a collection of `AST` nodes which need to appear consecutively in the input string. For example, `abc` would be a `Group` of 3 `CharacterLiteral` nodes. The inner nodes of `Group` do not have to be `CharacterLiterals`, however. For example, `(()()())` would be a `Group` of 3 `Group` nodes.
+
+Comiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child.
