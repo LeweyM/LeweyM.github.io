@@ -60,12 +60,14 @@ We saw these in the diagram above as 'group' and 'char' boxes. Let's go through 
 
 The `CharacterLiteral` node represents a single character. It does not contain any inner nodes, so it is a leaf node of the `AST`.
 
-Compiling a `CharacterLiteral` node is fairly straight forward. It should look something like this;
+Compiling a `CharacterLiteral` node is fairly straight forward. A character literal for the expression `a` should look like this;
 
+![Pasted-image-20220807175929.png](/img/Pasted-image-20220807175929.png)
 
+That's really all there is to it. It's a two `State` system with a single transition between them, using the character of the `CharacterLiteral` as the transition predicate.
 
 2. `Group`
 
 The `Group` node represents a collection of `AST` nodes which need to appear consecutively in the input string. For example, `abc` would be a `Group` of 3 `CharacterLiteral` nodes. The inner nodes of `Group` do not have to be `CharacterLiterals`, however. For example, `(()()())` would be a `Group` of 3 `Group` nodes.
 
-Comiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child.
+Compiling a `Group` node is a case of merging together it's child nodes so that the last state of one child is merged with the first state of the next child.
