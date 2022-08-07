@@ -23,7 +23,7 @@ The Transition struct contains two things:">
 The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
-<meta itemprop=wordCount content="1566">
+<meta itemprop=wordCount content="1559">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 2 Getting into some code">
 <meta name=twitter:description content="Let&rsquo;s start coding.
@@ -145,8 +145,7 @@ type State struct {
 </code></pre><p>We now have our first FSM starting at the root node <code>startState</code>. Let&rsquo;s write a test which creates a <code>runner</code> and uses this FSM to check against a few different input cases.</p>
 <p>The outcome of running a string through an FSM should result in one of 3 statuses;</p>
 <ol>
-<li><code>Normal</code>. The FSM has not found a match yet, but neither has it found that there is no match. Another way of saying this is that the search is still &lsquo;in progress&rsquo;.
-The cases we want to test are;</li>
+<li><code>Normal</code>. The FSM has not found a match yet, but neither has it found that there is no match. Another way of saying this is that the search is still &lsquo;in progress&rsquo;.</li>
 <li><code>Success</code>. The FSM has found a match.</li>
 <li><code>fail</code>. The FSM has found that the string does not match.</li>
 </ol>
@@ -159,10 +158,12 @@ const (
    Normal         = &quot;normal&quot;  
 )
 </code></pre><p>With that in mind we can think of a few cases to test our FSM and runner logic;</p>
-<p><code>""</code> -> <code>normal</code>
-<code>"x"</code> -> <code>fail</code>
-<code>"abc"</code> -> <code>success</code>
-<code>"ab"</code> -> <code>normal</code></p>
+<ul>
+<li><code>""</code> -> <code>normal</code></li>
+<li><code>"x"</code> -> <code>fail</code></li>
+<li><code>"abc"</code> -> <code>success</code></li>
+<li><code>"ab"</code> -> <code>normal</code></li>
+</ul>
 <p>Writing these up into table-style tests we get the following;</p>
 <pre tabindex=0><code>type test struct {  
    name           string  
