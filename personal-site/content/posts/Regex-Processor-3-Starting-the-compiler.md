@@ -37,17 +37,21 @@ An example of the structure of regular expression `(cat)` might look like this;
 
 ![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
 
-This tree shows the relationship between a `group` (whatever is inside the parenthesis) and the three `char` literals which make up the expression `cat`. This hierarchy can become more complicated when things like nested groups or `branches` are involved. For example, the `AST` for `(ca(r|t)s)` looks like this;
+This tree shows the relationship between a `group` (whatever is inside the parenthesis) and the three `char` literals which make up the expression `cat`. To simplify things, we're going to imagine that all regular expressions exist inside a top-level `group`, so `cat` is equivalent to `(cat)`. 
+
+This hierarchy can become more complicated when things like nested groups or `branches` are involved. For example, the `AST` for `(ca(r|t)s)` looks like this;
 
 ![Pasted-image-20220807173959.png](/img/Pasted-image-20220807173959.png)
 
-The important thing to know about this step is that here we are describing the **structure** of the expression - this will make our lives a lot easier in the next step.
+The important thing to know about this step is that here we are describing the **structure** of the expression, and that this structure is **recursive**. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each **sub-tree** can be treated in the same way as the **tree**, which is very useful in reducing complexity. 
+
+Having this structure will make our lives a lot easier in the next step.
 
 ### Compile
 
 Here, we actually build the `States` from the `AST` we created in the previous step.
 
-The trick to keeping this step simple (it can very quickly become **not** simple) is to let each node of the `AST` decide what it should compile to. 
+The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
 
 For our simple example of compiling the regular expression `abc`, we just need two types of `AST` node;
 
