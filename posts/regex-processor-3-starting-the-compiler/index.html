@@ -6,26 +6,26 @@
 <meta name=viewport content="width=device-width,minimum-scale=1">
 <meta name=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
- Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="Regex Processor 3 Starting the compiler">
 <meta property="og:description" content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
- Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Regex Processor 3 Starting the compiler">
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
- Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
-<meta itemprop=wordCount content="786">
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
+<meta itemprop=wordCount content="804">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
- Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input and move through the states.">
+ Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -58,12 +58,12 @@ POSTS
 <p>We can break down the previous example of writing an FSM for the regular expression <code>abc</code> into at least 2 discrete steps;</p>
 <ol>
 <li>Take the string <code>abc</code> and create a linked list of <code>'states'</code> with conditional transitions to other states.</li>
-<li>Process the input and move through the states.</li>
+<li>Process the input by moving through the states.</li>
 </ol>
-<p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code>.</p>
+<p>We&rsquo;ll call these steps <code>compile</code> and <code>evaluate</code> respectively.</p>
 <p>So far, we&rsquo;ve only looked at the <code>evaluate</code> step, where we take an already made FSM and process an input string by moving through its states. Now we&rsquo;ll look at the <code>compile</code> step.</p>
-<p><code>compile</code> in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code>.</p>
-<p>We can break the compile step down into three more steps;</p>
+<p><code>compile</code> in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a <code>Compiler</code> struct with a <code>Compile</code> method which takes a string and returns a <code>*State</code> representing the first <code>State</code> of the FSM, the <code>root</code> or <code>head</code> <code>State</code>.</p>
+<p>Let&rsquo;s do even more decomposition of this problem and break the compilation step into three phases;</p>
 <ol>
 <li>lexing</li>
 <li>parsing</li>
