@@ -137,6 +137,35 @@ Now we'll use those `tokens` to build our `AST`
 
 ### Coding the parser
 
+For our simple example of parsing the regular expression `abc`, we just need two types of `AST`node; `Group` and `CharacterLiteral`.
+
+![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
+
+Let's create two structs to represent these nodes.
+
+```
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // for compiler coding stage
