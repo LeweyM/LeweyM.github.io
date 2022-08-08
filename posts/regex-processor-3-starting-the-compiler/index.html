@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1049">
+<meta itemprop=wordCount content="1104">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -87,9 +87,24 @@ POSTS
 <p>This is where we see the power of recursive structures, as each node must produce an FSM, but nested structures don&rsquo;t need to know anything about how their children produce FSMs - in fact those children might be nested structures themselves. This is a very powerful and flexible concept, and very useful for what we&rsquo;re trying to do now.</p>
 <p>Now that we&rsquo;ve described our three phases, let&rsquo;s jump into some code.</p>
 <h3 id=coding-the-lexer>Coding the lexer</h3>
-<p>In this implementation, we&rsquo;re going to support a subset of regex characters;</p>
-<pre tabindex=0><code>
-</code></pre><p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
+<p>In this implementation, we&rsquo;re going to support a subset of regex special characters;</p>
+<pre tabindex=0><code>().*?+|
+</code></pre><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a literal character.</p>
+<p>Let&rsquo;s define these as <code>tokens</code>.</p>
+<pre tabindex=0><code>type SymbolType int
+
+const (
+	AnyCharacter SymbolType = iota
+	Pipe
+	LParen
+	RParen
+	Character
+	ZeroOrMore
+	OneOrMore
+	ZeroOrOne
+)
+</code></pre><p>// for compiler coding stage</p>
+<p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
 <li><code>CharacterLiteral</code></li>
