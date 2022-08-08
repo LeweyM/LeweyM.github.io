@@ -43,13 +43,27 @@ This hierarchy can become more complicated when things like nested groups or `br
 
 ![Pasted-image-20220807173959.png](/img/Pasted-image-20220807173959.png)
 
-The important thing to know about this step is that here we are describing the **structure** of the expression, and that this structure is **recursive**. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each **sub-tree** can be treated in the same way as the **tree**, which is very useful in reducing complexity. 
+The important thing to know about this step is that here we are describing the **structure** of the expression, and that this structure is **recursive**. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each **subtree** can be treated in the same way as the **tree**, which is very useful in reducing complexity. 
 
 Having this structure will make our lives a lot easier in the next step.
 
 ### Compile
 
 Here, we actually build the `States` from the `AST` we created in the previous step.
+
+The end result should be a linked list of `States` which should represent our regular expression, and a reference to the root `State`. The way we produce this from our `AST` is by asking each node to produce an FSM, which will in-turn ask any child nodes to produce an FSM and compose them together, until we reach the leaf nodes - which have no children - and the process ends.
+
+This is where we see the power of recursive structures, as each node must produce an FSM, but nested structures don't need to know anything about how their children produce FSMs - in fact those children might be nested structures themselves. This is a very powerful and flexible concept, and very useful for what we're trying to do now.
+
+Now that we've described our three phases, let's jump into some code.
+
+### Coding the lexer
+
+In this implementation, we're going to support a subset of regex characters;
+
+```
+
+```
 
 The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
 
@@ -98,5 +112,7 @@ And there we have it, a successfully compiled state machine!
 
 ### The power of structure
 
-Here, I hope it starts to become clear why we separate the `compiling` from the `lexing` and `parsing` stages. Once we have the **structure** of the expression, it's much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group its children, and tell leaf nodes the expected compiled form. 
+Here, I hope it starts to become clear why we separate the `compiling` from the `lexing` and `parsing` stages. Once we have the **structure** of the expression, it's much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group their children, and tell leaf nodes the expected compiled form. 
+
+Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.
 
