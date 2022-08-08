@@ -67,13 +67,13 @@ In this implementation, we're going to support a subset of regex special charact
 
 For simplicity, we're not going to support escaped characters such as `\?`. Any character not in the set above is to be considered a literal character.
 
-Let's define these as `tokens`.
+Let's define these as `symbols`.
 
 ```
-type SymbolType int
+type symbol int
 
 const (
-	AnyCharacter SymbolType = iota
+	AnyCharacter symbol = iota
 	Pipe
 	LParen
 	RParen
@@ -84,6 +84,58 @@ const (
 )
 ```
 
+Using these `symbols`, we can create a `token` struct which contains information on the type of symbol, and the character itself, if necessary.
+
+```
+type token struct {  
+   symbol symbol  
+   letter rune  
+}
+```
+
+Now we simply need to loop through the regular expression string and map the characters to our tokens.
+
+```
+func lex(input string) []token {  
+   var tokens []token  
+   i := 0  
+   for i < len(input) {  
+      tokens = append(tokens, lexRune(rune(input[i])))  
+      i++  
+   }  
+   return tokens  
+}  
+  
+func lexRune(r rune) token {  
+   var s token  
+   switch r {  
+   case '(':  
+      s.symbol = LParen  
+   case ')':  
+      s.symbol = RParen  
+   case '.':  
+      s.symbol = AnyCharacter  
+   case '|':  
+      s.symbol = Pipe  
+   case '*':  
+      s.symbol = ZeroOrMore  
+   case '+':  
+      s.symbol = OneOrMore  
+   case '?':  
+      s.symbol = ZeroOrOne  
+   default:  
+      s.symbol = Character  
+      s.letter = r  
+   }  
+   return s  
+}
+```
+
+That's really all there is to it. Now instead of a string of characters, we have our own defined `tokens` to work with.
+
+Now we'll use those `tokens` to build our `AST`
+
+### Coding the parser
 
 
 
