@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1104">
+<meta itemprop=wordCount content="1271">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -90,11 +90,11 @@ POSTS
 <p>In this implementation, we&rsquo;re going to support a subset of regex special characters;</p>
 <pre tabindex=0><code>().*?+|
 </code></pre><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a literal character.</p>
-<p>Let&rsquo;s define these as <code>tokens</code>.</p>
-<pre tabindex=0><code>type SymbolType int
+<p>Let&rsquo;s define these as <code>symbols</code>.</p>
+<pre tabindex=0><code>type symbol int
 
 const (
-	AnyCharacter SymbolType = iota
+	AnyCharacter symbol = iota
 	Pipe
 	LParen
 	RParen
@@ -103,7 +103,49 @@ const (
 	OneOrMore
 	ZeroOrOne
 )
-</code></pre><p>// for compiler coding stage</p>
+</code></pre><p>Using these <code>symbols</code>, we can create a <code>token</code> struct which contains information on the type of symbol, and the character itself, if necessary.</p>
+<pre tabindex=0><code>type token struct {  
+   symbol symbol  
+   letter rune  
+}
+</code></pre><p>Now we simply need to loop through the regular expression string and map the characters to our tokens.</p>
+<pre tabindex=0><code>func lex(input string) []token {  
+   var tokens []token  
+   i := 0  
+   for i &lt; len(input) {  
+      tokens = append(tokens, lexRune(rune(input[i])))  
+      i++  
+   }  
+   return tokens  
+}  
+  
+func lexRune(r rune) token {  
+   var s token  
+   switch r {  
+   case '(':  
+      s.symbol = LParen  
+   case ')':  
+      s.symbol = RParen  
+   case '.':  
+      s.symbol = AnyCharacter  
+   case '|':  
+      s.symbol = Pipe  
+   case '*':  
+      s.symbol = ZeroOrMore  
+   case '+':  
+      s.symbol = OneOrMore  
+   case '?':  
+      s.symbol = ZeroOrOne  
+   default:  
+      s.symbol = Character  
+      s.letter = r  
+   }  
+   return s  
+}
+</code></pre><p>That&rsquo;s really all there is to it. Now instead of a string of characters, we have our own defined <code>tokens</code> to work with.</p>
+<p>Now we&rsquo;ll use those <code>tokens</code> to build our <code>AST</code></p>
+<h3 id=coding-the-parser>Coding the parser</h3>
+<p>// for compiler coding stage</p>
 <p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
