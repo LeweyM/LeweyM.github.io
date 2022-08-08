@@ -9,15 +9,15 @@ draft: false
 We can break down the previous example of writing an FSM for the regular expression `abc` into  at least 2 discrete steps;
 
 1. Take the string `abc` and create a linked list of `'states'` with conditional transitions to other states.
-2. Process the input and move through the states.
+2. Process the input by moving through the states.
 
-We'll call these steps `compile` and `evaluate`.
+We'll call these steps `compile` and `evaluate` respectively.
 
 So far, we've only looked at the `evaluate` step, where we take an already made FSM and process an input string by moving through its states. Now we'll look at the `compile` step.
 
-`compile` in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State`.
+`compile` in this context, means turning a string of characters that represent a valid regular expression into a linked list of states; a finite state machine. For this, we will create a `Compiler` struct with a `Compile` method which takes a string and returns a `*State` representing the first `State` of the FSM, the `root` or `head` `State`.
 
-We can break the compile step down into three more steps;
+Let's do even more decomposition of this problem and break the compilation step into three phases;
 
 1. lexing
 2. parsing
