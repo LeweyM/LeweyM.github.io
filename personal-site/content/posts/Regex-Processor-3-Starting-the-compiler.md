@@ -174,6 +174,7 @@ type CharacterLiteral struct {
 
 
 
+
 // for compiler coding stage
 
 The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
