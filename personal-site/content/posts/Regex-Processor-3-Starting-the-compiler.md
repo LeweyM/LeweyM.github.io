@@ -143,8 +143,14 @@ For our simple example of parsing the regular expression `abc`, we just need two
 
 Let's create two structs to represent these nodes.
 
-```
-
+``` 
+type Group struct {  
+   ChildNodes []Ast  
+}  
+  
+type CharacterLiteral struct {  
+   Character rune  
+}
 ```
 
 
