@@ -59,11 +59,35 @@ Now that we've described our three phases, let's jump into some code.
 
 ### Coding the lexer
 
-In this implementation, we're going to support a subset of regex characters;
+In this implementation, we're going to support a subset of regex special characters;
 
 ```
+().*?+|
+```
+
+For simplicity, we're not going to support escaped characters such as `\?`. Any character not in the set above is to be considered a literal character.
+
+Let's define these as `tokens`.
 
 ```
+type SymbolType int
+
+const (
+	AnyCharacter SymbolType = iota
+	Pipe
+	LParen
+	RParen
+	Character
+	ZeroOrMore
+	OneOrMore
+	ZeroOrOne
+)
+```
+
+
+
+
+// for compiler coding stage
 
 The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
 
