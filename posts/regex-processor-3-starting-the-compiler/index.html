@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="873">
+<meta itemprop=wordCount content="1049">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -79,11 +79,17 @@ POSTS
 <p>This tree shows the relationship between a <code>group</code> (whatever is inside the parenthesis) and the three <code>char</code> literals which make up the expression <code>cat</code>. To simplify things, we&rsquo;re going to imagine that all regular expressions exist inside a top-level <code>group</code>, so <code>cat</code> is equivalent to <code>(cat)</code>.</p>
 <p>This hierarchy can become more complicated when things like nested groups or <code>branches</code> are involved. For example, the <code>AST</code> for <code>(ca(r|t)s)</code> looks like this;</p>
 <p><img src=/img/Pasted-image-20220807173959.png alt=Pasted-image-20220807173959.png></p>
-<p>The important thing to know about this step is that here we are describing the <strong>structure</strong> of the expression, and that this structure is <strong>recursive</strong>. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each <strong>sub-tree</strong> can be treated in the same way as the <strong>tree</strong>, which is very useful in reducing complexity.</p>
+<p>The important thing to know about this step is that here we are describing the <strong>structure</strong> of the expression, and that this structure is <strong>recursive</strong>. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each <strong>subtree</strong> can be treated in the same way as the <strong>tree</strong>, which is very useful in reducing complexity.</p>
 <p>Having this structure will make our lives a lot easier in the next step.</p>
 <h3 id=compile>Compile</h3>
 <p>Here, we actually build the <code>States</code> from the <code>AST</code> we created in the previous step.</p>
-<p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
+<p>The end result should be a linked list of <code>States</code> which should represent our regular expression, and a reference to the root <code>State</code>. The way we produce this from our <code>AST</code> is by asking each node to produce an FSM, which will in-turn ask any child nodes to produce an FSM and compose them together, until we reach the leaf nodes - which have no children - and the process ends.</p>
+<p>This is where we see the power of recursive structures, as each node must produce an FSM, but nested structures don&rsquo;t need to know anything about how their children produce FSMs - in fact those children might be nested structures themselves. This is a very powerful and flexible concept, and very useful for what we&rsquo;re trying to do now.</p>
+<p>Now that we&rsquo;ve described our three phases, let&rsquo;s jump into some code.</p>
+<h3 id=coding-the-lexer>Coding the lexer</h3>
+<p>In this implementation, we&rsquo;re going to support a subset of regex characters;</p>
+<pre tabindex=0><code>
+</code></pre><p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
 <li><code>CharacterLiteral</code></li>
@@ -113,7 +119,8 @@ POSTS
 <p><img src=/img/Pasted-image-20220807181901.png alt=Pasted-image-20220807181901.png></p>
 <p>And there we have it, a successfully compiled state machine!</p>
 <h3 id=the-power-of-structure>The power of structure</h3>
-<p>Here, I hope it starts to become clear why we separate the <code>compiling</code> from the <code>lexing</code> and <code>parsing</code> stages. Once we have the <strong>structure</strong> of the expression, it&rsquo;s much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group its children, and tell leaf nodes the expected compiled form.</p>
+<p>Here, I hope it starts to become clear why we separate the <code>compiling</code> from the <code>lexing</code> and <code>parsing</code> stages. Once we have the <strong>structure</strong> of the expression, it&rsquo;s much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group their children, and tell leaf nodes the expected compiled form.</p>
+<p>Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
