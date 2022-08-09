@@ -135,13 +135,17 @@ func lexRune(r rune) token {
 
 That's really all there is to it. Now instead of a string of characters, we have our own defined `tokens` to work with.
 
-Now we'll use those `tokens` to build our `AST`
+We'll now use those `tokens` to build our `AST`
 
 ### Coding the parser
 
-For our simple example of parsing the regular expression `abc`, we just need two types of `AST`node; `Group` and `CharacterLiteral`.
+For our simple example of parsing the regular expression `abc`, we just need two types of `AST`node: `Group` and `CharacterLiteral`.
+
+Let's remind ourselves quickly of how these AST nodes relate to each other with our `AST` diagram.
 
 ![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
+
+A `group` **contains** three child nodes. The child nodes are `characterLiterals` and are the **leaf nodes** of the tree.
 
 Let's create two structs to represent these nodes.
 
@@ -154,6 +158,7 @@ type CharacterLiteral struct {
    Character rune  
 }
 ```
+
 
 
 
