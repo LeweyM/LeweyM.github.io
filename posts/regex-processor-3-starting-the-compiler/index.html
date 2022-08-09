@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="2288">
+<meta itemprop=wordCount content="2379">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -325,36 +325,66 @@ POSTS
 <p>Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.</p>
 <h3 id=changing-our-tests>Changing our tests</h3>
 <p>Before we get ahead of ourselves, let&rsquo;s modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#f92672>-       // handMade
-</span><span style=color:#f92672>-       startState := State{}
-</span><span style=color:#f92672>-       stateA := State{}
-</span><span style=color:#f92672>-       stateB := State{}
-</span><span style=color:#f92672>-       stateC := State{}
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#f92672>- func TestHandmadeFSM(t *testing.T) {  
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+ func TestCompiledFSM(t *testing.T) {  
+</span><span style=color:#a6e22e></span><span style=color:#f92672>-  // handMade
+</span><span style=color:#f92672>-  startState := State{}
+</span><span style=color:#f92672>-  stateA := State{}
+</span><span style=color:#f92672>-  stateB := State{}
+</span><span style=color:#f92672>-  stateC := State{}
 </span><span style=color:#f92672>- 
-</span><span style=color:#f92672>-       startState.transitions = append(startState.transitions, Transition{
-</span><span style=color:#f92672>-               to:        &amp;stateA,
-</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;a&#39; },
-</span><span style=color:#f92672>-       })
+</span><span style=color:#f92672>-  startState.transitions = append(startState.transitions, Transition{
+</span><span style=color:#f92672>-          to:        &amp;stateA,
+</span><span style=color:#f92672>-          predicate: func(input rune) bool { return input == &#39;a&#39; },
+</span><span style=color:#f92672>-  })
 </span><span style=color:#f92672>- 
-</span><span style=color:#f92672>-       stateA.transitions = append(stateA.transitions, Transition{
-</span><span style=color:#f92672>-               to:        &amp;stateB,
-</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;b&#39; },
-</span><span style=color:#f92672>-       })
-</span><span style=color:#f92672>- 
-</span><span style=color:#f92672>-       stateB.transitions = append(stateB.transitions, Transition{
-</span><span style=color:#f92672>-               to:        &amp;stateC,
-</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;c&#39; },
-</span><span style=color:#f92672>-       })
-</span><span style=color:#f92672>---
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+       parser := NewParser()
-</span><span style=color:#a6e22e>+ 
-</span><span style=color:#a6e22e>+       tokens := lex(&#34;abc&#34;)
-</span><span style=color:#a6e22e>+       ast := parser.Parse(tokens)
-</span><span style=color:#a6e22e>+       startState, _ := ast.compile()
-</span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#f92672>-                       testRunner := NewRunner(&amp;startState)
-</span><span style=color:#f92672>---
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+                       testRunner := NewRunner(startState)
-</span></code></pre></div><p>And with that, our tests should be green!</p>
+</span><span style=color:#f92672>-  stateA.transitions = append(stateA.transitions, Transition{
+</span><span style=color:#f92672>-          to:        &amp;stateB,
+</span><span style=color:#f92672>-          predicate: func(input rune) bool { return input == &#39;b&#39; },
+</span><span style=color:#f92672>-  })
+</span><span style=color:#f92672>-
+</span><span style=color:#f92672>-  stateB.transitions = append(stateB.transitions, Transition{
+</span><span style=color:#f92672>-          to:        &amp;stateC,
+</span><span style=color:#f92672>-          predicate: func(input rune) bool { return input == &#39;c&#39; },
+</span><span style=color:#f92672>-  })
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+  // compiled
+</span><span style=color:#a6e22e>+  parser := NewParser()
+</span><span style=color:#a6e22e>+
+</span><span style=color:#a6e22e>+  tokens := lex(&#34;abc&#34;)
+</span><span style=color:#a6e22e>+  ast := parser.Parse(tokens)
+</span><span style=color:#a6e22e>+  startState, _ := ast.compile()
+</span><span style=color:#a6e22e></span>  
+   type test struct {  
+      name           string  
+      input          string  
+      expectedStatus Status  
+   }  
+  
+   tests := []test{  
+      {&#34;empty string&#34;, &#34;&#34;, Normal},  
+      {&#34;non matching string&#34;, &#34;xxx&#34;, Fail},  
+      {&#34;matching string&#34;, &#34;abc&#34;, Success},  
+      {&#34;partial matching string&#34;, &#34;ab&#34;, Normal},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         testRunner := NewRunner(startState)  
+<span style=color:#f92672>-        testRunner := NewRunner(&amp;startState)
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+        testRunner := NewRunner(startState)
+</span><span style=color:#a6e22e></span>  
+         for _, character := range tt.input {  
+            testRunner.Next(character)  
+         }  
+  
+         result := testRunner.GetStatus()  
+         if tt.expectedStatus != result {  
+            t.Fatalf(&#34;Expected FSM to have final state of &#39;%v&#39;, got &#39;%v&#39;&#34;, tt.expectedStatus, result)  
+         }  
+      })  
+   }  
+}
+</code></pre></div><p>And with that, our tests should be green!</p>
 <p>We&rsquo;ve now created a fully compiled - although very limited - state machine. Congrats!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v2>here</a></p>
 <ul class=pa0>
