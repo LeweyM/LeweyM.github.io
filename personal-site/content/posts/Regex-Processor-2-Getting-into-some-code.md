@@ -7,7 +7,7 @@ draft: false
 ### The FSM data structure
 We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects.
 
-```
+```go
 type State struct {  
 	connectedStates []State  
 }
@@ -19,7 +19,7 @@ The `Transition` struct contains two things:
 1. the next state
 2. the predicate that determines whether we can go to the next state
 
-```
+```go
 type Transition struct {  
    // to: a pointer to the next state   
    to *State  
@@ -30,13 +30,13 @@ type Transition struct {
 
 The `Predicate` is a simple function that takes in a character (here we're using `rune` to avoid multi-byte character issues).
 
-```
+```go
 type Predicate func(input rune) bool
 ```
 
 Putting that together;
 
-```
+```go
 type Predicate func(input rune) bool
   
 type Transition struct {  
@@ -54,7 +54,7 @@ type State struct {
 
 Inorder to use our state machine, we'll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we'll call this a **Runner**.
 
-```
+```go
 type runner struct {  
    head      *State  
 }
@@ -68,7 +68,7 @@ We'll be following TDD principles when convenient in order to make sure things a
 
 Our first test will check the behaviour of a simple FSM which represents the regex expression `abc`. The first thing to do is contruct the FSM. We'll do this 'by hand' for now, and later we'll work on a **compiler** that can take a string like `"abc"` and build an FSM automatically.
 
-```
+```go
 func TestHandmadeFSM(t *testing.T) {
 	startState := State{}  
 	stateA := State{}  
@@ -100,7 +100,7 @@ First, let's remind ourselves of the FSM structure for the regex `abc`
 
 There are 4 states which we have to define first.
 
-```
+```go
 	startState := State{}  
 	stateA := State{}  
 	stateB := State{}  
@@ -109,7 +109,7 @@ There are 4 states which we have to define first.
 
 Once we have our states, we need to describe the transitions between them. The first is the transition from the `startState` to `stateA`. To do this, we simply append a `Transition` object to the `transitions` property of `startState`. This new transition must point to `stateA`, and take as it's predicate a function that returns `true` if the input rune is `'a'`. 
 
-```
+```go
 startState.transitions = append(startState.transitions, Transition{  
    to:          &stateA,  
    predicate:   func(input rune) bool { return input == 'a' },  
@@ -118,7 +118,7 @@ startState.transitions = append(startState.transitions, Transition{
 
 Same goes for the remaining states.
 
-```
+```go
 	stateA.transitions = append(stateA.transitions, Transition{  
 	   to:          &stateB,  
 	   predicate:   func(input rune) bool { return input == 'b' },  
@@ -139,7 +139,7 @@ The outcome of running a string through an FSM should result in one of 3 statuse
 
 We can define these as consts of a specific type.
 
-```
+```go
 type Status string  
   
 const (  
@@ -158,7 +158,7 @@ With that in mind we can think of a few cases to test our FSM and runner logic;
 
 Writing these up into table-style tests we get the following;
 
-```
+```go
 type test struct {  
    name           string  
    input          string  
@@ -175,7 +175,7 @@ tests := []test{
 
 The actual tests should simply create a runner using our hand-made FSM, iterate through the runes in the `input` string, and check that the `Status` of the runner is the same as our expected status.
 
-```
+```go
 for _, tt := range tests {  
    t.Run(tt.name, func(t *testing.T) {  
       testRunner := NewRunner(&startState)  
@@ -196,7 +196,7 @@ Notice that we had to invent a couple of methods to make this work, such as the 
 
 All together, our first test looks like this;
 
-```
+```go
 func TestHandmadeFSM(t *testing.T) {  
    // hand-made FSM
    startState := State{}  
@@ -258,7 +258,7 @@ Now that we have our first test, let's implement the missing methods and make th
 
 The first method we need to implement is a simple constructor function.
 
-```
+```go
 func NewRunner(head *State) *runner {  
    r := &runner{  
       head:    head,  
@@ -275,7 +275,7 @@ Note: This assumes that we can only be in one place at a time in our FSM, more o
 
 Now, the `Next` method.
 
-```
+```go
 func (r *runner) Next(input rune) {  
    if r.current == nil {  
       return  
@@ -290,7 +290,7 @@ All this does is change the `r.current` state to the state pointed to by the fir
 
 The logic for finding the first matching transition is implemented on a method of the `State` struct, so let's implement that now.
 
-```
+```go
 func (s *State) firstMatchingTransition(input rune) destination {  
    for _, t := range s.transitions {  
       if t.predicate(input) {  
@@ -306,7 +306,7 @@ This is pretty simple also. The function loops over the transitions of the state
 
 Finally, we just need to determine the status of the FSM at any time.
 
-```
+```go
 func (r *runner) GetStatus() Status {  
    // if the current state is nil, return Fail  
    if r.current == nil {  
@@ -325,7 +325,7 @@ func (r *runner) GetStatus() Status {
 
 Again, the logic for determining a `Success` status is implemented as a `State` struct method.
 
-```
+```go
 func (s *State) isSuccessState() bool {  
    if len(s.transitions) == 0 {  
       return true  
