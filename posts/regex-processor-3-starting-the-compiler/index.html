@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="2246">
+<meta itemprop=wordCount content="2288">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -351,8 +351,13 @@ POSTS
 </span><span style=color:#a6e22e>+       tokens := lex(&#34;abc&#34;)
 </span><span style=color:#a6e22e>+       ast := parser.Parse(tokens)
 </span><span style=color:#a6e22e>+       startState, _ := ast.compile()
-</span><span style=color:#a6e22e></span>
-</code></pre></div><ul class=pa0>
+</span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#f92672>-                       testRunner := NewRunner(&amp;startState)
+</span><span style=color:#f92672>---
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+                       testRunner := NewRunner(startState)
+</span></code></pre></div><p>And with that, our tests should be green!</p>
+<p>We&rsquo;ve now created a fully compiled - although very limited - state machine. Congrats!</p>
+<p>Note: Check out this part of the project on github <a href=https://github.com/LeweyM/search/tree/master/src/v2>here</a></p>
+<ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
 </div>
