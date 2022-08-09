@@ -198,10 +198,76 @@ type CompositeNode interface {
 
 Ok, now we have our `AST` nodes defined, let's take a look at how to parse a string into a tree.
 
-### 
+### Building the Abstract Syntax Tree
 
+Building the parser is going to be one of the more complex pieces of this project, so it helps to have tests just for this. Let's start with a simple test to make it clear what we're trying to produce.
 
+```
+func TestParser(t *testing.T) {  
+   type test struct {  
+      name, input    string  
+      expectedResult Node  
+   }  
+  
+   tests := []test{  
+      {name: "simple string", input: "aBc", expectedResult: &Group{  
+         ChildNodes: []Node{  
+            CharacterLiteral{Character: 'a'},  
+            CharacterLiteral{Character: 'B'},  
+            CharacterLiteral{Character: 'c'},  
+         },  
+      }},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         p := Parser{}  
+         tokens := lex(tt.input)  
+  
+         result := p.Parse(tokens)  
+  
+         if !reflect.DeepEqual(result, tt.expectedResult) {  
+            t.Fatalf("Expected [%+v], got [%+v]", tt.expectedResult, result)  
+         }  
+      })  
+   }  
+}
+```
 
+So, in our `simple string` test, we're using as an input the string `aBc` and we hope to create the following `Group` struct:
+
+```
+&Group{  
+	ChildNodes: []Node{  
+		CharacterLiteral{Character: 'a'},  
+		CharacterLiteral{Character: 'B'},  
+		CharacterLiteral{Character: 'c'},  
+	},  
+}
+```
+
+Parsing such a simple example is very easy - we would simply initialize a new `Group`, then loop over the characters and append them to the `Group`. As we have no other `compositeNodes`, this will be enough for now.
+
+```
+type Parser struct { }  
+  
+func NewParser() *Parser {  
+   return &Parser{}  
+}  
+  
+func (p *Parser) Parse(tokens []token) Node {  
+   group := Group{}
+  
+   for _, t := range tokens {  
+      switch t.symbol {  
+      case Character:    
+         group.Append(CharacterLiteral{Character: t.letter})  
+      }  
+   }  
+  
+   return &group  
+}
+```
 
 
 
