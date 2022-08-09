@@ -65,9 +65,9 @@ In this implementation, we're going to support a subset of regex special charact
 ().*?+|
 ```
 
-For simplicity, we're not going to support escaped characters such as `\?`. Any character not in the set above is to be considered a literal character.
+For simplicity, we're not going to support escaped characters such as `\?`. Any character not in the set above is to be considered a character literal.
 
-Let's define these as `symbols`.
+Let's define these special characters as `symbols`.
 
 ```
 type symbol int
@@ -83,6 +83,8 @@ const (
 	ZeroOrOne
 )
 ```
+
+Notice we also include the symbol `character` which represents any character which is not a special character.
 
 Using these `symbols`, we can create a `token` struct which contains information on the type of symbol, and the character itself, if necessary.
 
