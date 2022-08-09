@@ -159,11 +159,46 @@ type CharacterLiteral struct {
 }
 ```
 
+We'll need a way to add child nodes to the `Group` struct, so let's add a simple method for that.
 
+```
+func (g *Group) Append(node Node) {  
+   g.ChildNodes = append(g.ChildNodes, node)  
+}
+```
 
+And we want all nodes to be compilable, although we'll get to actually *how* to compile them a bit later. Let's use an interface to show that they share this functionality.
 
+```
+type Node interface {  
+   compile() (head *State, tail *State)  
+}
+```
 
+And we'll leave these methods unimplemented for now
 
+```
+func (g *Group) compile() (head *State, tail *State) {  
+   panic("implement me")
+}  
+  
+func (l *CharacterLiteral) compile() (head *State, tail *State) {  
+   panic("implement me") 
+}
+```
+
+Finally, let's use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just `group`.
+
+```
+type CompositeNode interface {  
+   Node  
+   Append(node Node)  
+}
+```
+
+Ok, now we have our `AST` nodes defined, let's take a look at how to parse a string into a tree.
+
+### 
 
 
 
