@@ -38,3 +38,7 @@ And finally we process `b`, so we move to `state[3]`.
 ![Pasted-image-20220710203508.png](/img/Pasted-image-20220710203508.png)
 
 As `state[3]` is an end state, we can finish here and declare that a match was found!
+
+
+
+todo...
