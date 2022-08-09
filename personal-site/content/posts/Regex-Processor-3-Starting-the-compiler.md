@@ -423,5 +423,16 @@ Before we get ahead of ourselves, let's modify our tests to use our new lexer, p
 +       tokens := lex("abc")
 +       ast := parser.Parse(tokens)
 +       startState, _ := ast.compile()
-
 ```
+
+```diff
+-                       testRunner := NewRunner(&startState)
+---
++                       testRunner := NewRunner(startState)
+```
+
+And with that, our tests should be green!
+
+We've now created a fully compiled - although very limited - state machine. Congrats!
+
+Note: Check out this part of the project on github [here](https://github.com/LeweyM/search/tree/master/src/v2)
