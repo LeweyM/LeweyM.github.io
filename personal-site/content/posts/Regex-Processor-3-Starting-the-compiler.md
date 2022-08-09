@@ -336,6 +336,18 @@ We can repeat this process of merging the tail of the left-most FSM with the hea
 
 ![Pasted-image-20220807181901.png](/img/Pasted-image-20220807181901.png)
 
+Let's add this to the `Compile` method of the `Group` struct. This will be a bit more tricky than the `CharacterLiteral` node.
+
+First, let's build a starting `State` for this FSM.
+
+```
+startState := State{}  
+```
+
+Next, we want to loop over the child nodes and do the following;
+1. compile the child node
+2. merge the tail of the first node with the head of the second node
+
 And there we have it, a successfully compiled state machine!
 
 ### The power of structure
