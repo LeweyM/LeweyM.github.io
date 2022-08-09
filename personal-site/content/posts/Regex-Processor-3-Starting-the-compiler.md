@@ -269,23 +269,13 @@ func (p *Parser) Parse(tokens []token) Node {
 }
 ```
 
+As our tests are now green, let's leave it there and move onto the next step - there'll be plenty of complexity to dive into later as we introduce nested structures.
 
+Now, turning an `AST` into a compiled FSM.
 
+### Our first compiler
 
-
-
-
-
-
-
-
-
-
-
-
-// for compiler coding stage
-
-The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
+Compiling the `AST` into `State` objects can be tricky. The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
 
 For our simple example of compiling the regular expression `abc`, we just need two types of `AST` node;
 
@@ -303,6 +293,24 @@ Compiling a `CharacterLiteral` node is fairly straight forward. A character lite
 ![Pasted-image-20220807175929.png](/img/Pasted-image-20220807175929.png)
 
 That's really all there is to it. It's a two `State` system with a single transition between them, using the character of the `CharacterLiteral` as the transition predicate.
+
+Let's encode this behavior in the `Compile` method of the `CharacterLiteral` node object.
+
+```
+func (l CharacterLiteral) compile() (head *State, tail *State) {
+	// create the first state
+	startingState := State{} 
+	
+	// create the second state
+	endState := State{}  
+	
+	// add a transition between the two states, using the character as the transition predicate
+	startingState.addTransition(&endState, func(input rune) bool { return input == l.Character })  
+	
+	// return the head and tail states of this FSM
+	return &startingState, &endState
+}
+```
 
 2. `Group`
 
