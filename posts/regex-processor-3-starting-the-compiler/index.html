@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1535">
+<meta itemprop=wordCount content="1763">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -180,8 +180,65 @@ func (l *CharacterLiteral) compile() (head *State, tail *State) {
    Append(node Node)  
 }
 </code></pre><p>Ok, now we have our <code>AST</code> nodes defined, let&rsquo;s take a look at how to parse a string into a tree.</p>
-<h3 id=heading></h3>
-<p>// for compiler coding stage</p>
+<h3 id=building-the-abstract-syntax-tree>Building the Abstract Syntax Tree</h3>
+<p>Building the parser is going to be one of the more complex pieces of this project, so it helps to have tests just for this. Let&rsquo;s start with a simple test to make it clear what we&rsquo;re trying to produce.</p>
+<pre tabindex=0><code>func TestParser(t *testing.T) {  
+   type test struct {  
+      name, input    string  
+      expectedResult Node  
+   }  
+  
+   tests := []test{  
+      {name: &quot;simple string&quot;, input: &quot;aBc&quot;, expectedResult: &amp;Group{  
+         ChildNodes: []Node{  
+            CharacterLiteral{Character: 'a'},  
+            CharacterLiteral{Character: 'B'},  
+            CharacterLiteral{Character: 'c'},  
+         },  
+      }},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         p := Parser{}  
+         tokens := lex(tt.input)  
+  
+         result := p.Parse(tokens)  
+  
+         if !reflect.DeepEqual(result, tt.expectedResult) {  
+            t.Fatalf(&quot;Expected [%+v], got [%+v]&quot;, tt.expectedResult, result)  
+         }  
+      })  
+   }  
+}
+</code></pre><p>So, in our <code>simple string</code> test, we&rsquo;re using as an input the string <code>aBc</code> and we hope to create the following <code>Group</code> struct:</p>
+<pre tabindex=0><code>&amp;Group{  
+	ChildNodes: []Node{  
+		CharacterLiteral{Character: 'a'},  
+		CharacterLiteral{Character: 'B'},  
+		CharacterLiteral{Character: 'c'},  
+	},  
+}
+</code></pre><p>Parsing such a simple example is very easy - we would simply initialize a new <code>Group</code>, then loop over the characters and append them to the <code>Group</code>. As we have no other <code>compositeNodes</code>, this will be enough for now.</p>
+<pre tabindex=0><code>type Parser struct { }  
+  
+func NewParser() *Parser {  
+   return &amp;Parser{}  
+}  
+  
+func (p *Parser) Parse(tokens []token) Node {  
+   group := Group{}
+  
+   for _, t := range tokens {  
+      switch t.symbol {  
+      case Character:    
+         group.Append(CharacterLiteral{Character: t.letter})  
+      }  
+   }  
+  
+   return &amp;group  
+}
+</code></pre><p>// for compiler coding stage</p>
 <p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
