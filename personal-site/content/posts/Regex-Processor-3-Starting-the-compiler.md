@@ -397,38 +397,65 @@ Having this separation of concerns will make life a lot easier for use when we i
 Before we get ahead of ourselves, let's modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.
 
 ```diff
--       // handMade
--       startState := State{}
--       stateA := State{}
--       stateB := State{}
--       stateC := State{}
+- func TestHandmadeFSM(t *testing.T) {  
++ func TestCompiledFSM(t *testing.T) {  
+-  // handMade
+-  startState := State{}
+-  stateA := State{}
+-  stateB := State{}
+-  stateC := State{}
 - 
--       startState.transitions = append(startState.transitions, Transition{
--               to:        &stateA,
--               predicate: func(input rune) bool { return input == 'a' },
--       })
+-  startState.transitions = append(startState.transitions, Transition{
+-          to:        &stateA,
+-          predicate: func(input rune) bool { return input == 'a' },
+-  })
 - 
--       stateA.transitions = append(stateA.transitions, Transition{
--               to:        &stateB,
--               predicate: func(input rune) bool { return input == 'b' },
--       })
-- 
--       stateB.transitions = append(stateB.transitions, Transition{
--               to:        &stateC,
--               predicate: func(input rune) bool { return input == 'c' },
--       })
----
-+       parser := NewParser()
-+ 
-+       tokens := lex("abc")
-+       ast := parser.Parse(tokens)
-+       startState, _ := ast.compile()
-```
-
-```diff
--                       testRunner := NewRunner(&startState)
----
-+                       testRunner := NewRunner(startState)
+-  stateA.transitions = append(stateA.transitions, Transition{
+-          to:        &stateB,
+-          predicate: func(input rune) bool { return input == 'b' },
+-  })
+-
+-  stateB.transitions = append(stateB.transitions, Transition{
+-          to:        &stateC,
+-          predicate: func(input rune) bool { return input == 'c' },
+-  })
++  // compiled
++  parser := NewParser()
++
++  tokens := lex("abc")
++  ast := parser.Parse(tokens)
++  startState, _ := ast.compile()
+  
+   type test struct {  
+      name           string  
+      input          string  
+      expectedStatus Status  
+   }  
+  
+   tests := []test{  
+      {"empty string", "", Normal},  
+      {"non matching string", "xxx", Fail},  
+      {"matching string", "abc", Success},  
+      {"partial matching string", "ab", Normal},  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         testRunner := NewRunner(startState)  
+-        testRunner := NewRunner(&startState)
++        testRunner := NewRunner(startState)
+  
+         for _, character := range tt.input {  
+            testRunner.Next(character)  
+         }  
+  
+         result := testRunner.GetStatus()  
+         if tt.expectedStatus != result {  
+            t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
+         }  
+      })  
+   }  
+}
 ```
 
 And with that, our tests should be green!
