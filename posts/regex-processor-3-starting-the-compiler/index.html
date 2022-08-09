@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1313">
+<meta itemprop=wordCount content="1332">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -89,8 +89,8 @@ POSTS
 <h3 id=coding-the-lexer>Coding the lexer</h3>
 <p>In this implementation, we&rsquo;re going to support a subset of regex special characters;</p>
 <pre tabindex=0><code>().*?+|
-</code></pre><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a literal character.</p>
-<p>Let&rsquo;s define these as <code>symbols</code>.</p>
+</code></pre><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a character literal.</p>
+<p>Let&rsquo;s define these special characters as <code>symbols</code>.</p>
 <pre tabindex=0><code>type symbol int
 
 const (
@@ -103,7 +103,8 @@ const (
 	OneOrMore
 	ZeroOrOne
 )
-</code></pre><p>Using these <code>symbols</code>, we can create a <code>token</code> struct which contains information on the type of symbol, and the character itself, if necessary.</p>
+</code></pre><p>Notice we also include the symbol <code>character</code> which represents any character which is not a special character.</p>
+<p>Using these <code>symbols</code>, we can create a <code>token</code> struct which contains information on the type of symbol, and the character itself, if necessary.</p>
 <pre tabindex=0><code>type token struct {  
    symbol symbol  
    letter rune  
