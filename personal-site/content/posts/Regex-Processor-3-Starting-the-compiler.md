@@ -347,8 +347,44 @@ startState := State{}
 Next, we want to loop over the child nodes and do the following;
 1. compile the child node
 2. merge the tail of the first node with the head of the second node
+3. mark the tail of the second node as the new tail
 
-And there we have it, a successfully compiled state machine!
+The third step is important as it tells us which state we need to merge next in the iteration, and allows the FSM to grow to the right, as in the diagrams.
+
+In code, the loop looks like so;
+
+```
+// 0. mark the tail of the startState as the current tail to prepare the iteration.
+currentTail := &startState  
+  
+for _, expression := range g.ChildNodes {  
+	// 1. compile the child node
+	nextStateHead, nextStateTail := expression.compile()  
+	
+	// 2. merge the tail of the first node with the head of the second node
+	currentTail.merge(nextStateHead)  
+	
+	// 3. mark the tail of the second node as the new tail
+	currentTail = nextStateTail  
+}
+```
+
+Putting this all together, we have the following `Compile` function;
+
+``` 
+func (g *Group) compile() (head *State, tail *State) {  
+   startState := State{}  
+   currentTail := &startState  
+  
+   for _, expression := range g.ChildNodes {  
+      nextStateHead, nextStateTail := expression.compile()  
+      currentTail.merge(nextStateHead)  
+      currentTail = nextStateTail  
+   }  
+  
+   return &startState, currentTail  
+}
+```
 
 ### The power of structure
 
@@ -356,3 +392,10 @@ Here, I hope it starts to become clear why we separate the `compiling` from the 
 
 Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.
 
+### Changing our tests
+
+Before we get ahead of ourselves, let's modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.
+
+```
+
+```
