@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="2142">
+<meta itemprop=wordCount content="2246">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -88,62 +88,62 @@ POSTS
 <p>Now that we&rsquo;ve described our three phases, let&rsquo;s jump into some code.</p>
 <h3 id=coding-the-lexer>Coding the lexer</h3>
 <p>In this implementation, we&rsquo;re going to support a subset of regex special characters;</p>
-<pre tabindex=0><code>().*?+|
-</code></pre><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a character literal.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>().<span style=color:#f92672>*</span><span style=color:#960050;background-color:#1e0010>?</span><span style=color:#f92672>+</span>|
+</code></pre></div><p>For simplicity, we&rsquo;re not going to support escaped characters such as <code>\?</code>. Any character not in the set above is to be considered a character literal.</p>
 <p>Let&rsquo;s define these special characters as <code>symbols</code>.</p>
-<pre tabindex=0><code>type symbol int
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>symbol</span> <span style=color:#66d9ef>int</span>
 
-const (
-	AnyCharacter symbol = iota
-	Pipe
-	LParen
-	RParen
-	Character
-	ZeroOrMore
-	OneOrMore
-	ZeroOrOne
+<span style=color:#66d9ef>const</span> (
+	<span style=color:#a6e22e>AnyCharacter</span> <span style=color:#a6e22e>symbol</span> = <span style=color:#66d9ef>iota</span>
+	<span style=color:#a6e22e>Pipe</span>
+	<span style=color:#a6e22e>LParen</span>
+	<span style=color:#a6e22e>RParen</span>
+	<span style=color:#a6e22e>Character</span>
+	<span style=color:#a6e22e>ZeroOrMore</span>
+	<span style=color:#a6e22e>OneOrMore</span>
+	<span style=color:#a6e22e>ZeroOrOne</span>
 )
-</code></pre><p>Notice we also include the symbol <code>character</code> which represents any character which is not a special character.</p>
+</code></pre></div><p>Notice we also include the symbol <code>character</code> which represents any character which is not a special character.</p>
 <p>Using these <code>symbols</code>, we can create a <code>token</code> struct which contains information on the type of symbol, and the character itself, if necessary.</p>
-<pre tabindex=0><code>type token struct {  
-   symbol symbol  
-   letter rune  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>token</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>symbol</span> <span style=color:#a6e22e>symbol</span>  
+   <span style=color:#a6e22e>letter</span> <span style=color:#66d9ef>rune</span>  
 }
-</code></pre><p>Now we simply need to loop through the regular expression string and map the characters to our tokens.</p>
-<pre tabindex=0><code>func lex(input string) []token {  
-   var tokens []token  
-   i := 0  
-   for i &lt; len(input) {  
-      tokens = append(tokens, lexRune(rune(input[i])))  
-      i++  
+</code></pre></div><p>Now we simply need to loop through the regular expression string and map the characters to our tokens.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) []<span style=color:#a6e22e>token</span> {  
+   <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>tokens</span> []<span style=color:#a6e22e>token</span>  
+   <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> &lt; len(<span style=color:#a6e22e>input</span>) {  
+      <span style=color:#a6e22e>tokens</span> = append(<span style=color:#a6e22e>tokens</span>, <span style=color:#a6e22e>lexRune</span>(rune(<span style=color:#a6e22e>input</span>[<span style=color:#a6e22e>i</span>])))  
+      <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>  
    }  
-   return tokens  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>tokens</span>  
 }  
   
-func lexRune(r rune) token {  
-   var s token  
-   switch r {  
-   case '(':  
-      s.symbol = LParen  
-   case ')':  
-      s.symbol = RParen  
-   case '.':  
-      s.symbol = AnyCharacter  
-   case '|':  
-      s.symbol = Pipe  
-   case '*':  
-      s.symbol = ZeroOrMore  
-   case '+':  
-      s.symbol = OneOrMore  
-   case '?':  
-      s.symbol = ZeroOrOne  
-   default:  
-      s.symbol = Character  
-      s.letter = r  
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>lexRune</span>(<span style=color:#a6e22e>r</span> <span style=color:#66d9ef>rune</span>) <span style=color:#a6e22e>token</span> {  
+   <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#a6e22e>token</span>  
+   <span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>r</span> {  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;(&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>LParen</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;)&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>RParen</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;.&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>AnyCharacter</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;|&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>Pipe</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;*&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>ZeroOrMore</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;+&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>OneOrMore</span>  
+   <span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#39;?&#39;</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>ZeroOrOne</span>  
+   <span style=color:#66d9ef>default</span>:  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>symbol</span> = <span style=color:#a6e22e>Character</span>  
+      <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>letter</span> = <span style=color:#a6e22e>r</span>  
    }  
-   return s  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>  
 }
-</code></pre><p>That&rsquo;s really all there is to it. Now instead of a string of characters, we have our own defined <code>tokens</code> to work with.</p>
+</code></pre></div><p>That&rsquo;s really all there is to it. Now instead of a string of characters, we have our own defined <code>tokens</code> to work with.</p>
 <p>We&rsquo;ll now use those <code>tokens</code> to build our <code>AST</code></p>
 <h3 id=coding-the-parser>Coding the parser</h3>
 <p>For our simple example of parsing the regular expression <code>abc</code>, we just need two types of <code>AST</code>node: <code>Group</code> and <code>CharacterLiteral</code>.</p>
@@ -151,94 +151,94 @@ func lexRune(r rune) token {
 <p><img src=/img/Pasted-image-20220807173722.png alt=Pasted-image-20220807173722.png></p>
 <p>A <code>group</code> <strong>contains</strong> three child nodes. The child nodes are <code>characterLiterals</code> and are the <strong>leaf nodes</strong> of the tree.</p>
 <p>Let&rsquo;s create two structs to represent these nodes.</p>
-<pre tabindex=0><code>type Group struct {  
-   ChildNodes []Ast  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Group</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>ChildNodes</span> []<span style=color:#a6e22e>Ast</span>  
 }  
   
-type CharacterLiteral struct {  
-   Character rune  
+<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>CharacterLiteral</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>Character</span> <span style=color:#66d9ef>rune</span>  
 }
-</code></pre><p>We&rsquo;ll need a way to add child nodes to the <code>Group</code> struct, so let&rsquo;s add a simple method for that.</p>
-<pre tabindex=0><code>func (g *Group) Append(node Node) {  
-   g.ChildNodes = append(g.ChildNodes, node)  
+</code></pre></div><p>We&rsquo;ll need a way to add child nodes to the <code>Group</code> struct, so let&rsquo;s add a simple method for that.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>g</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Group</span>) <span style=color:#a6e22e>Append</span>(<span style=color:#a6e22e>node</span> <span style=color:#a6e22e>Node</span>) {  
+   <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>ChildNodes</span> = append(<span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>ChildNodes</span>, <span style=color:#a6e22e>node</span>)  
 }
-</code></pre><p>And we want all nodes to be compilable, although we&rsquo;ll get to actually <em>how</em> to compile them a bit later. Let&rsquo;s use an interface to show that they share this functionality.</p>
-<pre tabindex=0><code>type Node interface {  
-   compile() (head *State, tail *State)  
+</code></pre></div><p>And we want all nodes to be compilable, although we&rsquo;ll get to actually <em>how</em> to compile them a bit later. Let&rsquo;s use an interface to show that they share this functionality.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Node</span> <span style=color:#66d9ef>interface</span> {  
+   <span style=color:#a6e22e>compile</span>() (<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>, <span style=color:#a6e22e>tail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>)  
 }
-</code></pre><p>And we&rsquo;ll leave these methods unimplemented for now</p>
-<pre tabindex=0><code>func (g *Group) compile() (head *State, tail *State) {  
-   panic(&quot;implement me&quot;)
+</code></pre></div><p>And we&rsquo;ll leave these methods unimplemented for now</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>g</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Group</span>) <span style=color:#a6e22e>compile</span>() (<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>, <span style=color:#a6e22e>tail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) {  
+   panic(<span style=color:#e6db74>&#34;implement me&#34;</span>)
 }  
   
-func (l *CharacterLiteral) compile() (head *State, tail *State) {  
-   panic(&quot;implement me&quot;) 
+<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>l</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>CharacterLiteral</span>) <span style=color:#a6e22e>compile</span>() (<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>, <span style=color:#a6e22e>tail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) {  
+   panic(<span style=color:#e6db74>&#34;implement me&#34;</span>) 
 }
-</code></pre><p>Finally, let&rsquo;s use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just <code>group</code>.</p>
-<pre tabindex=0><code>type CompositeNode interface {  
-   Node  
-   Append(node Node)  
+</code></pre></div><p>Finally, let&rsquo;s use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just <code>group</code>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>CompositeNode</span> <span style=color:#66d9ef>interface</span> {  
+   <span style=color:#a6e22e>Node</span>  
+   <span style=color:#a6e22e>Append</span>(<span style=color:#a6e22e>node</span> <span style=color:#a6e22e>Node</span>)  
 }
-</code></pre><p>Ok, now we have our <code>AST</code> nodes defined, let&rsquo;s take a look at how to parse a string into a tree.</p>
+</code></pre></div><p>Ok, now we have our <code>AST</code> nodes defined, let&rsquo;s take a look at how to parse a string into a tree.</p>
 <h3 id=building-the-abstract-syntax-tree>Building the Abstract Syntax Tree</h3>
 <p>Building the parser is going to be one of the more complex pieces of this project, so it helps to have tests just for this. Let&rsquo;s start with a simple test to make it clear what we&rsquo;re trying to produce.</p>
-<pre tabindex=0><code>func TestParser(t *testing.T) {  
-   type test struct {  
-      name, input    string  
-      expectedResult Node  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestParser</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
+   <span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
+      <span style=color:#a6e22e>name</span>, <span style=color:#a6e22e>input</span>    <span style=color:#66d9ef>string</span>  
+      <span style=color:#a6e22e>expectedResult</span> <span style=color:#a6e22e>Node</span>  
    }  
   
-   tests := []test{  
-      {name: &quot;simple string&quot;, input: &quot;aBc&quot;, expectedResult: &amp;Group{  
-         ChildNodes: []Node{  
-            CharacterLiteral{Character: 'a'},  
-            CharacterLiteral{Character: 'B'},  
-            CharacterLiteral{Character: 'c'},  
+   <span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
+      {<span style=color:#a6e22e>name</span>: <span style=color:#e6db74>&#34;simple string&#34;</span>, <span style=color:#a6e22e>input</span>: <span style=color:#e6db74>&#34;aBc&#34;</span>, <span style=color:#a6e22e>expectedResult</span>: <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Group</span>{  
+         <span style=color:#a6e22e>ChildNodes</span>: []<span style=color:#a6e22e>Node</span>{  
+            <span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;a&#39;</span>},  
+            <span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;B&#39;</span>},  
+            <span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;c&#39;</span>},  
          },  
       }},  
    }  
   
-   for _, tt := range tests {  
-      t.Run(tt.name, func(t *testing.T) {  
-         p := Parser{}  
-         tokens := lex(tt.input)  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>tt</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tests</span> {  
+      <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>name</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
+         <span style=color:#a6e22e>p</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Parser</span>{}  
+         <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>input</span>)  
   
-         result := p.Parse(tokens)  
+         <span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span>)  
   
-         if !reflect.DeepEqual(result, tt.expectedResult) {  
-            t.Fatalf(&quot;Expected [%+v], got [%+v]&quot;, tt.expectedResult, result)  
+         <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>DeepEqual</span>(<span style=color:#a6e22e>result</span>, <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>expectedResult</span>) {  
+            <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;Expected [%+v], got [%+v]&#34;</span>, <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>expectedResult</span>, <span style=color:#a6e22e>result</span>)  
          }  
       })  
    }  
 }
-</code></pre><p>So, in our <code>simple string</code> test, we&rsquo;re using as an input the string <code>aBc</code> and we hope to create the following <code>Group</code> struct:</p>
-<pre tabindex=0><code>&amp;Group{  
-	ChildNodes: []Node{  
-		CharacterLiteral{Character: 'a'},  
-		CharacterLiteral{Character: 'B'},  
-		CharacterLiteral{Character: 'c'},  
+</code></pre></div><p>So, in our <code>simple string</code> test, we&rsquo;re using as an input the string <code>aBc</code> and we hope to create the following <code>Group</code> struct:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Group</span>{  
+	<span style=color:#a6e22e>ChildNodes</span>: []<span style=color:#a6e22e>Node</span>{  
+		<span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;a&#39;</span>},  
+		<span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;B&#39;</span>},  
+		<span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#e6db74>&#39;c&#39;</span>},  
 	},  
 }
-</code></pre><p>Parsing such a simple example is very easy - we would simply initialize a new <code>Group</code>, then loop over the characters and append them to the <code>Group</code>. As we have no other <code>compositeNodes</code>, this will be enough for now.</p>
-<pre tabindex=0><code>type Parser struct { }  
+</code></pre></div><p>Parsing such a simple example is very easy - we would simply initialize a new <code>Group</code>, then loop over the characters and append them to the <code>Group</code>. As we have no other <code>compositeNodes</code>, this will be enough for now.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Parser</span> <span style=color:#66d9ef>struct</span> { }  
   
-func NewParser() *Parser {  
-   return &amp;Parser{}  
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewParser</span>() <span style=color:#f92672>*</span><span style=color:#a6e22e>Parser</span> {  
+   <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Parser</span>{}  
 }  
   
-func (p *Parser) Parse(tokens []token) Node {  
-   group := Group{}
+<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>p</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Parser</span>) <span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span> []<span style=color:#a6e22e>token</span>) <span style=color:#a6e22e>Node</span> {  
+   <span style=color:#a6e22e>group</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Group</span>{}
   
-   for _, t := range tokens {  
-      switch t.symbol {  
-      case Character:    
-         group.Append(CharacterLiteral{Character: t.letter})  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>t</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tokens</span> {  
+      <span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>symbol</span> {  
+      <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>Character</span>:    
+         <span style=color:#a6e22e>group</span>.<span style=color:#a6e22e>Append</span>(<span style=color:#a6e22e>CharacterLiteral</span>{<span style=color:#a6e22e>Character</span>: <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>letter</span>})  
       }  
    }  
   
-   return &amp;group  
+   <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>group</span>  
 }
-</code></pre><p>As our tests are now green, let&rsquo;s leave it there and move onto the next step - there&rsquo;ll be plenty of complexity to dive into later as we introduce nested structures.</p>
+</code></pre></div><p>As our tests are now green, let&rsquo;s leave it there and move onto the next step - there&rsquo;ll be plenty of complexity to dive into later as we introduce nested structures.</p>
 <p>Now, turning an <code>AST</code> into a compiled FSM.</p>
 <h3 id=our-first-compiler>Our first compiler</h3>
 <p>Compiling the <code>AST</code> into <code>State</code> objects can be tricky. The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
@@ -256,20 +256,20 @@ func (p *Parser) Parse(tokens []token) Node {
 <p><img src=/img/Pasted-image-20220807175929.png alt=Pasted-image-20220807175929.png></p>
 <p>That&rsquo;s really all there is to it. It&rsquo;s a two <code>State</code> system with a single transition between them, using the character of the <code>CharacterLiteral</code> as the transition predicate.</p>
 <p>Let&rsquo;s encode this behavior in the <code>Compile</code> method of the <code>CharacterLiteral</code> node object.</p>
-<pre tabindex=0><code>func (l CharacterLiteral) compile() (head *State, tail *State) {
-	// create the first state
-	startingState := State{} 
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>l</span> <span style=color:#a6e22e>CharacterLiteral</span>) <span style=color:#a6e22e>compile</span>() (<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>, <span style=color:#a6e22e>tail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) {
+	<span style=color:#75715e>// create the first state
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>startingState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{} 
 	
-	// create the second state
-	endState := State{}  
+	<span style=color:#75715e>// create the second state
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>endState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
 	
-	// add a transition between the two states, using the character as the transition predicate
-	startingState.addTransition(&amp;endState, func(input rune) bool { return input == l.Character })  
+	<span style=color:#75715e>// add a transition between the two states, using the character as the transition predicate
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>startingState</span>.<span style=color:#a6e22e>addTransition</span>(<span style=color:#f92672>&amp;</span><span style=color:#a6e22e>endState</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>l</span>.<span style=color:#a6e22e>Character</span> })  
 	
-	// return the head and tail states of this FSM
-	return &amp;startingState, &amp;endState
+	<span style=color:#75715e>// return the head and tail states of this FSM
+</span><span style=color:#75715e></span>	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>startingState</span>, <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>endState</span>
 }
-</code></pre><ol start=2>
+</code></pre></div><ol start=2>
 <li><code>Group</code></li>
 </ol>
 <p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
@@ -294,39 +294,65 @@ func (p *Parser) Parse(tokens []token) Node {
 </ol>
 <p>The third step is important as it tells us which state we need to merge next in the iteration, and allows the FSM to grow to the right, as in the diagrams.</p>
 <p>In code, the loop looks like so;</p>
-<pre tabindex=0><code>// 0. mark the tail of the startState as the current tail to prepare the iteration.
-currentTail := &amp;startState  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// 0. mark the tail of the startState as the current tail to prepare the iteration.
+</span><span style=color:#75715e></span><span style=color:#a6e22e>currentTail</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>startState</span>  
   
-for _, expression := range g.ChildNodes {  
-	// 1. compile the child node
-	nextStateHead, nextStateTail := expression.compile()  
+<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>expression</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>ChildNodes</span> {  
+	<span style=color:#75715e>// 1. compile the child node
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>nextStateHead</span>, <span style=color:#a6e22e>nextStateTail</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>expression</span>.<span style=color:#a6e22e>compile</span>()  
 	
-	// 2. merge the tail of the first node with the head of the second node
-	currentTail.merge(nextStateHead)  
+	<span style=color:#75715e>// 2. merge the tail of the first node with the head of the second node
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>currentTail</span>.<span style=color:#a6e22e>merge</span>(<span style=color:#a6e22e>nextStateHead</span>)  
 	
-	// 3. mark the tail of the second node as the new tail
-	currentTail = nextStateTail  
+	<span style=color:#75715e>// 3. mark the tail of the second node as the new tail
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>currentTail</span> = <span style=color:#a6e22e>nextStateTail</span>  
 }
-</code></pre><p>Putting this all together, we have the following <code>Compile</code> function;</p>
-<pre tabindex=0><code>func (g *Group) compile() (head *State, tail *State) {  
-   startState := State{}  
-   currentTail := &amp;startState  
+</code></pre></div><p>Putting this all together, we have the following <code>Compile</code> function;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>g</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Group</span>) <span style=color:#a6e22e>compile</span>() (<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>, <span style=color:#a6e22e>tail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) {  
+   <span style=color:#a6e22e>startState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+   <span style=color:#a6e22e>currentTail</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>startState</span>  
   
-   for _, expression := range g.ChildNodes {  
-      nextStateHead, nextStateTail := expression.compile()  
-      currentTail.merge(nextStateHead)  
-      currentTail = nextStateTail  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>expression</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>ChildNodes</span> {  
+      <span style=color:#a6e22e>nextStateHead</span>, <span style=color:#a6e22e>nextStateTail</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>expression</span>.<span style=color:#a6e22e>compile</span>()  
+      <span style=color:#a6e22e>currentTail</span>.<span style=color:#a6e22e>merge</span>(<span style=color:#a6e22e>nextStateHead</span>)  
+      <span style=color:#a6e22e>currentTail</span> = <span style=color:#a6e22e>nextStateTail</span>  
    }  
   
-   return &amp;startState, currentTail  
+   <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>startState</span>, <span style=color:#a6e22e>currentTail</span>  
 }
-</code></pre><h3 id=the-power-of-structure>The power of structure</h3>
+</code></pre></div><h3 id=the-power-of-structure>The power of structure</h3>
 <p>Here, I hope it starts to become clear why we separate the <code>compiling</code> from the <code>lexing</code> and <code>parsing</code> stages. Once we have the <strong>structure</strong> of the expression, it&rsquo;s much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group their children, and tell leaf nodes the expected compiled form.</p>
 <p>Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.</p>
 <h3 id=changing-our-tests>Changing our tests</h3>
 <p>Before we get ahead of ourselves, let&rsquo;s modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.</p>
-<pre tabindex=0><code>
-</code></pre><ul class=pa0>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#f92672>-       // handMade
+</span><span style=color:#f92672>-       startState := State{}
+</span><span style=color:#f92672>-       stateA := State{}
+</span><span style=color:#f92672>-       stateB := State{}
+</span><span style=color:#f92672>-       stateC := State{}
+</span><span style=color:#f92672>- 
+</span><span style=color:#f92672>-       startState.transitions = append(startState.transitions, Transition{
+</span><span style=color:#f92672>-               to:        &amp;stateA,
+</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;a&#39; },
+</span><span style=color:#f92672>-       })
+</span><span style=color:#f92672>- 
+</span><span style=color:#f92672>-       stateA.transitions = append(stateA.transitions, Transition{
+</span><span style=color:#f92672>-               to:        &amp;stateB,
+</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;b&#39; },
+</span><span style=color:#f92672>-       })
+</span><span style=color:#f92672>- 
+</span><span style=color:#f92672>-       stateB.transitions = append(stateB.transitions, Transition{
+</span><span style=color:#f92672>-               to:        &amp;stateC,
+</span><span style=color:#f92672>-               predicate: func(input rune) bool { return input == &#39;c&#39; },
+</span><span style=color:#f92672>-       })
+</span><span style=color:#f92672>---
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+       parser := NewParser()
+</span><span style=color:#a6e22e>+ 
+</span><span style=color:#a6e22e>+       tokens := lex(&#34;abc&#34;)
+</span><span style=color:#a6e22e>+       ast := parser.Parse(tokens)
+</span><span style=color:#a6e22e>+       startState, _ := ast.compile()
+</span><span style=color:#a6e22e></span>
+</code></pre></div><ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
 </div>

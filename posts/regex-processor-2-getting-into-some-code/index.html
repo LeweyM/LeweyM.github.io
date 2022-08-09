@@ -60,89 +60,89 @@ POSTS
 <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Let&rsquo;s start coding.</p>
 <h3 id=the-fsm-data-structure>The FSM data structure</h3>
 <p>We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of <code>state</code> objects.</p>
-<pre tabindex=0><code>type State struct {  
-	connectedStates []State  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>State</span> <span style=color:#66d9ef>struct</span> {  
+	<span style=color:#a6e22e>connectedStates</span> []<span style=color:#a6e22e>State</span>  
 }
-</code></pre><p>We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a <code>Transition</code> struct to represent this.</p>
+</code></pre></div><p>We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a <code>Transition</code> struct to represent this.</p>
 <p>The <code>Transition</code> struct contains two things:</p>
 <ol>
 <li>the next state</li>
 <li>the predicate that determines whether we can go to the next state</li>
 </ol>
-<pre tabindex=0><code>type Transition struct {  
-   // to: a pointer to the next state   
-   to *State  
-   // predicate: a function to determine if we should move to the next state
-   predicate func(input rune) bool  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Transition</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#75715e>// to: a pointer to the next state   
+</span><span style=color:#75715e></span>   <span style=color:#a6e22e>to</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>  
+   <span style=color:#75715e>// predicate: a function to determine if we should move to the next state
+</span><span style=color:#75715e></span>   <span style=color:#a6e22e>predicate</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span>  
 }  
-</code></pre><p>The <code>Predicate</code> is a simple function that takes in a character (here we&rsquo;re using <code>rune</code> to avoid multi-byte character issues).</p>
-<pre tabindex=0><code>type Predicate func(input rune) bool
-</code></pre><p>Putting that together;</p>
-<pre tabindex=0><code>type Predicate func(input rune) bool
+</code></pre></div><p>The <code>Predicate</code> is a simple function that takes in a character (here we&rsquo;re using <code>rune</code> to avoid multi-byte character issues).</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Predicate</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span>
+</code></pre></div><p>Putting that together;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Predicate</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span>
   
-type Transition struct {  
-   to          *State  
-   predicate   Predicate  
+<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Transition</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>to</span>          <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>  
+   <span style=color:#a6e22e>predicate</span>   <span style=color:#a6e22e>Predicate</span>  
 }  
   
-type State struct {  
-   transitions []Transition  
+<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>State</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>transitions</span> []<span style=color:#a6e22e>Transition</span>  
 }
 
-</code></pre><h3 id=running-our-state-machine>Running Our State machine</h3>
+</code></pre></div><h3 id=running-our-state-machine>Running Our State machine</h3>
 <p>Inorder to use our state machine, we&rsquo;ll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we&rsquo;ll call this a <strong>Runner</strong>.</p>
-<pre tabindex=0><code>type runner struct {  
-   head      *State  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>runner</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>head</span>      <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>  
 }
-</code></pre><p>For now, all our runner needs to have is a pointer to the root (or <code>head</code>) node of our FSM.</p>
+</code></pre></div><p>For now, all our runner needs to have is a pointer to the root (or <code>head</code>) node of our FSM.</p>
 <h3 id=tests-first>Tests first</h3>
 <p>We&rsquo;ll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.</p>
 <p>Our first test will check the behaviour of a simple FSM which represents the regex expression <code>abc</code>. The first thing to do is contruct the FSM. We&rsquo;ll do this &lsquo;by hand&rsquo; for now, and later we&rsquo;ll work on a <strong>compiler</strong> that can take a string like <code>"abc"</code> and build an FSM automatically.</p>
-<pre tabindex=0><code>func TestHandmadeFSM(t *testing.T) {
-	startState := State{}  
-	stateA := State{}  
-	stateB := State{}  
-	stateC := State{}  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestHandmadeFSM</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
+	<span style=color:#a6e22e>startState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateA</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateB</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateC</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
 	  
-	startState.transitions = append(startState.transitions, Transition{  
-	   to:          &amp;stateA,  
-	   predicate:   func(input rune) bool { return input == 'a' },  
+	<span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+	   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateA</span>,  
+	   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;a&#39;</span> },  
 	})  
 	  
-	stateA.transitions = append(stateA.transitions, Transition{  
-	   to:          &amp;stateB,  
-	   predicate:   func(input rune) bool { return input == 'b' },  
+	<span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+	   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateB</span>,  
+	   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;b&#39;</span> },  
 	})  
 	  
-	stateB.transitions = append(stateB.transitions, Transition{  
-	   to:          &amp;stateC,  
-	   predicate:   func(input rune) bool { return input == 'c' },  
+	<span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+	   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateC</span>,  
+	   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;c&#39;</span> },  
 	})
 }
-</code></pre><p>There&rsquo;s quite a bit going on here, so let&rsquo;s break it down a bit.</p>
+</code></pre></div><p>There&rsquo;s quite a bit going on here, so let&rsquo;s break it down a bit.</p>
 <p>First, let&rsquo;s remind ourselves of the FSM structure for the regex <code>abc</code></p>
 <p><img src=/img/Pasted-image-20220710201842.png alt=Pasted-image-20220710201842.png></p>
 <p>There are 4 states which we have to define first.</p>
-<pre tabindex=0><code>	startState := State{}  
-	stateA := State{}  
-	stateB := State{}  
-	stateC := State{} 
-</code></pre><p>Once we have our states, we need to describe the transitions between them. The first is the transition from the <code>startState</code> to <code>stateA</code>. To do this, we simply append a <code>Transition</code> object to the <code>transitions</code> property of <code>startState</code>. This new transition must point to <code>stateA</code>, and take as it&rsquo;s predicate a function that returns <code>true</code> if the input rune is <code>'a'</code>.</p>
-<pre tabindex=0><code>startState.transitions = append(startState.transitions, Transition{  
-   to:          &amp;stateA,  
-   predicate:   func(input rune) bool { return input == 'a' },  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>	<span style=color:#a6e22e>startState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateA</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateB</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+	<span style=color:#a6e22e>stateC</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{} 
+</code></pre></div><p>Once we have our states, we need to describe the transitions between them. The first is the transition from the <code>startState</code> to <code>stateA</code>. To do this, we simply append a <code>Transition</code> object to the <code>transitions</code> property of <code>startState</code>. This new transition must point to <code>stateA</code>, and take as it&rsquo;s predicate a function that returns <code>true</code> if the input rune is <code>'a'</code>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateA</span>,  
+   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;a&#39;</span> },  
 })  
-</code></pre><p>Same goes for the remaining states.</p>
-<pre tabindex=0><code>	stateA.transitions = append(stateA.transitions, Transition{  
-	   to:          &amp;stateB,  
-	   predicate:   func(input rune) bool { return input == 'b' },  
+</code></pre></div><p>Same goes for the remaining states.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>	<span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+	   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateB</span>,  
+	   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;b&#39;</span> },  
 	})  
 	  
-	stateB.transitions = append(stateB.transitions, Transition{  
-	   to:          &amp;stateC,  
-	   predicate:   func(input rune) bool { return input == 'c' },  
+	<span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+	   <span style=color:#a6e22e>to</span>:          <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateC</span>,  
+	   <span style=color:#a6e22e>predicate</span>:   <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;c&#39;</span> },  
 	})
-</code></pre><p>We now have our first FSM starting at the root node <code>startState</code>. Let&rsquo;s write a test which creates a <code>runner</code> and uses this FSM to check against a few different input cases.</p>
+</code></pre></div><p>We now have our first FSM starting at the root node <code>startState</code>. Let&rsquo;s write a test which creates a <code>runner</code> and uses this FSM to check against a few different input cases.</p>
 <p>The outcome of running a string through an FSM should result in one of 3 statuses;</p>
 <ol>
 <li><code>Normal</code>. The FSM has not found a match yet, but neither has it found that there is no match. Another way of saying this is that the search is still &lsquo;in progress&rsquo;.</li>
@@ -150,14 +150,14 @@ type State struct {
 <li><code>fail</code>. The FSM has found that the string does not match.</li>
 </ol>
 <p>We can define these as consts of a specific type.</p>
-<pre tabindex=0><code>type Status string  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Status</span> <span style=color:#66d9ef>string</span>  
   
-const (  
-   Success Status = &quot;success&quot;  
-   Fail           = &quot;fail&quot;  
-   Normal         = &quot;normal&quot;  
+<span style=color:#66d9ef>const</span> (  
+   <span style=color:#a6e22e>Success</span> <span style=color:#a6e22e>Status</span> = <span style=color:#e6db74>&#34;success&#34;</span>  
+   <span style=color:#a6e22e>Fail</span>           = <span style=color:#e6db74>&#34;fail&#34;</span>  
+   <span style=color:#a6e22e>Normal</span>         = <span style=color:#e6db74>&#34;normal&#34;</span>  
 )
-</code></pre><p>With that in mind we can think of a few cases to test our FSM and runner logic;</p>
+</code></pre></div><p>With that in mind we can think of a few cases to test our FSM and runner logic;</p>
 <ul>
 <li><code>""</code> -> <code>normal</code></li>
 <li><code>"xxx"</code> -> <code>fail</code></li>
@@ -165,145 +165,145 @@ const (
 <li><code>"ab"</code> -> <code>normal</code></li>
 </ul>
 <p>Writing these up into table-style tests we get the following;</p>
-<pre tabindex=0><code>type test struct {  
-   name           string  
-   input          string  
-   expectedStatus Status  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>name</span>           <span style=color:#66d9ef>string</span>  
+   <span style=color:#a6e22e>input</span>          <span style=color:#66d9ef>string</span>  
+   <span style=color:#a6e22e>expectedStatus</span> <span style=color:#a6e22e>Status</span>  
 }  
   
-tests := []test{  
-   {&quot;empty string&quot;, &quot;&quot;, Normal},  
-   {&quot;non matching string&quot;, &quot;x&quot;, Fail},  
-   {&quot;matching string&quot;, &quot;abc&quot;, Success},  
-   {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
+<span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
+   {<span style=color:#e6db74>&#34;empty string&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>Normal</span>},  
+   {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;x&#34;</span>, <span style=color:#a6e22e>Fail</span>},  
+   {<span style=color:#e6db74>&#34;matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#a6e22e>Success</span>},  
+   {<span style=color:#e6db74>&#34;partial matching string&#34;</span>, <span style=color:#e6db74>&#34;ab&#34;</span>, <span style=color:#a6e22e>Normal</span>},  
 }
-</code></pre><p>The actual tests should simply create a runner using our hand-made FSM, iterate through the runes in the <code>input</code> string, and check that the <code>Status</code> of the runner is the same as our expected status.</p>
-<pre tabindex=0><code>for _, tt := range tests {  
-   t.Run(tt.name, func(t *testing.T) {  
-      testRunner := NewRunner(&amp;startState)  
+</code></pre></div><p>The actual tests should simply create a runner using our hand-made FSM, iterate through the runes in the <code>input</code> string, and check that the <code>Status</code> of the runner is the same as our expected status.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>tt</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tests</span> {  
+   <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>name</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
+      <span style=color:#a6e22e>testRunner</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#f92672>&amp;</span><span style=color:#a6e22e>startState</span>)  
   
-      for _, character := range tt.input {  
-         testRunner.Next(character)  
+      <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>input</span> {  
+         <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
       }  
   
-      result := testRunner.getTotalState()  
-      if tt.expectedStatus != result {  
-         t.Fatalf(&quot;Expected FSM to have final state of '%v', got '%v'&quot;, tt.expectedStatus, result)  
+      <span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>getTotalState</span>()  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>expectedStatus</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>result</span> {  
+         <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;Expected FSM to have final state of &#39;%v&#39;, got &#39;%v&#39;&#34;</span>, <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>expectedStatus</span>, <span style=color:#a6e22e>result</span>)  
       }  
    })  
 }
-</code></pre><p>Notice that we had to invent a couple of methods to make this work, such as the <code>NewRunner</code>, <code>testRunner.Next</code> and <code>testRunner.getStatus</code>. This is fine, as we&rsquo;ll come back to implementing these in a moment.</p>
+</code></pre></div><p>Notice that we had to invent a couple of methods to make this work, such as the <code>NewRunner</code>, <code>testRunner.Next</code> and <code>testRunner.getStatus</code>. This is fine, as we&rsquo;ll come back to implementing these in a moment.</p>
 <p>All together, our first test looks like this;</p>
-<pre tabindex=0><code>func TestHandmadeFSM(t *testing.T) {  
-   // hand-made FSM
-   startState := State{}  
-   stateA := State{}  
-   stateB := State{}  
-   stateC := State{}  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestHandmadeFSM</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
+   <span style=color:#75715e>// hand-made FSM
+</span><span style=color:#75715e></span>   <span style=color:#a6e22e>startState</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+   <span style=color:#a6e22e>stateA</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+   <span style=color:#a6e22e>stateB</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
+   <span style=color:#a6e22e>stateC</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>State</span>{}  
   
-   startState.transitions = append(startState.transitions, Transition{  
-      to:        &amp;stateA,  
-      predicate: func(input rune) bool { return input == 'a' },  
+   <span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>startState</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+      <span style=color:#a6e22e>to</span>:        <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateA</span>,  
+      <span style=color:#a6e22e>predicate</span>: <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;a&#39;</span> },  
    })  
   
-   stateA.transitions = append(stateA.transitions, Transition{  
-      to:        &amp;stateB,  
-      predicate: func(input rune) bool { return input == 'b' },  
+   <span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateA</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+      <span style=color:#a6e22e>to</span>:        <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateB</span>,  
+      <span style=color:#a6e22e>predicate</span>: <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;b&#39;</span> },  
    })  
   
-   stateB.transitions = append(stateB.transitions, Transition{  
-      to:        &amp;stateC,  
-      predicate: func(input rune) bool { return input == 'c' },  
+   <span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span> = append(<span style=color:#a6e22e>stateB</span>.<span style=color:#a6e22e>transitions</span>, <span style=color:#a6e22e>Transition</span>{  
+      <span style=color:#a6e22e>to</span>:        <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>stateC</span>,  
+      <span style=color:#a6e22e>predicate</span>: <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>input</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;c&#39;</span> },  
    })  
   
-   type test struct {  
-      name           string  
-      input          string  
-      expectedStatus Status  
+   <span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
+      <span style=color:#a6e22e>name</span>           <span style=color:#66d9ef>string</span>  
+      <span style=color:#a6e22e>input</span>          <span style=color:#66d9ef>string</span>  
+      <span style=color:#a6e22e>expectedStatus</span> <span style=color:#a6e22e>Status</span>  
    }  
   
-   tests := []test{  
-      {&quot;empty string&quot;, &quot;&quot;, Normal},  
-      {&quot;non matching string&quot;, &quot;xxx, Fail},  
-      {&quot;matching string&quot;, &quot;abc&quot;, Success},  
-      {&quot;partial matching string&quot;, &quot;ab&quot;, Normal},  
-   }  
-  
-   for _, tt := range tests {  
-      t.Run(tt.name, func(t *testing.T) {  
-         testRunner := NewRunner(&amp;startState)  
-  
-         for _, character := range tt.input {  
-            testRunner.Next(character)  
-         }  
-  
-         result := testRunner.getTotalState()  
-         if tt.expectedStatus != result {  
-            t.Fatalf(&quot;Expected FSM to have final state of '%v', got '%v'&quot;, tt.expectedStatus, result)  
+   <span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
+      {<span style=color:#e6db74>&#34;empty string&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#a6e22e>Normal</span>},  
+      {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;xxx, Fail},  
+</span><span style=color:#e6db74>      {&#34;</span><span style=color:#a6e22e>matching</span> <span style=color:#66d9ef>string</span><span style=color:#e6db74>&#34;, &#34;</span><span style=color:#a6e22e>abc</span><span style=color:#e6db74>&#34;, Success},  
+</span><span style=color:#e6db74>      {&#34;</span><span style=color:#a6e22e>partial</span> <span style=color:#a6e22e>matching</span> <span style=color:#66d9ef>string</span><span style=color:#e6db74>&#34;, &#34;</span><span style=color:#a6e22e>ab</span><span style=color:#e6db74>&#34;, Normal},  
+</span><span style=color:#e6db74>   }  
+</span><span style=color:#e6db74>  
+</span><span style=color:#e6db74>   for _, tt := range tests {  
+</span><span style=color:#e6db74>      t.Run(tt.name, func(t *testing.T) {  
+</span><span style=color:#e6db74>         testRunner := NewRunner(&amp;startState)  
+</span><span style=color:#e6db74>  
+</span><span style=color:#e6db74>         for _, character := range tt.input {  
+</span><span style=color:#e6db74>            testRunner.Next(character)  
+</span><span style=color:#e6db74>         }  
+</span><span style=color:#e6db74>  
+</span><span style=color:#e6db74>         result := testRunner.getTotalState()  
+</span><span style=color:#e6db74>         if tt.expectedStatus != result {  
+</span><span style=color:#e6db74>            t.Fatalf(&#34;</span><span style=color:#a6e22e>Expected</span> <span style=color:#a6e22e>FSM</span> <span style=color:#a6e22e>to</span> <span style=color:#a6e22e>have</span> <span style=color:#a6e22e>final</span> <span style=color:#a6e22e>state</span> <span style=color:#a6e22e>of</span> <span style=color:#960050;background-color:#1e0010>&#39;</span><span style=color:#f92672>%</span><span style=color:#a6e22e>v</span><span style=color:#960050;background-color:#1e0010>&#39;</span>, <span style=color:#a6e22e>got</span> <span style=color:#960050;background-color:#1e0010>&#39;</span><span style=color:#f92672>%</span><span style=color:#a6e22e>v</span><span style=color:#960050;background-color:#1e0010>&#39;&#34;</span>, <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>expectedStatus</span>, <span style=color:#a6e22e>result</span>)  
          }  
       })  
    }  
 }
 
-</code></pre><p>Note: One might take a look at this test and say &ldquo;The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another.&rdquo; and I would totally agree. The only reason we&rsquo;re getting away with it here is because our State Machines are <strong>stateless</strong>, meaning they don&rsquo;t contain any information about the state of the process. On the other hand, our <code>runner</code> instance is <strong>stateful</strong>, so we want to create a new instance for every test case.</p>
+</code></pre></div><p>Note: One might take a look at this test and say &ldquo;The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another.&rdquo; and I would totally agree. The only reason we&rsquo;re getting away with it here is because our State Machines are <strong>stateless</strong>, meaning they don&rsquo;t contain any information about the state of the process. On the other hand, our <code>runner</code> instance is <strong>stateful</strong>, so we want to create a new instance for every test case.</p>
 <p>Now that we have our first test, let&rsquo;s implement the missing methods and make these tests pass.</p>
 <h3 id=runner>Runner</h3>
 <p>The first method we need to implement is a simple constructor function.</p>
-<pre tabindex=0><code>func NewRunner(head *State) *runner {  
-   r := &amp;runner{  
-      head:    head,  
-      current: head,  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#a6e22e>head</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span> {  
+   <span style=color:#a6e22e>r</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>runner</span>{  
+      <span style=color:#a6e22e>head</span>:    <span style=color:#a6e22e>head</span>,  
+      <span style=color:#a6e22e>current</span>: <span style=color:#a6e22e>head</span>,  
    }  
   
-   return r  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>r</span>  
 }
-</code></pre><p>This is a simple constructor which requires that we store two pointers to the root <code>State</code>. The <code>head</code> state will remain constant incase we want to reset the <code>runner</code>. The <code>current</code> state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.</p>
+</code></pre></div><p>This is a simple constructor which requires that we store two pointers to the root <code>State</code>. The <code>head</code> state will remain constant incase we want to reset the <code>runner</code>. The <code>current</code> state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.</p>
 <p>Note: This assumes that we can only be in one place at a time in our FSM, more on that later..</p>
 <p>Now, the <code>Next</code> method.</p>
-<pre tabindex=0><code>func (r *runner) Next(input rune) {  
-   if r.current == nil {  
-      return  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>) <span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) {  
+   <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>current</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> {  
+      <span style=color:#66d9ef>return</span>  
    }  
   
-   // move to next matching transition  
-   r.current = r.current.firstMatchingTransition(input)  
+   <span style=color:#75715e>// move to next matching transition  
+</span><span style=color:#75715e></span>   <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>current</span> = <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>current</span>.<span style=color:#a6e22e>firstMatchingTransition</span>(<span style=color:#a6e22e>input</span>)  
 }
-</code></pre><p>All this does is change the <code>r.current</code> state to the state pointed to by the first matching transition of the current state. If <code>r.current</code> is <code>nil</code>, that means that the FSM has already fallen into a <code>fail</code> state, and so should do nothing.</p>
+</code></pre></div><p>All this does is change the <code>r.current</code> state to the state pointed to by the first matching transition of the current state. If <code>r.current</code> is <code>nil</code>, that means that the FSM has already fallen into a <code>fail</code> state, and so should do nothing.</p>
 <p>The logic for finding the first matching transition is implemented on a method of the <code>State</code> struct, so let&rsquo;s implement that now.</p>
-<pre tabindex=0><code>func (s *State) firstMatchingTransition(input rune) destination {  
-   for _, t := range s.transitions {  
-      if t.predicate(input) {  
-         return t.to  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) <span style=color:#a6e22e>firstMatchingTransition</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>rune</span>) <span style=color:#a6e22e>destination</span> {  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>t</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>transitions</span> {  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>predicate</span>(<span style=color:#a6e22e>input</span>) {  
+         <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>to</span>  
       }  
    }  
   
-   return nil  
+   <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>  
 }
-</code></pre><p>This is pretty simple also. The function loops over the transitions of the state and returns the <code>destination</code> state of the first transition which passes the <code>predicate</code> test function. Notice that if the state has no <code>transition</code> which matches the predicate, the function returns <code>nil</code> - this is the same as the red dot in our diagrams leaving the FSM and represents a <code>Fail</code> case.</p>
+</code></pre></div><p>This is pretty simple also. The function loops over the transitions of the state and returns the <code>destination</code> state of the first transition which passes the <code>predicate</code> test function. Notice that if the state has no <code>transition</code> which matches the predicate, the function returns <code>nil</code> - this is the same as the red dot in our diagrams leaving the FSM and represents a <code>Fail</code> case.</p>
 <p>Finally, we just need to determine the status of the FSM at any time.</p>
-<pre tabindex=0><code>func (r *runner) GetStatus() Status {  
-   // if the current state is nil, return Fail  
-   if r.current == nil {  
-      return Fail  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>) <span style=color:#a6e22e>GetStatus</span>() <span style=color:#a6e22e>Status</span> {  
+   <span style=color:#75715e>// if the current state is nil, return Fail  
+</span><span style=color:#75715e></span>   <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>current</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> {  
+      <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Fail</span>  
    }  
   
-   // if the current state has no transitions from it, return Success  
-   if r.current.isSuccessState() {  
-      return Success  
+   <span style=color:#75715e>// if the current state has no transitions from it, return Success  
+</span><span style=color:#75715e></span>   <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>current</span>.<span style=color:#a6e22e>isSuccessState</span>() {  
+      <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Success</span>  
    }  
   
-   // else, return normal  
-   return Normal  
+   <span style=color:#75715e>// else, return normal  
+</span><span style=color:#75715e></span>   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Normal</span>  
 }
-</code></pre><p>Again, the logic for determining a <code>Success</code> status is implemented as a <code>State</code> struct method.</p>
-<pre tabindex=0><code>func (s *State) isSuccessState() bool {  
-   if len(s.transitions) == 0 {  
-      return true  
+</code></pre></div><p>Again, the logic for determining a <code>Success</code> status is implemented as a <code>State</code> struct method.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>) <span style=color:#a6e22e>isSuccessState</span>() <span style=color:#66d9ef>bool</span> {  
+   <span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>transitions</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {  
+      <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>  
    }  
   
-   return false  
+   <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>  
 }
-</code></pre><p>Here we&rsquo;re using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it&rsquo;s useful for now.</p>
+</code></pre></div><p>Here we&rsquo;re using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it&rsquo;s useful for now.</p>
 <p>If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!</p>
 <p>Note: Check out this part of the project on github <a href=https://github.com/LeweyM/search/tree/master/src/v1>here</a></p>
 <ul class=pa0>
