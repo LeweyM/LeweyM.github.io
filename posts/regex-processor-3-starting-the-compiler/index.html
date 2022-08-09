@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1763">
+<meta itemprop=wordCount content="1886">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -238,8 +238,10 @@ func (p *Parser) Parse(tokens []token) Node {
   
    return &amp;group  
 }
-</code></pre><p>// for compiler coding stage</p>
-<p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
+</code></pre><p>As our tests are now green, let&rsquo;s leave it there and move onto the next step - there&rsquo;ll be plenty of complexity to dive into later as we introduce nested structures.</p>
+<p>Now, turning an <code>AST</code> into a compiled FSM.</p>
+<h3 id=our-first-compiler>Our first compiler</h3>
+<p>Compiling the <code>AST</code> into <code>State</code> objects can be tricky. The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
 <li><code>CharacterLiteral</code></li>
@@ -253,7 +255,21 @@ func (p *Parser) Parse(tokens []token) Node {
 <p>Compiling a <code>CharacterLiteral</code> node is fairly straight forward. A character literal for the expression <code>a</code> should look like this;</p>
 <p><img src=/img/Pasted-image-20220807175929.png alt=Pasted-image-20220807175929.png></p>
 <p>That&rsquo;s really all there is to it. It&rsquo;s a two <code>State</code> system with a single transition between them, using the character of the <code>CharacterLiteral</code> as the transition predicate.</p>
-<ol start=2>
+<p>Let&rsquo;s encode this behavior in the <code>Compile</code> method of the <code>CharacterLiteral</code> node object.</p>
+<pre tabindex=0><code>func (l CharacterLiteral) compile() (head *State, tail *State) {
+	// create the first state
+	startingState := State{} 
+	
+	// create the second state
+	endState := State{}  
+	
+	// add a transition between the two states, using the character as the transition predicate
+	startingState.addTransition(&amp;endState, func(input rune) bool { return input == l.Character })  
+	
+	// return the head and tail states of this FSM
+	return &amp;startingState, &amp;endState
+}
+</code></pre><ol start=2>
 <li><code>Group</code></li>
 </ol>
 <p>The <code>Group</code> node represents a collection of <code>AST</code> nodes which need to appear consecutively in the input string. For example, <code>abc</code> would be a <code>Group</code> of 3 <code>CharacterLiteral</code> nodes. The inner nodes of <code>Group</code> do not have to be <code>CharacterLiterals</code>, however. For example, <code>(()()())</code> would be a <code>Group</code> of 3 <code>Group</code> nodes.</p>
