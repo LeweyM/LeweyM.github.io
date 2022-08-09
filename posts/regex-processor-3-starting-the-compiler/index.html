@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1368">
+<meta itemprop=wordCount content="1535">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -158,7 +158,30 @@ func lexRune(r rune) token {
 type CharacterLiteral struct {  
    Character rune  
 }
-</code></pre><p>// for compiler coding stage</p>
+</code></pre><p>We&rsquo;ll need a way to add child nodes to the <code>Group</code> struct, so let&rsquo;s add a simple method for that.</p>
+<pre tabindex=0><code>func (g *Group) Append(node Node) {  
+   g.ChildNodes = append(g.ChildNodes, node)  
+}
+</code></pre><p>And we want all nodes to be compilable, although we&rsquo;ll get to actually <em>how</em> to compile them a bit later. Let&rsquo;s use an interface to show that they share this functionality.</p>
+<pre tabindex=0><code>type Node interface {  
+   compile() (head *State, tail *State)  
+}
+</code></pre><p>And we&rsquo;ll leave these methods unimplemented for now</p>
+<pre tabindex=0><code>func (g *Group) compile() (head *State, tail *State) {  
+   panic(&quot;implement me&quot;)
+}  
+  
+func (l *CharacterLiteral) compile() (head *State, tail *State) {  
+   panic(&quot;implement me&quot;) 
+}
+</code></pre><p>Finally, let&rsquo;s use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just <code>group</code>.</p>
+<pre tabindex=0><code>type CompositeNode interface {  
+   Node  
+   Append(node Node)  
+}
+</code></pre><p>Ok, now we have our <code>AST</code> nodes defined, let&rsquo;s take a look at how to parse a string into a tree.</p>
+<h3 id=heading></h3>
+<p>// for compiler coding stage</p>
 <p>The trick to keeping this step simple (and it can very quickly become <strong>not</strong> simple) is to let each node of the <code>AST</code> decide how it should be compiled.</p>
 <p>For our simple example of compiling the regular expression <code>abc</code>, we just need two types of <code>AST</code> node;</p>
 <ol>
