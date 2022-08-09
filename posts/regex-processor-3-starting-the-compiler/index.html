@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1332">
+<meta itemprop=wordCount content="1368">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -144,10 +144,12 @@ func lexRune(r rune) token {
    return s  
 }
 </code></pre><p>That&rsquo;s really all there is to it. Now instead of a string of characters, we have our own defined <code>tokens</code> to work with.</p>
-<p>Now we&rsquo;ll use those <code>tokens</code> to build our <code>AST</code></p>
+<p>We&rsquo;ll now use those <code>tokens</code> to build our <code>AST</code></p>
 <h3 id=coding-the-parser>Coding the parser</h3>
-<p>For our simple example of parsing the regular expression <code>abc</code>, we just need two types of <code>AST</code>node; <code>Group</code> and <code>CharacterLiteral</code>.</p>
+<p>For our simple example of parsing the regular expression <code>abc</code>, we just need two types of <code>AST</code>node: <code>Group</code> and <code>CharacterLiteral</code>.</p>
+<p>Let&rsquo;s remind ourselves quickly of how these AST nodes relate to each other with our <code>AST</code> diagram.</p>
 <p><img src=/img/Pasted-image-20220807173722.png alt=Pasted-image-20220807173722.png></p>
+<p>A <code>group</code> <strong>contains</strong> three child nodes. The child nodes are <code>characterLiterals</code> and are the <strong>leaf nodes</strong> of the tree.</p>
 <p>Let&rsquo;s create two structs to represent these nodes.</p>
 <pre tabindex=0><code>type Group struct {  
    ChildNodes []Ast  
