@@ -20,7 +20,7 @@ Compiling a Finite State Machine We can break down the previous example of writi
 <meta itemprop=description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
 Compiling a Finite State Machine We can break down the previous example of writing an FSM for the regular expression abc into at least 2 discrete steps;
  Take the string abc and create a linked list of 'states' with conditional transitions to other states. Process the input by moving through the states.">
-<meta itemprop=wordCount content="1951">
+<meta itemprop=wordCount content="2142">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 3 Starting the compiler">
 <meta name=twitter:description content="Now we have a working FSM and way to process strings, let&rsquo;s take a look at building FSMs automatically from regular expressions using a compiler.
@@ -290,12 +290,43 @@ func (p *Parser) Parse(tokens []token) Node {
 <ol>
 <li>compile the child node</li>
 <li>merge the tail of the first node with the head of the second node</li>
+<li>mark the tail of the second node as the new tail</li>
 </ol>
-<p>And there we have it, a successfully compiled state machine!</p>
-<h3 id=the-power-of-structure>The power of structure</h3>
+<p>The third step is important as it tells us which state we need to merge next in the iteration, and allows the FSM to grow to the right, as in the diagrams.</p>
+<p>In code, the loop looks like so;</p>
+<pre tabindex=0><code>// 0. mark the tail of the startState as the current tail to prepare the iteration.
+currentTail := &amp;startState  
+  
+for _, expression := range g.ChildNodes {  
+	// 1. compile the child node
+	nextStateHead, nextStateTail := expression.compile()  
+	
+	// 2. merge the tail of the first node with the head of the second node
+	currentTail.merge(nextStateHead)  
+	
+	// 3. mark the tail of the second node as the new tail
+	currentTail = nextStateTail  
+}
+</code></pre><p>Putting this all together, we have the following <code>Compile</code> function;</p>
+<pre tabindex=0><code>func (g *Group) compile() (head *State, tail *State) {  
+   startState := State{}  
+   currentTail := &amp;startState  
+  
+   for _, expression := range g.ChildNodes {  
+      nextStateHead, nextStateTail := expression.compile()  
+      currentTail.merge(nextStateHead)  
+      currentTail = nextStateTail  
+   }  
+  
+   return &amp;startState, currentTail  
+}
+</code></pre><h3 id=the-power-of-structure>The power of structure</h3>
 <p>Here, I hope it starts to become clear why we separate the <code>compiling</code> from the <code>lexing</code> and <code>parsing</code> stages. Once we have the <strong>structure</strong> of the expression, it&rsquo;s much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group their children, and tell leaf nodes the expected compiled form.</p>
 <p>Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.</p>
-<ul class=pa0>
+<h3 id=changing-our-tests>Changing our tests</h3>
+<p>Before we get ahead of ourselves, let&rsquo;s modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.</p>
+<pre tabindex=0><code>
+</code></pre><ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
 </div>
