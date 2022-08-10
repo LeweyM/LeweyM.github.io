@@ -26,7 +26,7 @@ cool, so what about a regular expression like 'a+b'?
 This means &ldquo;match any string that has one or more 'a's, followed by a 'b'&rdquo;. So, for example:
  &#34;ab&#34; -> match &#34;aaaaab&#34; -> match &#34;ba&#34; -> no match &#34;&#34; -> no match  What would the FSM look like for that? Well, it would look like the following;
 This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;you&rsquo;ve already seen 'a'&rdquo;.">
-<meta itemprop=wordCount content="181">
+<meta itemprop=wordCount content="182">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 A bit more theory">
 <meta name=twitter:description content="## One or more
@@ -83,6 +83,7 @@ POSTS
 <p>And finally we process <code>b</code>, so we move to <code>state[3]</code>.</p>
 <p><img src=/img/Pasted-image-20220710203508.png alt=Pasted-image-20220710203508.png></p>
 <p>As <code>state[3]</code> is an end state, we can finish here and declare that a match was found!</p>
+<p>todo&mldr;</p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">

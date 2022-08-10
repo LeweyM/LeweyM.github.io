@@ -23,7 +23,7 @@ The Transition struct contains two things:">
 The FSM data structure We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of state objects.
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
-<meta itemprop=wordCount content="1595">
+<meta itemprop=wordCount content="1605">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 2 Getting into some code">
 <meta name=twitter:description content="Let&rsquo;s start coding.
@@ -306,6 +306,8 @@ POSTS
 </code></pre></div><p>Here we&rsquo;re using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it&rsquo;s useful for now.</p>
 <p>If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!</p>
 <p>Note: Check out this part of the project on github <a href=https://github.com/LeweyM/search/tree/master/src/v1>here</a></p>
+<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a>
+Prev:<a href=https://LeweyM.github.io/posts/regex-processor-1-intro/>Regex Processor 1 Intro</a></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
