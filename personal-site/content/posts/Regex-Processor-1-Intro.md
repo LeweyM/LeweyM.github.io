@@ -65,4 +65,4 @@ And at state 3, we know we've seen `'abc'`, so we don't want to do anything from
 
 That's really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.
 
-Next:[Regex Processor 2 Getting into some code]({{< ref "-Regex-Processor-2-Getting-into-some-code" >}})
+Next:[Regex Processor 2 Getting into some code]({{< ref "Regex-Processor-2-Getting-into-some-code" >}})
