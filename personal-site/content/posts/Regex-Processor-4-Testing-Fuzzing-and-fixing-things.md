@@ -199,6 +199,14 @@ Note: Your path might be different, use the path of the package with the test an
 
 We found an error!
 
+### Let's get a'fixing
+
+Note: Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
+
+```
+
+```
+
 ```zsh
 ➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
