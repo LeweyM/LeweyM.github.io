@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2788">
+<meta itemprop=wordCount content="2839">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -212,8 +212,9 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
         v3_test.go:106: Mismatch - Regex: <span style=color:#e6db74>&#39;aA&#39;</span>, Input: <span style=color:#e6db74>&#39;aaA&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;fail&#39;</span>
 
 </code></pre></div><h4 id=problem-1>Problem 1</h4>
-<p>You should see that the fuzzer has saved this to a file at <code>testdata/fuzz/FuzzFSM/08fa440d...</code></p>
-<pre tabindex=0><code>go test fuzz v1  
+<p>You should see that the fuzzer has saved this to a file at</p>
+<pre tabindex=0><code>testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
+</code></pre><pre tabindex=0><code>go test fuzz v1  
 string(&quot;aA&quot;)  
 string(&quot;aaA&quot;)
 </code></pre><p>It seems that passing <code>aaA</code> to the regex <code>aA</code> fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package <code>MatchString</code> method we&rsquo;re using will look for a match anywhere in the string, whereas we&rsquo;re looking only at the beginning of the string.</p>
@@ -250,7 +251,7 @@ string(&quot;aaA&quot;)
 </code></pre></div><p>Notice that we need to run <code>testRunner.Next(character)</code> after the reset because the second <code>a</code> in the input string needs to be used in the second attempt. More on that later.</p>
 <p>Let&rsquo;s run the fuzzer again.</p>
 <h4 id=problem-2>Problem 2</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>        v3_test.go:126: Mismatch - Regex: <span style=color:#e6db74>&#39;&#39;</span>, Input: <span style=color:#e6db74>&#39;A&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:126: Mismatch - Regex: <span style=color:#e6db74>&#39;&#39;</span>, Input: <span style=color:#e6db74>&#39;A&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
 </code></pre></div><p>or in the file;</p>
 <pre tabindex=0><code>go test fuzz v1  
 string(&quot;&quot;)  
@@ -271,9 +272,10 @@ string(&quot;A&quot;)
 </span><span style=color:#a6e22e>+   if testRunner.GetStatus() == Success {  
 </span><span style=color:#a6e22e>+      return true  
 </span><span style=color:#a6e22e>+   }
-</span></code></pre></div><p>Tests are green so back to the fuzzer.</p>
+</span></code></pre></div><p>Why does this work? In the case of an empty regex, the compiler would produce a single state FSM. As the FSM will have no outbound transitions, this will function as an end state. So, for an empty regex, we just need to check the status before we do any processing.</p>
+<p>Tests are green so back to the fuzzer.</p>
 <h4 id=problem-3>Problem 3</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>        v3_test.go:105: Mismatch - Regex: <span style=color:#e6db74>&#39;.&#39;</span>, Input: <span style=color:#e6db74>&#39;&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;false&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;success&#39;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:105: Mismatch - Regex: <span style=color:#e6db74>&#39;.&#39;</span>, Input: <span style=color:#e6db74>&#39;&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;false&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;success&#39;</span>
 </code></pre></div><p>We&rsquo;re now failing when using the regex <code>.</code> and an input string. This makes sense because we haven&rsquo;t implemented the wildcard character <code>.</code> (yet). For now, let&rsquo;s ignore these special characters in our fuzz tests.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>f.Fuzz(func(t *testing.T, regex, input string) {  
 <span style=color:#a6e22e>+     if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {  
