@@ -57,7 +57,7 @@ type test struct {
 
 Notice that we no longer require the `Status` field. This is because we no longer need to specify the result, as the Go library does that for us! 
 
-Adding a new test case is pretty simple;
+Adding a new test case is pretty simple, we just need the inputs and the test is ready to go;
 
 ```diff
 tests := []test{  
@@ -69,3 +69,41 @@ tests := []test{
 }
 ```
 
+Having a way of automatically computing the desired output for a test not only makes writing the tests less work, but also open up some interesting possibilities, such as Fuzzing.
+
+### Fuzzing
+
+Go 1.18 introduced [fuzzing](https://go.dev/doc/fuzz/) to its standard library, which is an automated way of barraging your code with semi-random input to try to find hidden errors.
+
+Let's write a simple fuzz test.
+
+```Go
+func FuzzFSM(f *testing.F) {  
+   f.Add("abc", "abc")  
+   f.Add("abc", "")  
+   f.Add("abc", "xxx")  
+   f.Add("ca(t)(s)", "dog")  
+  
+   f.Fuzz(func(t *testing.T, regex, input string) {  
+      if strings.ContainsAny(input, "Ȥ") {  
+         t.Skip()  
+      }  
+  
+      if strings.ContainsAny(regex, "$^|*+?.\\") {  
+         t.Skip()  
+      }  
+  
+      compiledGoRegex, err := regexp.Compile(regex)  
+      if err != nil {  
+         t.Skip()  
+      }  
+  
+      result := matchRegex(regex, input)  
+      goRegexMatch := compiledGoRegex.MatchString(input)  
+  
+      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
+         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
+      }  
+   })  
+}
+```
