@@ -217,7 +217,7 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 
 #### Problem 1
 
-You should see that the fuzzer has saved this to a file at  `testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a`
+You should see that the fuzzer has saved this to a file at  `testdata/fuzz/FuzzFSM/08fa440d...`
 
 ```
 go test fuzz v1  
@@ -669,9 +669,30 @@ And then let's call these from our tests.
 - result := matchRegex(regex, input)
 ```
 
+#### Onwards and upwards
 
+We've covered a lot of ground here. Our tests now look like so:
 
-Great! Let's move onto adding some more functionality to our FSM.
+```go
+tests := []test{  
+   {"empty string", "abc", ""},  
+   {"empty regex", "", "abc"},  
+   {"non matching string", "abc", "xxx"},  
+   {"matching string", "abc", "abc"},  
+   {"partial matching string", "abc", "ab"},  
+   {"nested expressions", "a(b(d))c", "abdc"},  
+   {"substring match with reset needed", "aA", "aaA"},  
+   {"substring match without reset needed", "B", "ABA"},  
+   {"multibyte characters", "Ȥ", "Ȥ"},  
+   {  
+      "complex multibyte characters",  
+      string([]byte{0xef, 0xbf, 0xbd, 0x30}),  
+      string([]byte{0xcc, 0x87, 0x30}),  
+   },  
+}
+```
+
+We're covering a lot of cases of odd input characters, but we're missing a lot of special characters which make regex so powerful. Let's start adding them!
 
 Next:[Regex Processor 5 A bit more theory]({{< ref "Regex-Processor-5-A-bit-more-theory" >}})
 
