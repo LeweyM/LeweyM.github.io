@@ -107,10 +107,6 @@ func FuzzFSM(f *testing.F) {
    f.Add("ca(t)(s)", "dog")  
   
    f.Fuzz(func(t *testing.T, regex, input string) {  
-      if strings.ContainsAny(regex, "$^|*+?.\\") {  
-         t.Skip()  
-      }  
-  
       compiledGoRegex, err := regexp.Compile(regex)  
       if err != nil {  
          t.Skip()  
@@ -156,7 +152,8 @@ f.Fuzz(func(t *testing.T, regex, input string) {
 First, we only want to test valid regex statements, so any invalid statements we can simply ignore.
 
 ```Go
-if strings.ContainsAny(regex, "$^|*+?.\\") {  
+compiledGoRegex, err := regexp.Compile(regex)  
+if err != nil {  
 	t.Skip()  
 }  
 ```
