@@ -125,7 +125,7 @@ Regex Processor 4 testing and fuzzing
 <div class="nested-links f5 lh-copy nested-copy-line-height">
 We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {"empty string", "abc", ""}, {"non matching string", "abc", "xxx"}, {"matching string", "abc", "abc"}, {"partial matching string", "abc", "ab"}, {"nested expressions", "a(b(d))c", "abdc"}, } for _, tt := range tests { t.
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {"empty string", "abc", ""}, {"non matching string", "abc", "xxx"}, {"matching string", "abc", "abc"}, {"partial matching string", "abc", "ab"}, } for _, tt := range tests { t.
 </div>
 </div>
 </div>

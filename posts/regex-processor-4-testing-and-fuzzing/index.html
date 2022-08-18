@@ -6,26 +6,26 @@
 <meta name=viewport content="width=device-width,minimum-scale=1">
 <meta name=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, } for _, tt := range tests { t.">
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
 <meta property="og:title" content="Regex Processor 4 testing and fuzzing">
 <meta property="og:description" content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, } for _, tt := range tests { t.">
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-4-testing-and-fuzzing/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Regex Processor 4 testing and fuzzing">
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="158">
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
+<meta itemprop=wordCount content="217">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 testing and fuzzing">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, } for _, tt := range tests { t.">
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 </head>
 <body class="ma0 avenir bg-near-white">
 <header>
@@ -68,7 +68,6 @@ POSTS
       {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>},  
       {<span style=color:#e6db74>&#34;matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
       {<span style=color:#e6db74>&#34;partial matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;ab&#34;</span>},  
-      {<span style=color:#e6db74>&#34;nested expressions&#34;</span>, <span style=color:#e6db74>&#34;a(b(d))c&#34;</span>, <span style=color:#e6db74>&#34;abdc&#34;</span>},  
    }  
   
    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>tt</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tests</span> {  
@@ -83,7 +82,22 @@ POSTS
       })  
    }  
 }
-</code></pre></div><ul class=pa0>
+</code></pre></div><p>Our tests should all be green still. Let&rsquo;s compare the test structs between this and our previous tests.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// old tests
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>name</span>           <span style=color:#66d9ef>string</span>  
+   <span style=color:#a6e22e>input</span>          <span style=color:#66d9ef>string</span>  
+   <span style=color:#a6e22e>expectedStatus</span> <span style=color:#a6e22e>Status</span>  
+}
+
+<span style=color:#75715e>// new tests
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
+  <span style=color:#a6e22e>name</span>  <span style=color:#66d9ef>string</span>  
+  <span style=color:#a6e22e>regex</span> <span style=color:#66d9ef>string</span>  
+  <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>  
+}  
+</code></pre></div><p>Notice that we no longer require the <code>Status</code> field. This is because we no longer need to</p>
+<ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
 </div>
