@@ -2,7 +2,7 @@
 <head>
 <meta charset=utf-8>
 <meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Regex Processor 4 testing and fuzzing | Lewis Metcalf</title>
+<title>Regex Processor 4 Testing, Fuzzing, and fixing things | Lewis Metcalf</title>
 <meta name=viewport content="width=device-width,minimum-scale=1">
 <meta name=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
@@ -10,19 +10,19 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
 <link rel=stylesheet href=/ananke/css/main.min.css>
-<meta property="og:title" content="Regex Processor 4 testing and fuzzing">
+<meta property="og:title" content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta property="og:description" content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-4-testing-and-fuzzing/"><meta property="article:section" content="posts">
-<meta itemprop=name content="Regex Processor 4 testing and fuzzing">
+<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/"><meta property="article:section" content="posts">
+<meta itemprop=name content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta itemprop=wordCount content="1272">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
-<meta name=twitter:title content="Regex Processor 4 testing and fuzzing">
+<meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
@@ -51,7 +51,7 @@ POSTS
 </aside>
 <div id=sharing class="mt3 ananke-socials">
 </div>
-<h1 class="f1 athelas mt3 mb1">Regex Processor 4 testing and fuzzing</h1>
+<h1 class="f1 athelas mt3 mb1">Regex Processor 4 Testing, Fuzzing, and fixing things</h1>
 </header>
 <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.</p>
 <h3 id=testing-against-the-go-regex-package>Testing against the Go regex package</h3>
