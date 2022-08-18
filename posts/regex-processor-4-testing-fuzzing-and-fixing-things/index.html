@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="1246">
+<meta itemprop=wordCount content="1276">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -200,7 +200,10 @@ POSTS
 <pre tabindex=0><code>go test ./src/v3/... -fuzz ^FuzzFSM$
 </code></pre><p>Note: Your path might be different, use the path of the package with the test and FSM implementation.</p>
 <p>We found an error!</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+<h3 id=lets-get-afixing>Let&rsquo;s get a&rsquo;fixing</h3>
+<p>Note: Your mileage may vary. Go fuzzing uses randomized input, so there&rsquo;s no guarantee that errors will show up in the same order as I show here.</p>
+<pre tabindex=0><code>
+</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
 fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
 failure <span style=color:#66d9ef>while</span> testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
