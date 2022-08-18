@@ -29,9 +29,14 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
   
          goRegexMatch := regexp.MustCompile(tt.regex).MatchString(tt.input)  
   
-         if (result == Success && !goRegexMatch) || (result != Success && goRegexMatch) {  
-            t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", tt.regex, tt.input, goRegexMatch, result)  
-         }  
+         if result != goRegexMatch {  
+		   t.Fatalf(  
+		      "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+		      regex,  
+		      input,  
+		      goRegexMatch,  
+		      result)  
+		 }
       })  
    }  
 }
@@ -40,7 +45,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
 Most of the testing logic is in the `matchRegex` function, so let's define that also.
 
 ```Go
-func matchRegex(regex, input string) Status {  
+func matchRegex(regex, input string) bool {  
    parser := NewParser()  
    tokens := lex(regex)  
    ast := parser.Parse(tokens)  
@@ -51,7 +56,7 @@ func matchRegex(regex, input string) Status {
       testRunner.Next(character)  
    }  
   
-   return testRunner.GetStatus()  
+   return testRunner.GetStatus() == Success 
 }
 ```
 
@@ -115,9 +120,14 @@ func FuzzFSM(f *testing.F) {
       result := matchRegex(regex, input)  
       goRegexMatch := compiledGoRegex.MatchString(input)  
   
-      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
-         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
-      }  
+	  if result != goRegexMatch {  
+	   t.Fatalf(  
+		  "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+		  regex,  
+		  input,  
+		  goRegexMatch,  
+		  result)  
+	   }  
    })  
 }
 ```
@@ -143,9 +153,14 @@ f.Fuzz(func(t *testing.T, regex, input string) {
       result := matchRegex(regex, input)  
       goRegexMatch := compiledGoRegex.MatchString(input)  
   
-      if (result == Success && !goRegexMatch) || (result != Success && goRegexMatch) {  
-         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
-      }  
+      if result != goRegexMatch {  
+		t.Fatalf(  
+			"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+			regex,  
+			input,  
+			goRegexMatch,  
+			result)  
+	  } 
    })  
 ```
 
