@@ -143,7 +143,7 @@ f.Fuzz(func(t *testing.T, regex, input string) {
       result := matchRegex(regex, input)  
       goRegexMatch := compiledGoRegex.MatchString(input)  
   
-      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
+      if (result == Success && !goRegexMatch) || (result != Success && goRegexMatch) {  
          t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
       }  
    })  
