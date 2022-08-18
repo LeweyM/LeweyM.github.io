@@ -21,7 +21,6 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
       {"non matching string", "abc", "xxx"},  
       {"matching string", "abc", "abc"},  
       {"partial matching string", "abc", "ab"},  
-      {"nested expressions", "a(b(d))c", "abdc"},  
    }  
   
    for _, tt := range tests {  
@@ -38,3 +37,22 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
 }
 ```
 
+Our tests should all be green still. Let's compare the test structs between this and our previous tests.
+
+```go
+// old tests
+type test struct {  
+   name           string  
+   input          string  
+   expectedStatus Status  
+}
+
+// new tests
+type test struct {  
+  name  string  
+  regex string  
+  input string  
+}  
+```
+
+Notice that we no longer require the `Status` field. This is because we no longer need to 
