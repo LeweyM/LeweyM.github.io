@@ -544,15 +544,59 @@ v3_test.go:128: Mismatch -
 	Our regex result: 'true'
 ```
 
-This looks like 
+This looks like an extension of the multibyte problem, so let's add an additional test;
 
+```diff
+{"multibyte characters", "Ȥ", "Ȥ"},  
++{  
++   "complex multibyte characters",  
++   string([]byte{0xef, 0xbf, 0xbd, 0x30}),  
++   string([]byte{0xcc, 0x87, 0x30}),  
++},
+```
 
+This time, the problem is in our `match` function, which takes a string and recurses on a substring.
 
+```go
+return match(runner, input[1:])
+```
 
+See the problem? We're recursing on a substring of *bytes*, not a substring of *runes*. Let's fix this by having the function accept a rune slice instead of a string.
 
+```diff
+func matchRegexOLD(regex, input string) bool {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+-   return match(testRunner, input)  
++   return match(testRunner, []rune(input))  
+}
 
+-func match(runner *runner, input string) bool {  
++func match(runner *runner, input []rune) bool {  
+   runner.Reset()  
+  
+   for _, character := range input {  
+      runner.Next(character)  
+      status := runner.GetStatus()  
+  
+      if status == Fail {    
+         return match(runner, input[1:])  
+      }  
+  
+      if status == Success {  
+         return true  
+      }  
+   }  
+  
+   return runner.GetStatus() == Success  
+}
+```
 
-// completed
+#### And then, silence...
 
 If we run the fuzzer now, we see something like this;
 
@@ -571,6 +615,8 @@ fuzz: elapsed: 21s, execs: 3654537 (178003/sec), new interesting: 2 (total: 1112
 ```
 
 Fuzzing won't give us a green light like tests will. Fuzzing is an [infinite space problem](https://www.synopsys.com/blogs/software-security/fuzzing-test-cases-not-all-random/#:~:text=Fuzzing%20is%20an%20infinite%20space%20problem.%20For%20any%20piece%20of%20software%2C%20you%20can%20create%20an%20infinite%20number%20of%20malformed%20inputs.%20To%20get%20useful%20results%20in%20a%20reasonable%20amount%20of%20time%2C%20the%20trick%20is%20to%20select%20inputs%20that%20are%20most%20likely%20to%20cause%20failures%20in%20the%20target%20software.), meaning that it will never 'finish', but if we run it long enough we can be fairly confident that our algorithm is pretty error-proof. I let it run for a few minutes before I declared it a success. 
+
+
 
 Great! Let's move onto adding some more functionality to our FSM.
 
