@@ -381,17 +381,50 @@ Running the fuzzer again we now get this;
 
 ```zsh
 v3_test.go:94: Mismatch - 
-	Regex: 'Ȥ'(as bytes: [200 164]), 
-	Input: 'Ȥ'(as bytes: [200 164]) 
+	Regex: 'Ȥ' (as bytes: c8a4), 
+	Input: 'Ȥ' (as bytes: c8a4) 
 	-> 
 	Go Regex Pkg: 'true', 
 	Our regex result: 'false'
 ```
 
-As we can see here, the character `Ȥ` is made up of the two bytes `[200 164]`
+As we can see here, the character `Ȥ` is made up of the two bytes `c8` and `a4`. If we look up `c8a4` in the [ASCII value table](https://design215.com/toolbox/ascii-utf8.php#:~:text=%C8%A4-,c8%20a4,-%C8%A5%0Ac8%20a5) we see that it represents `Ȥ`. So what could be going wrong with our program?
 
+The problem in this case is with our lexer. Here's what we're doing at the moment.
 
+```go
+func lex(input string) []token {  
+   var tokens []token  
+   i := 0  
+   for i < len(input) {  
+      tokens = append(tokens, lexRune(rune(input[i])))  
+      i++  
+   }  
+   return tokens  
+}
+```
 
+We are looping over the bytes and converting them to runes. This means that multibyte words such as `Ȥ` will create two tokens; one for `c8`, and another for `a4`. This is not what we want.
+
+Solving this is quite simple, we just need to use a `range` loop over the input. Go knows how to split a string into runes and will do so when casting a string to runes, or when using the `range` keyword.
+
+For example;
+```
+```
+
+```diff
+func lex(input string) []token {  
+   var tokens []token  
+-   i := 0  
+-   for i < len(input) {  
+-      tokens = append(tokens, lexRune(rune(input[i])))  
+-      i++  
++   for _, character := range input {  
++     tokens = append(tokens, lexRune(character))    
+   }  
+   return tokens  
+}
+```
 
 
 // completed
