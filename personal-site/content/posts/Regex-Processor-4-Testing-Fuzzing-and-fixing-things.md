@@ -1,5 +1,5 @@
 ---
-title: Regex Processor 4 testing and fuzzing
+title: Regex Processor 4 Testing, Fuzzing, and fixing things
 draft: false
 ---
 We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
