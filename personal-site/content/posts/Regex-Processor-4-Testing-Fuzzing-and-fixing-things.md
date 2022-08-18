@@ -348,9 +348,10 @@ v3_test.go:127: Mismatch - Regex: 'Ȥ', Input: 'Ȥ' -> Go Regex Pkg: 'true', Our
 Now things are getting interesting. It seems that our regex matcher is having trouble with the non-alphanumeric character `Ȥ`. Let's start with a test and go from there.
 
 ```go
-
+{"multibyte characters", "Ȥ", "Ȥ"},
 ```
 
+I've called this test `multibyte characters` because these characters are represented as more than one byte
 
 If we run the fuzzer now, we see something like this;
 
