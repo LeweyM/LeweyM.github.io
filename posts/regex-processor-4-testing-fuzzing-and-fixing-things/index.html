@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2594">
+<meta itemprop=wordCount content="2696">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -493,8 +493,45 @@ fuzz: elapsed: 21s, execs: <span style=color:#ae81ff>3654537</span> <span style=
 <h3 id=some-clean-up>Some clean up</h3>
 <p>Let&rsquo;s refactor a bit before we move on.</p>
 <p>The <code>matchRegex</code> function in our tests is doing a lot of work. I think it makes sense here to move it out of a test file and into the actual logic of our regex. Let&rsquo;s create a <code>myRegex</code> struct with some methods we can expose to handle finding a match in a string.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>
-</code></pre></div><p>Great! Let&rsquo;s move onto adding some more functionality to our FSM.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>myRegex</span> <span style=color:#66d9ef>struct</span> {  
+   <span style=color:#a6e22e>fsm</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>  
+}  
+  
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewMyRegex</span>(<span style=color:#a6e22e>re</span> <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>myRegex</span> {  
+   <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>re</span>)  
+   <span style=color:#a6e22e>parser</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewParser</span>()  
+   <span style=color:#a6e22e>ast</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>parser</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span>)  
+   <span style=color:#a6e22e>state</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ast</span>.<span style=color:#a6e22e>compile</span>()  
+   <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>myRegex</span>{<span style=color:#a6e22e>fsm</span>: <span style=color:#a6e22e>state</span>}  
+}  
+  
+<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>m</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>myRegex</span>) <span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>bool</span> {  
+   <span style=color:#a6e22e>testRunner</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>fsm</span>)  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>testRunner</span>, []rune(<span style=color:#a6e22e>input</span>))  
+}  
+  
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span> []<span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> {  
+   <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Reset</span>()  
+  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
+      <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
+      <span style=color:#a6e22e>status</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>()  
+  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {  
+         <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+      }  
+  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span> {  
+         <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>  
+      }  
+   }  
+  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span>  
+}
+</code></pre></div><p>And then let&rsquo;s call these from our tests.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#a6e22e>+ result := NewMyRegex(regex).MatchString(input)  
+</span><span style=color:#a6e22e></span><span style=color:#f92672>- result := matchRegex(regex, input)
+</span></code></pre></div><p>Great! Let&rsquo;s move onto adding some more functionality to our FSM.</p>
 <p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-a-bit-more-theory/>Regex Processor 5 A bit more theory</a></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
 <ul class=pa0>
