@@ -85,10 +85,6 @@ func FuzzFSM(f *testing.F) {
    f.Add("ca(t)(s)", "dog")  
   
    f.Fuzz(func(t *testing.T, regex, input string) {  
-      if strings.ContainsAny(input, "Ȥ") {  
-         t.Skip()  
-      }  
-  
       if strings.ContainsAny(regex, "$^|*+?.\\") {  
          t.Skip()  
       }  
@@ -107,3 +103,71 @@ func FuzzFSM(f *testing.F) {
    })  
 }
 ```
+
+Let's step through this a bit. First, we need to add a few examples of input to our test function so that Go can seed the test corpus.
+
+```Go
+f.Add("abc", "abc")  
+f.Add("abc", "")  
+f.Add("abc", "xxx")  
+f.Add("ca(t)(s)", "dog")  
+```
+
+Now for the test function;
+
+```Go
+f.Fuzz(func(t *testing.T, regex, input string) {  
+      if strings.ContainsAny(regex, "$^|*+?.\\") {  
+         t.Skip()  
+      }  
+  
+      compiledGoRegex, err := regexp.Compile(regex)  
+      if err != nil {  
+         t.Skip()  
+      }  
+  
+      result := matchRegex(regex, input)  
+      goRegexMatch := compiledGoRegex.MatchString(input)  
+  
+      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
+         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
+      }  
+   })  
+```
+
+First, we want to ignore some special regex characters (for now), so any tests which use these characters we will simply ignore;
+
+```Go
+if strings.ContainsAny(regex, "$^|*+?.\\") {  
+	t.Skip()  
+}  
+```
+
+Also, we only want to test valid regex statements, so any invalid statements we can also ignore.
+
+```Go
+compiledGoRegex, err := regexp.Compile(regex)  
+if err != nil {  
+	t.Skip()  
+}  
+```
+
+After that, we can simply test in the same way as in our previous test.
+
+```Go
+result := matchRegex(regex, input)  
+goRegexMatch := compiledGoRegex.MatchString(input)  
+
+if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
+	t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
+}  
+```
+
+Let's see what happens when we run this fuzz test. Use the following command line instruction;
+
+```
+go test ./src/v3/... -fuzz ^FuzzFSM$
+```
+
+Note: Your path might be different, use the path of the package with the test and FSM implementation.
+
