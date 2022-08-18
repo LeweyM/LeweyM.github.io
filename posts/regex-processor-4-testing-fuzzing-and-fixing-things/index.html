@@ -227,7 +227,7 @@ FAIL
 
 </code></pre></div><p>We&rsquo;re now failing when using the regex <code>.</code> and an input string. This makes sense too because we haven&rsquo;t implemented the wildcard character <code>.</code> (yet). For now, let&rsquo;s ignore these special characters in our fuzz tests.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>f.Fuzz(func(t *testing.T, regex, input string) {  
-<span style=color:#a6e22e>+     if strings.ContainsAny(regex, &#34;$^|*+?.\\&#34;) {  
+<span style=color:#a6e22e>+     if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {  
 </span><span style=color:#a6e22e>+        t.Skip()  
 </span><span style=color:#a6e22e>+     }  
 </span><span style=color:#a6e22e></span>  
