@@ -37,7 +37,29 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
 }
 ```
 
-Our tests should all be green still. Let's compare the test structs between this and our previous tests.
+Most of the testing logic is in the `matchRegex` function, so let's define that also.
+
+```Go
+func matchRegex(regex, input string) Status {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+   for _, character := range input {  
+      testRunner.Next(character)  
+   }  
+  
+   return testRunner.GetStatus()  
+}
+```
+
+All we're doing here is setting up our lexer, parser, compiler and runner, then running through each character in the input. After running through the input string, we return the status.
+
+Our tests should still be green. 
+
+Let's compare the test structs between this and our previous tests.
 
 ```go
 // old tests
@@ -170,4 +192,6 @@ go test ./src/v3/... -fuzz ^FuzzFSM$
 ```
 
 Note: Your path might be different, use the path of the package with the test and FSM implementation.
+
+
 
