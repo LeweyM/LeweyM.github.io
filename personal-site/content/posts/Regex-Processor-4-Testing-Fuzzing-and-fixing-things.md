@@ -215,6 +215,8 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 
 ```
 
+#### Problem 1
+
 You should see that the fuzzer has saved this to a file at  `testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a`
 
 ```
@@ -250,6 +252,7 @@ func matchRegex(regex, input string) Status {
 +     status := testRunner.GetStatus()  
 +	  if status == Fail {  
 +	    testRunner.Reset()  
++		testRunner.Next(character)
 +       continue  
 +     }  
 +  
@@ -262,23 +265,57 @@ func matchRegex(regex, input string) Status {
 }
 ```
 
+Notice that we need to run `testRunner.Next(character)` after the reset because the second `a` in the input string needs to be used in the second attempt. More on that later.
+
 Let's run the fuzzer again.
 
+#### Problem 2
+
 ```zsh
-➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
-
-fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
-failure while testing seed corpus entry: FuzzFSM/95ebf188425a8fea7bfa9c05c938a499ff954ba884b7ef41c853b245b4b85cb4
-fuzz: elapsed: 0s, gathering baseline coverage: 12/1110 completed
---- FAIL: FuzzFSM (0.22s)
-    --- FAIL: FuzzFSM (0.00s)
-        v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
-    
-FAIL
-
+        v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
 ```
 
-We're now failing when using the regex `.` and an input string. This makes sense too because we haven't implemented the wildcard character `.` (yet). For now, let's ignore these special characters in our fuzz tests.
+or in the file; 
+
+```
+go test fuzz v1  
+string("")  
+string("A")
+```
+
+This time the issue is when the regex is an empty string. In these cases, any input should match. Let's write a test case.
+
+```diff
+	{"empty string", "abc", ""},  
++	{"empty regex", "", "abc"},  
+	{"non matching string", "abc", "xxx"},
+```
+
+And now we can solve this by adding a check in our `matchRegex` function;
+
+```diff
+func matchRegex(regex, input string) bool {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
++   // for empty regex  
++   if testRunner.GetStatus() == Success {  
++      return true  
++   }
+```
+
+Tests are green so back to the fuzzer.
+
+#### Problem 3
+
+```zsh
+        v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
+```
+
+We're now failing when using the regex `.` and an input string. This makes sense because we haven't implemented the wildcard character `.` (yet). For now, let's ignore these special characters in our fuzz tests.
 
 ```diff
 f.Fuzz(func(t *testing.T, regex, input string) {  
@@ -299,6 +336,21 @@ f.Fuzz(func(t *testing.T, regex, input string) {
       }  
    })  
 ```
+
+Rinse. Repeat
+
+#### Problem 4
+
+```zsh
+v3_test.go:127: Mismatch - Regex: 'Ȥ', Input: 'Ȥ' -> Go Regex Pkg: 'true', Our regex result: 'false'
+```
+
+Now things are getting interesting. It seems that our regex matcher is having trouble with the non-alphanumeric character `Ȥ`. Let's start with a test and go from there.
+
+```go
+
+```
+
 
 If we run the fuzzer now, we see something like this;
 
