@@ -493,8 +493,43 @@ func matchRegex(regex, input string) bool {
 -  
 -   return testRunner.GetStatus() == Success
 +   match(testRunner, input)
-
+}
 ```
+
+Ok, so far we've just piled everything into a new private method `match`, let's build that now
+
+```go
+func match(runner *runner, input string) bool {  
+   runner.Reset()  
+  
+   for _, character := range input {  
+      runner.Next(character)  
+      status := runner.GetStatus()  
+  
+      if status == Fail {    
+         return match(runner, input[1:])  
+      }  
+  
+      if status == Success {  
+         return true  
+      }  
+   }  
+  
+   return runner.GetStatus() == Success  
+}
+```
+
+This is similar to our previous implementation with one major difference: In the case of a failure, we attempt to match again on a substring of `input`.
+
+```go
+if status == Fail {    
+	return match(runner, input[1:])  
+} 
+```
+
+This means that we will test for a match on every substring of input.
+
+Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
 
 
 
