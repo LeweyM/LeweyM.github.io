@@ -217,7 +217,10 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 
 #### Problem 1
 
-You should see that the fuzzer has saved this to a file at  `testdata/fuzz/FuzzFSM/08fa440d...`
+You should see that the fuzzer has saved this to a file at  
+```
+testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
+```
 
 ```
 go test fuzz v1  
@@ -272,7 +275,7 @@ Let's run the fuzzer again.
 #### Problem 2
 
 ```zsh
-        v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
+v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
 ```
 
 or in the file; 
@@ -307,12 +310,14 @@ func matchRegex(regex, input string) bool {
 +   }
 ```
 
+Why does this work? In the case of an empty regex, the compiler would produce a single state FSM. As the FSM will have no outbound transitions, this will function as an end state. So, for an empty regex, we just need to check the status before we do any processing.
+
 Tests are green so back to the fuzzer.
 
 #### Problem 3
 
 ```zsh
-        v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
+v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
 ```
 
 We're now failing when using the regex `.` and an input string. This makes sense because we haven't implemented the wildcard character `.` (yet). For now, let's ignore these special characters in our fuzz tests.
