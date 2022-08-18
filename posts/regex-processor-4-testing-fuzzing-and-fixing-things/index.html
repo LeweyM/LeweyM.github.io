@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2321">
+<meta itemprop=wordCount content="2484">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -435,8 +435,47 @@ Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
 	-&gt; 
 	Go Regex Pkg: &#39;false&#39;, 
 	Our regex result: &#39;true&#39;
-</code></pre></div><p>This looks like</p>
-<p>// completed</p>
+</code></pre></div><p>This looks like an extension of the multibyte problem, so let&rsquo;s add an additional test;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;},  
+<span style=color:#a6e22e>+{  
+</span><span style=color:#a6e22e>+   &#34;complex multibyte characters&#34;,  
+</span><span style=color:#a6e22e>+   string([]byte{0xef, 0xbf, 0xbd, 0x30}),  
+</span><span style=color:#a6e22e>+   string([]byte{0xcc, 0x87, 0x30}),  
+</span><span style=color:#a6e22e>+},
+</span></code></pre></div><p>This time, the problem is in our <code>match</code> function, which takes a string and recurses on a substring.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])
+</code></pre></div><p>See the problem? We&rsquo;re recursing on a substring of <em>bytes</em>, not a substring of <em>runes</em>. Let&rsquo;s fix this by having the function accept a rune slice instead of a string.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegexOLD(regex, input string) bool {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+<span style=color:#f92672>-   return match(testRunner, input)  
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+   return match(testRunner, []rune(input))  
+</span><span style=color:#a6e22e></span>}
+
+<span style=color:#f92672>-func match(runner *runner, input string) bool {  
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+func match(runner *runner, input []rune) bool {  
+</span><span style=color:#a6e22e></span>   runner.Reset()  
+  
+   for _, character := range input {  
+      runner.Next(character)  
+      status := runner.GetStatus()  
+  
+      if status == Fail {    
+         return match(runner, input[1:])  
+      }  
+  
+      if status == Success {  
+         return true  
+      }  
+   }  
+  
+   return runner.GetStatus() == Success  
+}
+</code></pre></div><h4 id=and-then-silence>And then, silence&mldr;</h4>
 <p>If we run the fuzzer now, we see something like this;</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
