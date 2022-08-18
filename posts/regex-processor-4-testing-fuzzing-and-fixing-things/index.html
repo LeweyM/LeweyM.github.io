@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2122">
+<meta itemprop=wordCount content="2282">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -401,8 +401,33 @@ Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
 </span><span style=color:#f92672>-  
 </span><span style=color:#f92672>-   return testRunner.GetStatus() == Success
 </span><span style=color:#f92672></span><span style=color:#a6e22e>+   match(testRunner, input)
-</span><span style=color:#a6e22e></span>
-</code></pre></div><p>// completed</p>
+</span><span style=color:#a6e22e></span>}
+</code></pre></div><p>Ok, so far we&rsquo;ve just piled everything into a new private method <code>match</code>, let&rsquo;s build that now</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>bool</span> {  
+   <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Reset</span>()  
+  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
+      <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
+      <span style=color:#a6e22e>status</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>()  
+  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {    
+         <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+      }  
+  
+      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span> {  
+         <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>  
+      }  
+   }  
+  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span>  
+}
+</code></pre></div><p>This is similar to our previous implementation with one major difference: In the case of a failure, we attempt to match again on a substring of <code>input</code>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {    
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+} 
+</code></pre></div><p>This means that we will test for a match on every substring of input.</p>
+<p>Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we&rsquo;re just concerned with correctness, we can go back and optimize later, but it&rsquo;s something to bear in mind.</p>
+<p>// completed</p>
 <p>If we run the fuzzer now, we see something like this;</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
