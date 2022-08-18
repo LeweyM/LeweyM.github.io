@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="1522">
+<meta itemprop=wordCount content="1643">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -288,16 +288,46 @@ string(&quot;A&quot;)
       result := matchRegex(regex, input)  
       goRegexMatch := compiledGoRegex.MatchString(input)  
   
-      if (result == Success &amp;&amp; !goRegexMatch) || (result == Fail &amp;&amp; goRegexMatch) {  
-         t.Fatalf(&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;, regex, input, goRegexMatch, result)  
-      }  
+      if result != goRegexMatch {  
+	t.Fatalf(  
+		&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;,  
+		regex,  
+		input,  
+		goRegexMatch,  
+		result)  
+}   
    })  
 </code></pre></div><p>Rinse. Repeat</p>
 <h4 id=problem-4>Problem 4</h4>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:127: Mismatch - Regex: <span style=color:#e6db74>&#39;Ȥ&#39;</span>, Input: <span style=color:#e6db74>&#39;Ȥ&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
 </code></pre></div><p>Now things are getting interesting. It seems that our regex matcher is having trouble with the non-alphanumeric character <code>Ȥ</code>. Let&rsquo;s start with a test and go from there.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>{<span style=color:#e6db74>&#34;multibyte characters&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>},
-</code></pre></div><p>I&rsquo;ve called this test <code>multibyte characters</code> because these characters are represented as more than one byte</p>
+</code></pre></div><p>I&rsquo;ve called this test <code>multibyte characters</code> because these characters are represented as more than one byte. Let&rsquo;s change our error message to show this more clearly.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if result != goRegexMatch {  
+<span style=color:#f92672>-	t.Fatalf(  
+</span><span style=color:#f92672>-		&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;,  
+</span><span style=color:#f92672>-		regex,  
+</span><span style=color:#f92672>-		input,  
+</span><span style=color:#f92672>-		goRegexMatch,
+</span><span style=color:#f92672>-	it’s 	result)  
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+   t.Fatalf(  
+</span><span style=color:#a6e22e>+      &#34;Mismatch - \nRegex: &#39;%s&#39; (as bytes: %x), \nInput: &#39;%s&#39; (as bytes: %x) \n-&gt; \nGo Regex Pkg: &#39;%t&#39;, \nOur regex result: &#39;%v&#39;&#34;,  
+</span><span style=color:#a6e22e>+      regex,  
+</span><span style=color:#a6e22e>+      []byte(regex),  
+</span><span style=color:#a6e22e>+      input,  
+</span><span style=color:#a6e22e>+      []byte(input),  
+</span><span style=color:#a6e22e>+      goRegexMatch,  
+</span><span style=color:#a6e22e>+      result)  
+</span><span style=color:#a6e22e></span>}
+</code></pre></div><p>Running the fuzzer again we now get this;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:94: Mismatch - 
+	Regex: <span style=color:#e6db74>&#39;Ȥ&#39;</span><span style=color:#f92672>(</span>as bytes: <span style=color:#f92672>[</span><span style=color:#ae81ff>200</span> 164<span style=color:#f92672>])</span>, 
+	Input: <span style=color:#e6db74>&#39;Ȥ&#39;</span><span style=color:#f92672>(</span>as bytes: <span style=color:#f92672>[</span><span style=color:#ae81ff>200</span> 164<span style=color:#f92672>])</span> 
+	-&gt; 
+	Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, 
+	Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+</code></pre></div><p>As we can see here, the character <code>Ȥ</code> is made up of the two bytes <code>[200 164]</code></p>
+<p>// completed</p>
 <p>If we run the fuzzer now, we see something like this;</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
