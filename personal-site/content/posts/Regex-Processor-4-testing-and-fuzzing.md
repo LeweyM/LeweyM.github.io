@@ -139,10 +139,6 @@ Now for the test function;
 
 ```Go
 f.Fuzz(func(t *testing.T, regex, input string) {  
-      if strings.ContainsAny(regex, "$^|*+?.\\") {  
-         t.Skip()  
-      }  
-  
       compiledGoRegex, err := regexp.Compile(regex)  
       if err != nil {  
          t.Skip()  
@@ -157,19 +153,10 @@ f.Fuzz(func(t *testing.T, regex, input string) {
    })  
 ```
 
-First, we want to ignore some special regex characters (for now), so any tests which use these characters we will simply ignore;
+First, we only want to test valid regex statements, so any invalid statements we can simply ignore.
 
 ```Go
 if strings.ContainsAny(regex, "$^|*+?.\\") {  
-	t.Skip()  
-}  
-```
-
-Also, we only want to test valid regex statements, so any invalid statements we can also ignore.
-
-```Go
-compiledGoRegex, err := regexp.Compile(regex)  
-if err != nil {  
 	t.Skip()  
 }  
 ```
@@ -193,5 +180,101 @@ go test ./src/v3/... -fuzz ^FuzzFSM$
 
 Note: Your path might be different, use the path of the package with the test and FSM implementation.
 
+We found an error!
 
+```zsh
+➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
+fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
+failure while testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
+fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
+--- FAIL: FuzzFSM (0.21s)
+    --- FAIL: FuzzFSM (0.00s)
+        v3_test.go:106: Mismatch - Regex: 'aA', Input: 'aaA' -> Go Regex Pkg: 'true', Our regex result: 'fail'
+
+```
+
+It seems that passing `aaA` to the regex `aA` fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package `MatchString` method we're using will look for a match anywhere in the string, whereas we're looking only at the beginning of the string.
+
+Let's modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.
+
+```diff
+func matchRegex(regex, input string) Status {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+   for _, character := range input {  
+      testRunner.Next(character)  
++     status := testRunner.GetStatus()  
++	  if status == Fail {  
++	    testRunner.Reset()  
++       continue  
++     }  
++  
++	  if status != Normal {  
++	     return status  
++	  }
+   }  
+  
+   return testRunner.GetStatus()  
+}
+```
+
+Let's run the fuzzer again.
+
+```zsh
+➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+
+fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
+failure while testing seed corpus entry: FuzzFSM/95ebf188425a8fea7bfa9c05c938a499ff954ba884b7ef41c853b245b4b85cb4
+fuzz: elapsed: 0s, gathering baseline coverage: 12/1110 completed
+--- FAIL: FuzzFSM (0.22s)
+    --- FAIL: FuzzFSM (0.00s)
+        v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
+    
+FAIL
+
+```
+
+We're now failing when using the regex `.` and an input string. This makes sense too because we haven't implemented the wildcard character `.` (yet). For now, let's ignore these special characters in our fuzz tests.
+
+```diff
+f.Fuzz(func(t *testing.T, regex, input string) {  
++     if strings.ContainsAny(regex, "$^|*+?.\\") {  
++        t.Skip()  
++     }  
+  
+      compiledGoRegex, err := regexp.Compile(regex)  
+      if err != nil {  
+         t.Skip()  
+      }  
+  
+      result := matchRegex(regex, input)  
+      goRegexMatch := compiledGoRegex.MatchString(input)  
+  
+      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
+         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
+      }  
+   })  
+```
+
+If we run the fuzzer now, we see something like this;
+
+```zsh
+➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+
+fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 1110/1110 completed, now fuzzing with 8 workers
+fuzz: elapsed: 3s, execs: 481830 (160569/sec), new interesting: 0 (total: 1110)
+fuzz: elapsed: 6s, execs: 1041643 (186630/sec), new interesting: 0 (total: 1110)
+fuzz: elapsed: 9s, execs: 1540600 (166326/sec), new interesting: 1 (total: 1111)
+fuzz: elapsed: 12s, execs: 1997730 (152333/sec), new interesting: 1 (total: 1111)
+fuzz: elapsed: 15s, execs: 2593993 (198784/sec), new interesting: 2 (total: 1112)
+fuzz: elapsed: 18s, execs: 3120415 (175505/sec), new interesting: 2 (total: 1112)
+fuzz: elapsed: 21s, execs: 3654537 (178003/sec), new interesting: 2 (total: 1112)
+```
+
+Fuzzing won't give us a green light like tests will. Fuzzing is an infinite
