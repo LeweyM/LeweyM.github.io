@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="670">
+<meta itemprop=wordCount content="749">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 testing and fuzzing">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -82,7 +82,23 @@ POSTS
       })  
    }  
 }
-</code></pre></div><p>Our tests should all be green still. Let&rsquo;s compare the test structs between this and our previous tests.</p>
+</code></pre></div><p>Most of the testing logic is in the <code>matchRegex</code> function, so let&rsquo;s define that also.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#a6e22e>Status</span> {  
+   <span style=color:#a6e22e>parser</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewParser</span>()  
+   <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>regex</span>)  
+   <span style=color:#a6e22e>ast</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>parser</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span>)  
+   <span style=color:#a6e22e>startState</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ast</span>.<span style=color:#a6e22e>compile</span>()  
+   <span style=color:#a6e22e>testRunner</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#a6e22e>startState</span>)  
+  
+   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
+      <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
+   }  
+  
+   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>GetStatus</span>()  
+}
+</code></pre></div><p>All we&rsquo;re doing here is setting up our lexer, parser, compiler and runner, then running through each character in the input. After running through the input string, we return the status.</p>
+<p>Our tests should still be green.</p>
+<p>Let&rsquo;s compare the test structs between this and our previous tests.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// old tests
 </span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
    <span style=color:#a6e22e>name</span>           <span style=color:#66d9ef>string</span>  
