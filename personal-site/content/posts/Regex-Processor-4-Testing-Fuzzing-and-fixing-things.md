@@ -240,7 +240,7 @@ We're now failing when using the regex `.` and an input string. This makes sense
 
 ```diff
 f.Fuzz(func(t *testing.T, regex, input string) {  
-+     if strings.ContainsAny(regex, "$^|*+?.\\") {  
++     if strings.ContainsAny(regex, "[]{}$^|*+?.\\") {  
 +        t.Skip()  
 +     }  
   
