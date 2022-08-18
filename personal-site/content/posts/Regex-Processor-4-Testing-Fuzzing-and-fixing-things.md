@@ -225,7 +225,17 @@ string("aaA")
 
 It seems that passing `aaA` to the regex `aA` fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package `MatchString` method we're using will look for a match anywhere in the string, whereas we're looking only at the beginning of the string.
 
-Let's modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.
+Before we fix this, let's add a test for this case.
+
+```diff
+	{"non matching string", "abc", "xxx"},  
+	{"matching string", "abc", "abc"},  
+	{"partial matching string", "abc", "ab"},  
+	{"nested expressions", "a(b(d))c", "abdc"},  
++	{"substring match with reset needed", "aA", "aaA"},
+```
+
+Now let's modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.
 
 ```diff
 func matchRegex(regex, input string) Status {  
