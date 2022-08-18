@@ -55,4 +55,17 @@ type test struct {
 }  
 ```
 
-Notice that we no longer require the `Status` field. This is because we no longer need to 
+Notice that we no longer require the `Status` field. This is because we no longer need to specify the result, as the Go library does that for us! 
+
+Adding a new test case is pretty simple;
+
+```diff
+tests := []test{  
+   {"empty string", "abc", ""},  
+   {"non matching string", "abc", "xxx"},  
+   {"matching string", "abc", "abc"},  
+   {"partial matching string", "abc", "ab"},  
++  {"nested expressions", "a(b(d))c", "abdc"},  
+}
+```
+
