@@ -531,6 +531,25 @@ This means that we will test for a match on every substring of input.
 
 Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
 
+#### Problem 6
+
+Ok, we're starting to make progress now. Let's see our next issue.
+
+```diff
+v3_test.go:128: Mismatch - 
+	Regex: '�0' (as bytes: efbfbd30), 
+	Input: '̇0' (as bytes: cc8730) 
+	-> 
+	Go Regex Pkg: 'false', 
+	Our regex result: 'true'
+```
+
+This looks like 
+
+
+
+
+
 
 
 // completed
