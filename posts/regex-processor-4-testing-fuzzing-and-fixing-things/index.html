@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2696">
+<meta itemprop=wordCount content="2788">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -212,7 +212,7 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
         v3_test.go:106: Mismatch - Regex: <span style=color:#e6db74>&#39;aA&#39;</span>, Input: <span style=color:#e6db74>&#39;aaA&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;fail&#39;</span>
 
 </code></pre></div><h4 id=problem-1>Problem 1</h4>
-<p>You should see that the fuzzer has saved this to a file at <code>testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a</code></p>
+<p>You should see that the fuzzer has saved this to a file at <code>testdata/fuzz/FuzzFSM/08fa440d...</code></p>
 <pre tabindex=0><code>go test fuzz v1  
 string(&quot;aA&quot;)  
 string(&quot;aaA&quot;)
@@ -531,7 +531,25 @@ fuzz: elapsed: 21s, execs: <span style=color:#ae81ff>3654537</span> <span style=
 </code></pre></div><p>And then let&rsquo;s call these from our tests.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#a6e22e>+ result := NewMyRegex(regex).MatchString(input)  
 </span><span style=color:#a6e22e></span><span style=color:#f92672>- result := matchRegex(regex, input)
-</span></code></pre></div><p>Great! Let&rsquo;s move onto adding some more functionality to our FSM.</p>
+</span></code></pre></div><h4 id=onwards-and-upwards>Onwards and upwards</h4>
+<p>We&rsquo;ve covered a lot of ground here. Our tests now look like so:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
+   {<span style=color:#e6db74>&#34;empty string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>},  
+   {<span style=color:#e6db74>&#34;empty regex&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
+   {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>},  
+   {<span style=color:#e6db74>&#34;matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
+   {<span style=color:#e6db74>&#34;partial matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;ab&#34;</span>},  
+   {<span style=color:#e6db74>&#34;nested expressions&#34;</span>, <span style=color:#e6db74>&#34;a(b(d))c&#34;</span>, <span style=color:#e6db74>&#34;abdc&#34;</span>},  
+   {<span style=color:#e6db74>&#34;substring match with reset needed&#34;</span>, <span style=color:#e6db74>&#34;aA&#34;</span>, <span style=color:#e6db74>&#34;aaA&#34;</span>},  
+   {<span style=color:#e6db74>&#34;substring match without reset needed&#34;</span>, <span style=color:#e6db74>&#34;B&#34;</span>, <span style=color:#e6db74>&#34;ABA&#34;</span>},  
+   {<span style=color:#e6db74>&#34;multibyte characters&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>},  
+   {  
+      <span style=color:#e6db74>&#34;complex multibyte characters&#34;</span>,  
+      string([]<span style=color:#66d9ef>byte</span>{<span style=color:#ae81ff>0xef</span>, <span style=color:#ae81ff>0xbf</span>, <span style=color:#ae81ff>0xbd</span>, <span style=color:#ae81ff>0x30</span>}),  
+      string([]<span style=color:#66d9ef>byte</span>{<span style=color:#ae81ff>0xcc</span>, <span style=color:#ae81ff>0x87</span>, <span style=color:#ae81ff>0x30</span>}),  
+   },  
+}
+</code></pre></div><p>We&rsquo;re covering a lot of cases of odd input characters, but we&rsquo;re missing a lot of special characters which make regex so powerful. Let&rsquo;s start adding them!</p>
 <p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-a-bit-more-theory/>Regex Processor 5 A bit more theory</a></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
 <ul class=pa0>
