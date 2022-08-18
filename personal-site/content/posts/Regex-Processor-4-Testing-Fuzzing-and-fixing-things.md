@@ -625,9 +625,49 @@ Let's refactor a bit before we move on.
 The `matchRegex` function in our tests is doing a lot of work. I think it makes sense here to move it out of a test file and into the actual logic of our regex. Let's create a `myRegex` struct with some methods we can expose to handle finding a match in a string.
 
 ```go
-
+type myRegex struct {  
+   fsm *State  
+}  
+  
+func NewMyRegex(re string) *myRegex {  
+   tokens := lex(re)  
+   parser := NewParser()  
+   ast := parser.Parse(tokens)  
+   state, _ := ast.compile()  
+   return &myRegex{fsm: state}  
+}  
+  
+func (m *myRegex) MatchString(input string) bool {  
+   testRunner := NewRunner(m.fsm)  
+   return match(testRunner, []rune(input))  
+}  
+  
+func match(runner *runner, input []rune) bool {  
+   runner.Reset()  
+  
+   for _, character := range input {  
+      runner.Next(character)  
+      status := runner.GetStatus()  
+  
+      if status == Fail {  
+         return match(runner, input[1:])  
+      }  
+  
+      if status == Success {  
+         return true  
+      }  
+   }  
+  
+   return runner.GetStatus() == Success  
+}
 ```
 
+And then let's call these from our tests.
+
+```diff
++ result := NewMyRegex(regex).MatchString(input)  
+- result := matchRegex(regex, input)
+```
 
 
 
