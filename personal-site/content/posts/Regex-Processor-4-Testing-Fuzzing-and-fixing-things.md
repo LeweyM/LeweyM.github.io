@@ -406,11 +406,15 @@ func lex(input string) []token {
 
 We are looping over the bytes and converting them to runes. This means that multibyte words such as `Ȥ` will create two tokens; one for `c8`, and another for `a4`. This is not what we want.
 
-Solving this is quite simple, we just need to use a `range` loop over the input. Go knows how to split a string into runes and will do so when casting a string to runes, or when using the `range` keyword.
+Solving this is quite simple, we just need to use a `range` loop over the input. Go knows how to split a string into runes, which are `int32` types and can support all Unicode characters. It will do so when casting a string to runes, or when using the `range` keyword.
 
 For example;
+```go
+fmt.Println([]byte("café")) // [99 97 102 195 169]
+fmt.Println([]rune("café")) // [99 97 102 233]
 ```
-```
+
+So, let's change our lexer.
 
 ```diff
 func lex(input string) []token {  
@@ -425,6 +429,73 @@ func lex(input string) []token {
    return tokens  
 }
 ```
+
+#### Problem 5
+
+```zsh
+Regex: 'B' (as bytes: 42), 
+Input: 'ABA' (as bytes: 414241) 
+-> 
+Go Regex Pkg: 'true', 
+Our regex result: 'false'
+
+```
+
+Interesting. This is similar to a problem we already solved, but with a slight variation. Here we need to find all sub-matches, not just the match from the start of the input string, but in this case we don't need to use any of the already processed characters to make the match work.
+
+With the test;
+
+```diff
+{"substring match with reset needed", "aA", "aaA"},  
++{"substring match without reset needed", "B", "ABA"},
+```
+
+We can solve this by removing the extra call to `Next` from before;
+
+```diff
+if status == Fail {  
+   testRunner.Reset()  
+-   testRunner.Next(character)  
+   continue  
+}
+```
+
+But doing so will break the previous test. We need to reprocess the string in some situations and not in others. 
+
+Actually, there's a better way of looking at this problem. What we actually need to do, is to *check for a match against every substring of the input*. We can do this by changing our `matchRegex` method like so;
+
+```diff
+func matchRegex(regex, input string) bool {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+-   // for empty regex  
+-   if testRunner.GetStatus() == Success {  
+-      return true  
+-   }  
+  
+-   for _, character := range input {  
+-      testRunner.Next(character)  
+-      status := testRunner.GetStatus()  
+-      if status == Fail {  
+-         testRunner.Reset()  
+-         //testRunner.Next(character)  
+-         continue  
+-      }  
+-  
+-      if status == Success {  
+-         return true  
+-      }  
+-   }  
+-  
+-   return testRunner.GetStatus() == Success
++   match(testRunner, input)
+
+```
+
 
 
 // completed
