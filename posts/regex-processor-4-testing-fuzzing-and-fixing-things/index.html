@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="1831">
+<meta itemprop=wordCount content="2122">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -338,9 +338,12 @@ string(&quot;A&quot;)
    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>tokens</span>  
 }
 </code></pre></div><p>We are looping over the bytes and converting them to runes. This means that multibyte words such as <code>Ȥ</code> will create two tokens; one for <code>c8</code>, and another for <code>a4</code>. This is not what we want.</p>
-<p>Solving this is quite simple, we just need to use a <code>range</code> loop over the input. Go knows how to split a string into runes and will do so when casting a string to runes, or when using the <code>range</code> keyword.</p>
+<p>Solving this is quite simple, we just need to use a <code>range</code> loop over the input. Go knows how to split a string into runes, which are <code>int32</code> types and can support all Unicode characters. It will do so when casting a string to runes, or when using the <code>range</code> keyword.</p>
 <p>For example;</p>
-<pre tabindex=0><code></code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func lex(input string) []token {  
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>([]byte(<span style=color:#e6db74>&#34;café&#34;</span>)) <span style=color:#75715e>// [99 97 102 195 169]
+</span><span style=color:#75715e></span><span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>([]rune(<span style=color:#e6db74>&#34;café&#34;</span>)) <span style=color:#75715e>// [99 97 102 233]
+</span></code></pre></div><p>So, let&rsquo;s change our lexer.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func lex(input string) []token {  
    var tokens []token  
 <span style=color:#f92672>-   i := 0  
 </span><span style=color:#f92672>-   for i &lt; len(input) {  
@@ -351,6 +354,54 @@ string(&quot;A&quot;)
 </span><span style=color:#a6e22e></span>   }  
    return tokens  
 }
+</code></pre></div><h4 id=problem-5>Problem 5</h4>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>Regex: <span style=color:#e6db74>&#39;B&#39;</span> <span style=color:#f92672>(</span>as bytes: 42<span style=color:#f92672>)</span>, 
+Input: <span style=color:#e6db74>&#39;ABA&#39;</span> <span style=color:#f92672>(</span>as bytes: 414241<span style=color:#f92672>)</span> 
+-&gt; 
+Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, 
+Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+
+</code></pre></div><p>Interesting. This is similar to a problem we already solved, but with a slight variation. Here we need to find all sub-matches, not just the match from the start of the input string, but in this case we don&rsquo;t need to use any of the already processed characters to make the match work.</p>
+<p>With the test;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},  
+<span style=color:#a6e22e>+{&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;},
+</span></code></pre></div><p>We can solve this by removing the extra call to <code>Next</code> from before;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if status == Fail {  
+   testRunner.Reset()  
+<span style=color:#f92672>-   testRunner.Next(character)  
+</span><span style=color:#f92672></span>   continue  
+}
+</code></pre></div><p>But doing so will break the previous test. We need to reprocess the string in some situations and not in others.</p>
+<p>Actually, there&rsquo;s a better way of looking at this problem. What we actually need to do, is to <em>check for a match against every substring of the input</em>. We can do this by changing our <code>matchRegex</code> method like so;</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) bool {  
+   parser := NewParser()  
+   tokens := lex(regex)  
+   ast := parser.Parse(tokens)  
+   startState, _ := ast.compile()  
+   testRunner := NewRunner(startState)  
+  
+<span style=color:#f92672>-   // for empty regex  
+</span><span style=color:#f92672>-   if testRunner.GetStatus() == Success {  
+</span><span style=color:#f92672>-      return true  
+</span><span style=color:#f92672>-   }  
+</span><span style=color:#f92672></span>  
+<span style=color:#f92672>-   for _, character := range input {  
+</span><span style=color:#f92672>-      testRunner.Next(character)  
+</span><span style=color:#f92672>-      status := testRunner.GetStatus()  
+</span><span style=color:#f92672>-      if status == Fail {  
+</span><span style=color:#f92672>-         testRunner.Reset()  
+</span><span style=color:#f92672>-         //testRunner.Next(character)  
+</span><span style=color:#f92672>-         continue  
+</span><span style=color:#f92672>-      }  
+</span><span style=color:#f92672>-  
+</span><span style=color:#f92672>-      if status == Success {  
+</span><span style=color:#f92672>-         return true  
+</span><span style=color:#f92672>-      }  
+</span><span style=color:#f92672>-   }  
+</span><span style=color:#f92672>-  
+</span><span style=color:#f92672>-   return testRunner.GetStatus() == Success
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+   match(testRunner, input)
+</span><span style=color:#a6e22e></span>
 </code></pre></div><p>// completed</p>
 <p>If we run the fuzzer now, we see something like this;</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
