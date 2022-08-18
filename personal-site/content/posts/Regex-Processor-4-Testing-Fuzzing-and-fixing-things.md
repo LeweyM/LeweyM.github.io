@@ -179,9 +179,14 @@ After that, we can simply test in the same way as in our previous test.
 result := matchRegex(regex, input)  
 goRegexMatch := compiledGoRegex.MatchString(input)  
 
-if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
-	t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
-}  
+if result != goRegexMatch {  
+	t.Fatalf(  
+		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+		regex,  
+		input,  
+		goRegexMatch,  
+		result)  
+} 
 ```
 
 Let's see what happens when we run this fuzz test. Use the following command line instruction;
