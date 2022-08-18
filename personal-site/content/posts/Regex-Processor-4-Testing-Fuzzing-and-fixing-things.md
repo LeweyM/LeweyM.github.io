@@ -616,6 +616,19 @@ fuzz: elapsed: 21s, execs: 3654537 (178003/sec), new interesting: 2 (total: 1112
 
 Fuzzing won't give us a green light like tests will. Fuzzing is an [infinite space problem](https://www.synopsys.com/blogs/software-security/fuzzing-test-cases-not-all-random/#:~:text=Fuzzing%20is%20an%20infinite%20space%20problem.%20For%20any%20piece%20of%20software%2C%20you%20can%20create%20an%20infinite%20number%20of%20malformed%20inputs.%20To%20get%20useful%20results%20in%20a%20reasonable%20amount%20of%20time%2C%20the%20trick%20is%20to%20select%20inputs%20that%20are%20most%20likely%20to%20cause%20failures%20in%20the%20target%20software.), meaning that it will never 'finish', but if we run it long enough we can be fairly confident that our algorithm is pretty error-proof. I let it run for a few minutes before I declared it a success. 
 
+I hope that the power of techniques like fuzzing is clear here. We've managed to uncover lots of subtle (and some not so subtle) bugs and issues with our code, and we're now pretty confident that we're providing the same behavior as the Go regex package!
+
+### Some clean up
+
+Let's refactor a bit before we move on. 
+
+The `matchRegex` function in our tests is doing a lot of work. I think it makes sense here to move it out of a test file and into the actual logic of our regex. Let's create a `myRegex` struct with some methods we can expose to handle finding a match in a string.
+
+```go
+
+```
+
+
 
 
 Great! Let's move onto adding some more functionality to our FSM.
