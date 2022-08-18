@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="1209">
+<meta itemprop=wordCount content="1273">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 testing and fuzzing">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -258,7 +258,10 @@ fuzz: elapsed: 12s, execs: <span style=color:#ae81ff>1997730</span> <span style=
 fuzz: elapsed: 15s, execs: <span style=color:#ae81ff>2593993</span> <span style=color:#f92672>(</span>198784/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
 fuzz: elapsed: 18s, execs: <span style=color:#ae81ff>3120415</span> <span style=color:#f92672>(</span>175505/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
 fuzz: elapsed: 21s, execs: <span style=color:#ae81ff>3654537</span> <span style=color:#f92672>(</span>178003/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
-</code></pre></div><p>Fuzzing won&rsquo;t give us a green light like tests will. Fuzzing is an infinite</p>
+</code></pre></div><p>Fuzzing won&rsquo;t give us a green light like tests will. Fuzzing is an <a href="https://www.synopsys.com/blogs/software-security/fuzzing-test-cases-not-all-random/#:~:text=Fuzzing%20is%20an%20infinite%20space%20problem.%20For%20any%20piece%20of%20software%2C%20you%20can%20create%20an%20infinite%20number%20of%20malformed%20inputs.%20To%20get%20useful%20results%20in%20a%20reasonable%20amount%20of%20time%2C%20the%20trick%20is%20to%20select%20inputs%20that%20are%20most%20likely%20to%20cause%20failures%20in%20the%20target%20software.">infinite space problem</a>, meaning that it will never &lsquo;finish&rsquo;, but if we run it long enough we can be fairly confident that our algorithm is pretty error-proof. I let it run for a few minutes before I declared it a success.</p>
+<p>Great! Let&rsquo;s move onto adding some more functionality to our FSM.</p>
+<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-a-bit-more-theory/>Regex Processor 5 A bit more theory</a></p>
+<p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
 <ul class=pa0>
 </ul>
 <div class="mt6 instapaper_ignoref">
