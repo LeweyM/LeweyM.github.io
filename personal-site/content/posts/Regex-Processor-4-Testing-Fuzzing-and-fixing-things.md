@@ -203,10 +203,6 @@ We found an error!
 
 Note: Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
 
-```
-
-```
-
 ```zsh
 ➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
@@ -217,6 +213,14 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
     --- FAIL: FuzzFSM (0.00s)
         v3_test.go:106: Mismatch - Regex: 'aA', Input: 'aaA' -> Go Regex Pkg: 'true', Our regex result: 'fail'
 
+```
+
+You should see that the fuzzer has saved this to a file at  `testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a`
+
+```
+go test fuzz v1  
+string("aA")  
+string("aaA")
 ```
 
 It seems that passing `aaA` to the regex `aA` fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package `MatchString` method we're using will look for a match anywhere in the string, whereas we're looking only at the beginning of the string.
