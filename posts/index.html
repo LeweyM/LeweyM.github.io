@@ -118,8 +118,25 @@ Take the string abc and create a linked list of 'states' with conditional transi
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-4-a-bit-more-theory/ class="link black dim">
-Regex Processor 4 A bit more theory
+<a href=/posts/regex-processor-4-testing-and-fuzzing/ class="link black dim">
+Regex Processor 4 testing and fuzzing
+</a>
+</h1>
+<div class="nested-links f5 lh-copy nested-copy-line-height">
+We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
+Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
+func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {"empty string", "abc", ""}, {"non matching string", "abc", "xxx"}, {"matching string", "abc", "abc"}, {"partial matching string", "abc", "ab"}, {"nested expressions", "a(b(d))c", "abdc"}, } for _, tt := range tests { t.
+</div>
+</div>
+</div>
+</div>
+<div class="relative w-100 w-30-l mb4 bg-white">
+<div class="relative w-100 mb4 bg-white nested-copy-line-height">
+<div class="bg-white mb3 pa4 gray overflow-hidden">
+<span class="f6 db">Posts</span>
+<h1 class="f3 near-black">
+<a href=/posts/regex-processor-5-a-bit-more-theory/ class="link black dim">
+Regex Processor 5 A bit more theory
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
@@ -137,8 +154,8 @@ This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-5-branches/ class="link black dim">
-Regex Processor 5 Branches
+<a href=/posts/regex-processor-6-branches/ class="link black dim">
+Regex Processor 6 Branches
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
