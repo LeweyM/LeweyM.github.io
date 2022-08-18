@@ -331,9 +331,14 @@ f.Fuzz(func(t *testing.T, regex, input string) {
       result := matchRegex(regex, input)  
       goRegexMatch := compiledGoRegex.MatchString(input)  
   
-      if (result == Success && !goRegexMatch) || (result == Fail && goRegexMatch) {  
-         t.Fatalf("Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'", regex, input, goRegexMatch, result)  
-      }  
+      if result != goRegexMatch {  
+	t.Fatalf(  
+		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+		regex,  
+		input,  
+		goRegexMatch,  
+		result)  
+}   
    })  
 ```
 
@@ -351,7 +356,45 @@ Now things are getting interesting. It seems that our regex matcher is having tr
 {"multibyte characters", "Ȥ", "Ȥ"},
 ```
 
-I've called this test `multibyte characters` because these characters are represented as more than one byte
+I've called this test `multibyte characters` because these characters are represented as more than one byte. Let's change our error message to show this more clearly.
+
+```diff
+if result != goRegexMatch {  
+-	t.Fatalf(  
+-		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+-		regex,  
+-		input,  
+-		goRegexMatch,
+-	it’s 	result)  
++   t.Fatalf(  
++      "Mismatch - \nRegex: '%s' (as bytes: %x), \nInput: '%s' (as bytes: %x) \n-> \nGo Regex Pkg: '%t', \nOur regex result: '%v'",  
++      regex,  
++      []byte(regex),  
++      input,  
++      []byte(input),  
++      goRegexMatch,  
++      result)  
+}
+```
+
+Running the fuzzer again we now get this;
+
+```zsh
+v3_test.go:94: Mismatch - 
+	Regex: 'Ȥ'(as bytes: [200 164]), 
+	Input: 'Ȥ'(as bytes: [200 164]) 
+	-> 
+	Go Regex Pkg: 'true', 
+	Our regex result: 'false'
+```
+
+As we can see here, the character `Ȥ` is made up of the two bytes `[200 164]`
+
+
+
+
+
+// completed
 
 If we run the fuzzer now, we see something like this;
 
