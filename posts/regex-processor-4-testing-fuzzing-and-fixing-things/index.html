@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="1276">
+<meta itemprop=wordCount content="1296">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -202,8 +202,7 @@ POSTS
 <p>We found an error!</p>
 <h3 id=lets-get-afixing>Let&rsquo;s get a&rsquo;fixing</h3>
 <p>Note: Your mileage may vary. Go fuzzing uses randomized input, so there&rsquo;s no guarantee that errors will show up in the same order as I show here.</p>
-<pre tabindex=0><code>
-</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
 
 fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
 failure <span style=color:#66d9ef>while</span> testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
@@ -212,7 +211,11 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
     --- FAIL: FuzzFSM <span style=color:#f92672>(</span>0.00s<span style=color:#f92672>)</span>
         v3_test.go:106: Mismatch - Regex: <span style=color:#e6db74>&#39;aA&#39;</span>, Input: <span style=color:#e6db74>&#39;aaA&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;fail&#39;</span>
 
-</code></pre></div><p>It seems that passing <code>aaA</code> to the regex <code>aA</code> fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package <code>MatchString</code> method we&rsquo;re using will look for a match anywhere in the string, whereas we&rsquo;re looking only at the beginning of the string.</p>
+</code></pre></div><p>You should see that the fuzzer has saved this to a file at <code>testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a</code></p>
+<pre tabindex=0><code>go test fuzz v1  
+string(&quot;aA&quot;)  
+string(&quot;aaA&quot;)
+</code></pre><p>It seems that passing <code>aaA</code> to the regex <code>aA</code> fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package <code>MatchString</code> method we&rsquo;re using will look for a match anywhere in the string, whereas we&rsquo;re looking only at the beginning of the string.</p>
 <p>Let&rsquo;s modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) Status {  
    parser := NewParser()  
