@@ -31,12 +31,12 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
   
          if result != goRegexMatch {  
 		   t.Fatalf(  
-		      "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-		      regex,  
-		      input,  
-		      goRegexMatch,  
-		      result)  
-		 }
+			  "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
+			  regex,  
+			  input,  
+			  goRegexMatch,  
+			  result)  
+		   } 
       })  
    }  
 }
