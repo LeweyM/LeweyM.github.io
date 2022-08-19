@@ -152,9 +152,37 @@ v4_test.go:126: Mismatch -
 
 ```
 
-Again, our fuzzer has uncovered some very interesting behaviour of regular expression implementations.
+Again, our fuzzer has uncovered some very interesting behavior of regular expression implementations.
 
 To make clearer what's going on here, let's add a test.
+
+```diff
+                // wildcard
+                {"wildcard regex matching", "ab.", "abc"},
+                {"wildcard regex not matching", "ab.", "ab"},
++               {"wildcards matching newlines", "..0", "0\n0"},
+```
+
+We can see here that the `.` wildcard character is matching against the newline character `\n`. In the go regex package, and in most regex flavors, the `.` wildcard does not match the `\n`. This is mainly to avoid common misuse of queries such as `.*` which would otherwise search indefinitely throughout the search input, instead of just on a single line.
+
+This can actually be disabled in most regex flavors with the `singleline` option, although this is disabled by default.
+
+The fix is simple.
+
+```diff
+func (w WildcardLiteral) compile() (head *State, tail *State) {
+        startingState := State{}
+        endState := State{}
+ 
+-       startingState.addTransition(&endState, func(input rune) bool { return true })
++       startingState.addTransition(&endState, func(input rune) bool { return input != '\n' })
+        return &startingState, &endState
+ }
+```
+
+Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we've learned a bit more about regular expressions. Not bad!
+
+Next up, modifiers!
 
 Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
 
