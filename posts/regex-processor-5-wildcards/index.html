@@ -26,7 +26,7 @@ Wildcards The . character in a regular expression will match any character. To m
 abc -> success ab -> normal
 So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
-<meta itemprop=wordCount content="598">
+<meta itemprop=wordCount content="770">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 5 Wildcards">
 <meta name=twitter:description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
@@ -171,8 +171,25 @@ POSTS
 	Go Regex Pkg: <span style=color:#e6db74>&#39;false&#39;</span>, 
 	Our regex result: <span style=color:#e6db74>&#39;true&#39;</span>
 
-</code></pre></div><p>Again, our fuzzer has uncovered some very interesting behaviour of regular expression implementations.</p>
+</code></pre></div><p>Again, our fuzzer has uncovered some very interesting behavior of regular expression implementations.</p>
 <p>To make clearer what&rsquo;s going on here, let&rsquo;s add a test.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                // wildcard
+                {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
+                {&#34;wildcard regex not matching&#34;, &#34;ab.&#34;, &#34;ab&#34;},
+<span style=color:#a6e22e>+               {&#34;wildcards matching newlines&#34;, &#34;..0&#34;, &#34;0\n0&#34;},
+</span></code></pre></div><p>We can see here that the <code>.</code> wildcard character is matching against the newline character <code>\n</code>. In the go regex package, and in most regex flavors, the <code>.</code> wildcard does not match the <code>\n</code>. This is mainly to avoid common misuse of queries such as <code>.*</code> which would otherwise search indefinitely throughout the search input, instead of just on a single line.</p>
+<p>This can actually be disabled in most regex flavors with the <code>singleline</code> option, although this is disabled by default.</p>
+<p>The fix is simple.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func (w WildcardLiteral) compile() (head *State, tail *State) {
+        startingState := State{}
+        endState := State{}
+ 
+<span style=color:#f92672>-       startingState.addTransition(&amp;endState, func(input rune) bool { return true })
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+       startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#39;\n&#39; })
+</span><span style=color:#a6e22e></span>        return &amp;startingState, &amp;endState
+ }
+</code></pre></div><p>Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we&rsquo;ve learned a bit more about regular expressions. Not bad!</p>
+<p>Next up, modifiers!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v4>here</a></p>
 <p>Next: <em>coming soon</em></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/>Regex Processor 4 Testing, Fuzzing, and fixing things</a></p>
