@@ -23,7 +23,7 @@ Wildcards The . character in a regular expression will match any character. To m
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
  abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
-<meta itemprop=wordCount content="770">
+<meta itemprop=wordCount content="774">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 5 Wildcards">
 <meta name=twitter:description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
@@ -175,7 +175,7 @@ POSTS
                 {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
                 {&#34;wildcard regex not matching&#34;, &#34;ab.&#34;, &#34;ab&#34;},
 <span style=color:#a6e22e>+               {&#34;wildcards matching newlines&#34;, &#34;..0&#34;, &#34;0\n0&#34;},
-</span></code></pre></div><p>We can see here that the <code>.</code> wildcard character is matching against the newline character <code>\n</code>. In the go regex package, and in most regex flavors, the <code>.</code> wildcard does not match the <code>\n</code>. This is mainly to avoid common misuse of queries such as <code>.*</code> which would otherwise search indefinitely throughout the search input, instead of just on a single line.</p>
+</span></code></pre></div><p>We can see here that the <code>.</code> wildcard character is matching against the newline character <code>\n</code>. In the go regex package, <a href="https://www.regular-expressions.info/dot.html#:~:text=The%20dot%20matches%20a%20single%20character%2C%20without%20caring%20what%20that%20character%20is.%20The%20only%20exception%20are%20line%20break%20characters.%20In%20all%20regex%20flavors%20discussed%20in%20this%20tutorial%2C%20the%20dot%20does%20not%20match%20line%20breaks%20by%20default.">and in most regex flavors</a>, the <code>.</code> wildcard does not match the <code>\n</code>. This is mainly to avoid common misuse of queries such as <code>.*</code> which would otherwise search indefinitely throughout the search input, instead of just limiting the search space to a single line.</p>
 <p>This can actually be disabled in most regex flavors with the <code>singleline</code> option, although this is disabled by default.</p>
 <p>The fix is simple.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func (w WildcardLiteral) compile() (head *State, tail *State) {
