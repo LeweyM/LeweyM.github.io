@@ -163,7 +163,7 @@ To make clearer what's going on here, let's add a test.
 +               {"wildcards matching newlines", "..0", "0\n0"},
 ```
 
-We can see here that the `.` wildcard character is matching against the newline character `\n`. In the go regex package, and in most regex flavors, the `.` wildcard does not match the `\n`. This is mainly to avoid common misuse of queries such as `.*` which would otherwise search indefinitely throughout the search input, instead of just on a single line.
+We can see here that the `.` wildcard character is matching against the newline character `\n`. In the go regex package, [and in most regex flavors](https://www.regular-expressions.info/dot.html#:~:text=The%20dot%20matches%20a%20single%20character%2C%20without%20caring%20what%20that%20character%20is.%20The%20only%20exception%20are%20line%20break%20characters.%20In%20all%20regex%20flavors%20discussed%20in%20this%20tutorial%2C%20the%20dot%20does%20not%20match%20line%20breaks%20by%20default.), the `.` wildcard does not match the `\n`. This is mainly to avoid common misuse of queries such as `.*` which would otherwise search indefinitely throughout the search input, instead of just limiting the search space to a single line.
 
 This can actually be disabled in most regex flavors with the `singleline` option, although this is disabled by default.
 
