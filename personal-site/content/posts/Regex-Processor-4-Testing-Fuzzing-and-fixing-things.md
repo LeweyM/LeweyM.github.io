@@ -701,6 +701,6 @@ We're covering a lot of cases of odd input characters, but we're missing a lot o
 
 Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v3)
 
-Next:[Regex Processor 5 A bit more theory]({{< ref "Regex-Processor-5-A-bit-more-theory" >}})
+Next:[Regex Processor 5 Wildcards]({{< ref "Regex-Processor-5-Wildcards" >}})
 
 Prev:[Regex Processor 3 Starting the compiler]({{< ref "Regex-Processor-3-Starting-the-compiler" >}})
