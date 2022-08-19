@@ -6,8 +6,7 @@
 <meta name=viewport content="width=device-width,minimum-scale=1">
 <meta name=description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
-abc -> success ab -> normal
-So, let&rsquo;s add these as test cases in our code.
+ abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <meta name=generator content="Hugo 0.91.2">
 <meta name=robots content="noindex, nofollow">
@@ -15,24 +14,21 @@ So, let&rsquo;s add these as test cases in our code.
 <meta property="og:title" content="Regex Processor 5 Wildcards">
 <meta property="og:description" content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
-abc -> success ab -> normal
-So, let&rsquo;s add these as test cases in our code.
+ abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-5-wildcards/"><meta property="article:section" content="posts">
 <meta itemprop=name content="Regex Processor 5 Wildcards">
 <meta itemprop=description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
-abc -> success ab -> normal
-So, let&rsquo;s add these as test cases in our code.
+ abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <meta itemprop=wordCount content="770">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 5 Wildcards">
 <meta name=twitter:description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
-abc -> success ab -> normal
-So, let&rsquo;s add these as test cases in our code.
+ abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 </head>
 <body class="ma0 avenir bg-near-white">
@@ -64,8 +60,10 @@ POSTS
 <div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Let&rsquo;s start adding some special regex characters, starting with the <code>'.'</code> wildcard regular expression.</p>
 <h3 id=wildcards>Wildcards</h3>
 <p>The <code>.</code> character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression <code>ab.</code>;</p>
-<p><code>abc</code> -> <code>success</code>
-<code>ab</code> -> <code>normal</code></p>
+<ul>
+<li><code>abc</code> -> <code>success</code></li>
+<li><code>ab</code> -> <code>normal</code></li>
+</ul>
 <p>So, let&rsquo;s add these as test cases in our code.</p>
 <div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},
                 {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},

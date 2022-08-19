@@ -142,8 +142,7 @@ Regex Processor 5 Wildcards
 <div class="nested-links f5 lh-copy nested-copy-line-height">
 Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
-abc -> success ab -> normal
-So, let&rsquo;s add these as test cases in our code.
+abc -> success ab -> normal So, let&rsquo;s add these as test cases in our code.
 {"nested expressions", "a(b(d))c", "abdc"}, {"substring match with reset needed", "aA", "aaA"}, {"substring match without reset needed", "B", "ABA"}, {"multibyte characters", "Ȥ", "Ȥ"}, { "complex multibyte characters", string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {"wildcard regex matching", "ab.
 </div>
 </div>
