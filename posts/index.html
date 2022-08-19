@@ -135,33 +135,17 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <div class="bg-white mb3 pa4 gray overflow-hidden">
 <span class="f6 db">Posts</span>
 <h1 class="f3 near-black">
-<a href=/posts/regex-processor-5-a-bit-more-theory/ class="link black dim">
-Regex Processor 5 A bit more theory
+<a href=/posts/regex-processor-5-wildcards/ class="link black dim">
+Regex Processor 5 Wildcards
 </a>
 </h1>
 <div class="nested-links f5 lh-copy nested-copy-line-height">
-## One or more
-cool, so what about a regular expression like 'a+b'?
-This means &ldquo;match any string that has one or more 'a's, followed by a 'b'&rdquo;. So, for example:
-"ab" -> match "aaaaab" -> match "ba" -> no match "" -> no match What would the FSM look like for that? Well, it would look like the following;
-This is pretty straight forward, if you&rsquo;re at state[1], that means &ldquo;you&rsquo;ve already seen 'a'&rdquo;.
-</div>
-</div>
-</div>
-</div>
-<div class="relative w-100 w-30-l mb4 bg-white">
-<div class="relative w-100 mb4 bg-white nested-copy-line-height">
-<div class="bg-white mb3 pa4 gray overflow-hidden">
-<span class="f6 db">Posts</span>
-<h1 class="f3 near-black">
-<a href=/posts/regex-processor-6-branches/ class="link black dim">
-Regex Processor 6 Branches
-</a>
-</h1>
-<div class="nested-links f5 lh-copy nested-copy-line-height">
-## OR
-Consider a regular expression like 'dog|cat', which means &ldquo;match any string containing the substring dog or the substring cat&rdquo;.
-Hmm, although the structure is the same, we&rsquo;re starting to see some complexity here. It looks like most of the complexity comes from the cross arrows running between the upper and lower states. Also, we need to remember in our regex for "cat" that if we process a 'c' somewhere during the the states along "cat", we need to go back to the &ldquo;you&rsquo;ve seen 'c'&rdquo; state instead of the beginning.
+Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
+Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases;
+ab.
+Note: Check out this part of the project on GitHub here
+Next: coming soon
+Prev:Regex Processor 4 Testing, Fuzzing, and fixing things
 </div>
 </div>
 </div>

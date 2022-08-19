@@ -20,7 +20,7 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 <meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2850">
+<meta itemprop=wordCount content="2847">
 <meta itemprop=keywords content><meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
@@ -553,7 +553,7 @@ fuzz: elapsed: 21s, execs: <span style=color:#ae81ff>3654537</span> <span style=
 }
 </code></pre></div><p>We&rsquo;re covering a lot of cases of odd input characters, but we&rsquo;re missing a lot of special characters which make regex so powerful. Let&rsquo;s start adding them!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v3>here</a></p>
-<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-a-bit-more-theory/>Regex Processor 5 A bit more theory</a></p>
+<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-wildcards/>Regex Processor 5 Wildcards</a></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
 <ul class=pa0>
 </ul>
