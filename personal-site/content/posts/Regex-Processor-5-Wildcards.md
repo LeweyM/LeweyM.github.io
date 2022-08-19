@@ -152,6 +152,10 @@ v4_test.go:126: Mismatch -
 
 ```
 
+Again, our fuzzer has uncovered some very interesting behaviour of regular expression implementations.
+
+To make clearer what's going on here, let's add a test.
+
 Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
 
 Next: *coming soon*
