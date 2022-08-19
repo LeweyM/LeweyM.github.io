@@ -8,9 +8,16 @@ Let's start adding some special regex characters, starting with the `'.'` wildca
 
 ### Wildcards
 
-The `.` character in a regular expression will match any character. To make this clear, here are a few example cases;
+The `.` character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression `ab.`;
 
-`ab.`
+`abc` -> `success`
+`ab` -> `normal`
+
+So, let's add these as test cases in our code.
+
+```diff
+
+```
 
 Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
 
