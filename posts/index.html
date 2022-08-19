@@ -144,8 +144,7 @@ Let&rsquo;s start adding some special regex characters, starting with the '.' wi
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
 abc -> success ab -> normal
 So, let&rsquo;s add these as test cases in our code.
-Note: Check out this part of the project on GitHub here
-Next: coming soon
+{"nested expressions", "a(b(d))c", "abdc"}, {"substring match with reset needed", "aA", "aaA"}, {"substring match without reset needed", "B", "ABA"}, {"multibyte characters", "Ȥ", "Ȥ"}, { "complex multibyte characters", string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {"wildcard regex matching", "ab.
 </div>
 </div>
 </div>
