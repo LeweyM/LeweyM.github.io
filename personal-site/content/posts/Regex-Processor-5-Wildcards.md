@@ -10,8 +10,8 @@ Let's start adding some special regex characters, starting with the `'.'` wildca
 
 The `.` character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression `ab.`;
 
-`abc` -> `success`
-`ab` -> `normal`
+- `abc` -> `success`
+- `ab` -> `normal`
 
 So, let's add these as test cases in our code.
 
