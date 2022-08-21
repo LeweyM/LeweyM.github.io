@@ -1,6 +1,6 @@
 ---
 title: Regex Processor 3 Starting the compiler
-draft: false
+draft: true
 ---
 Now we have a working FSM and way to process strings, let's take a look at building FSMs automatically from regular expressions using a **compiler**.
 
