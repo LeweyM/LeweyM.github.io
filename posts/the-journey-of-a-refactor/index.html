@@ -1,102 +1,55 @@
-<!doctype html><html>
-<head>
-<meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge"><title>The Journey of a Refactor - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1">
-<meta property="og:title" content="The Journey of a Refactor">
-<meta property="og:description" content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://leweym.github.io/posts/the-journey-of-a-refactor/"><meta property="article:section" content="posts">
-<meta name=twitter:card content="summary">
-<meta name=twitter:title content="The Journey of a Refactor">
-<meta name=twitter:description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
-Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix.">
-<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
-<link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/normalize.css>
-<link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/main.css>
-<script src=https://leweym.github.io/js/main.js></script>
-</head>
-<body>
-<div class="container wrapper post">
-<div class=header>
-<base href=https://leweym.github.io/>
-<h1 class=site-title><a href=https://leweym.github.io/>Lewis Metcalf</a></h1>
-<div class=site-description><nav class="nav social">
-<ul class=flat></ul>
-</nav>
-</div>
-<nav class=nav>
-<ul class=flat>
-</ul>
-</nav>
-</div>
-<div class=post-header>
-<h1 class=title>The Journey of a Refactor</h1>
-<div class=meta></div>
-</div>
-<div class=markdown>
-<p>Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.</p>
-<h2 id=problem>Problem</h2>
-<p>I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use <strong>known</strong> fields with a struct, or <strong>unknown</strong> fields with a map, but you can’t do a mix. So, I wanted;</p>
-<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>type dbResponse struct {
-	Id          string                   `bson:&#34;_id&#34;`         // known
-	knownFields map[string]bool          `bson:&#34;knownFields&#34;` // known
-	otherFields map[string]interface{}                        // unknown
-}
-</code></pre></div><p>I started off down the path of trying to make this work. One way is to go to the db twice (not performant, but that’s not a big deal here) and marshal once for the known and again for the unknown. So two new types:</p>
-<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>type dbResponseKnown struct {
-	Id          string          `bson:&#34;_id&#34;`         // known
-	knownFields map[string]bool `bson:&#34;knownFields&#34;` // known
-}
-type dbResponseUnknown map[string]interface{}
-</code></pre></div><p>Then, try to combine these into a single data structure:</p>
-<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>func getUsersFromDB(mongoMainURI string) []dbResponse {
-	mongoDB := fixtures.NewMongoDB(mongoMainURI)
-
-	if err := mongoDB.Connect(); err != nil {
-		panic(err)
-	}
-
-	defer mongoDB.Disconnect()
-
-	var response []dbResponse
-	if err := mongoDB.GetAllDocuments(&#34;mydb&#34;, &#34;users&#34;, &amp;response); err != nil {
-		panic(err)
-	}
-
-	unstructuredResponse := make([]map[string]interface{}, len(response))
-	if err := mongoDB.GetAllDocuments(&#34;mybd&#34;, &#34;users&#34;, &amp;unstructuredResponse); err != nil {
-		panic(err)
-	}
-	for i := range response {
-		delete(unstructuredResponse[i], &#34;_id&#34;)
-		delete(unstructuredResponse[i], &#34;knownFields&#34;)
-		response[i].otherFields = unstructuredResponse[i]
-	}
-
-	return response
-}
-</code></pre></div><h2 id=complexity-spike>Complexity spike</h2>
-<p>This is where it’s a good point to take a deep breath and think about what happened to my lovely simple tests. Suddenly, I have two intermediate types on top of the actual type I need, plus my generic <code>getUsersFromDB</code>  logic is now littered with specifics about ids and knownFields. Somewhere along the way my abstractions went wrong.</p>
-<h2 id=diagnosis>Diagnosis</h2>
-<p>Simply put, <code>getUsersFromDB</code> is doing too much. It’s not <em>just</em> getting users from the db - it’s also doing some mapping and filtering between known and unknown fields. This is only necessary for some tests anyway, so why complicate this function to work for every case?</p>
-<h2 id=solution>Solution</h2>
-<p>Each test provides the shape of the response that it needs.</p>
-<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>func getUsersFromDBNEW(mongoMainURI string, response interface{}) {
-   mongoDB := fixtures.NewMongoDB(mongoMainURI)
-
-   if err := mongoDB.Connect(); err != nil {
-      panic(err)
-   }
-
-   defer mongoDB.Disconnect()
-
-   if err := mongoDB.GetAllDocuments(&#34;mydb&#34;, &#34;users&#34;, response); err != nil {
-      panic(err)
-   }
-}
-</code></pre></div><p>The function receives the response shape that it needs, and the tests handle the rest. Now the tests look something like this:</p>
-<pre><code>```
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>The Journey of a Refactor - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="The Journey of a Refactor"><meta property="og:description" content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix."><meta property="og:type" content="article"><meta property="og:url" content="https://leweym.github.io/posts/the-journey-of-a-refactor/"><meta property="article:section" content="posts"><meta name=twitter:card content="summary"><meta name=twitter:title content="The Journey of a Refactor"><meta name=twitter:description content="Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.
+Problem I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use known fields with a struct, or unknown fields with a map, but you can’t do a mix."><link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/normalize.css><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/main.css><script src=https://leweym.github.io/js/main.js></script></head><body><div class="container wrapper post"><div class=header><base href=https://leweym.github.io/><h1 class=site-title><a href=https://leweym.github.io/>Lewis Metcalf</a></h1><div class=site-description><nav class="nav social"><ul class=flat></ul></nav></div><nav class=nav><ul class=flat></ul></nav></div><br><div class=post-header><h1 class=title>The Journey of a Refactor</h1><div class=meta></div></div><div class=markdown><p>Basically, I was trying to do something and went down the wrong path, and when I finally saw the light it all got a lot better.</p><h2 id=problem>Problem</h2><p>I’m trying to write a test that makes sure that no other fields in the db are effected when we write to the db - only the field that we care about. The issue is that when you decode a response from the db to a go struct, you can use <strong>known</strong> fields with a struct, or <strong>unknown</strong> fields with a map, but you can’t do a mix. So, I wanted;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>type dbResponse struct {
+</span></span><span style=display:flex><span>	Id          string                   `bson:&#34;_id&#34;`         // known
+</span></span><span style=display:flex><span>	knownFields map[string]bool          `bson:&#34;knownFields&#34;` // known
+</span></span><span style=display:flex><span>	otherFields map[string]interface{}                        // unknown
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>I started off down the path of trying to make this work. One way is to go to the db twice (not performant, but that’s not a big deal here) and marshal once for the known and again for the unknown. So two new types:</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>type dbResponseKnown struct {
+</span></span><span style=display:flex><span>	Id          string          `bson:&#34;_id&#34;`         // known
+</span></span><span style=display:flex><span>	knownFields map[string]bool `bson:&#34;knownFields&#34;` // known
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>type dbResponseUnknown map[string]interface{}
+</span></span></code></pre></div><p>Then, try to combine these into a single data structure:</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>func getUsersFromDB(mongoMainURI string) []dbResponse {
+</span></span><span style=display:flex><span>	mongoDB := fixtures.NewMongoDB(mongoMainURI)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	if err := mongoDB.Connect(); err != nil {
+</span></span><span style=display:flex><span>		panic(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	defer mongoDB.Disconnect()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	var response []dbResponse
+</span></span><span style=display:flex><span>	if err := mongoDB.GetAllDocuments(&#34;mydb&#34;, &#34;users&#34;, &amp;response); err != nil {
+</span></span><span style=display:flex><span>		panic(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	unstructuredResponse := make([]map[string]interface{}, len(response))
+</span></span><span style=display:flex><span>	if err := mongoDB.GetAllDocuments(&#34;mybd&#34;, &#34;users&#34;, &amp;unstructuredResponse); err != nil {
+</span></span><span style=display:flex><span>		panic(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	for i := range response {
+</span></span><span style=display:flex><span>		delete(unstructuredResponse[i], &#34;_id&#34;)
+</span></span><span style=display:flex><span>		delete(unstructuredResponse[i], &#34;knownFields&#34;)
+</span></span><span style=display:flex><span>		response[i].otherFields = unstructuredResponse[i]
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	return response
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=complexity-spike>Complexity spike</h2><p>This is where it’s a good point to take a deep breath and think about what happened to my lovely simple tests. Suddenly, I have two intermediate types on top of the actual type I need, plus my generic <code>getUsersFromDB</code>  logic is now littered with specifics about ids and knownFields. Somewhere along the way my abstractions went wrong.</p><h2 id=diagnosis>Diagnosis</h2><p>Simply put, <code>getUsersFromDB</code> is doing too much. It’s not <em>just</em> getting users from the db - it’s also doing some mapping and filtering between known and unknown fields. This is only necessary for some tests anyway, so why complicate this function to work for every case?</p><h2 id=solution>Solution</h2><p>Each test provides the shape of the response that it needs.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>func getUsersFromDBNEW(mongoMainURI string, response interface{}) {
+</span></span><span style=display:flex><span>   mongoDB := fixtures.NewMongoDB(mongoMainURI)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>   if err := mongoDB.Connect(); err != nil {
+</span></span><span style=display:flex><span>      panic(err)
+</span></span><span style=display:flex><span>   }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>   defer mongoDB.Disconnect()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>   if err := mongoDB.GetAllDocuments(&#34;mydb&#34;, &#34;users&#34;, response); err != nil {
+</span></span><span style=display:flex><span>      panic(err)
+</span></span><span style=display:flex><span>   }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The function receives the response shape that it needs, and the tests handle the rest. Now the tests look something like this:</p><pre><code>```
 It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 		initCollection(mongoMainURI, map[string]interface{}{
 			&quot;_id&quot;:             testUser,
@@ -116,9 +69,7 @@ It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 		Expect(users[0]).To(HaveKeyWithValue(&quot;unrelated_field&quot;, &quot;its value&quot;))
 	})
 	```
-</code></pre>
-<p>And for an example where we would prefer known fields:</p>
-<pre><code>	It(&quot;sets a value&quot;, func() {
+</code></pre><p>And for an example where we would prefer known fields:</p><pre><code>	It(&quot;sets a value&quot;, func() {
 		// arrange
 		initCollection(mongoMainURI, map[string]interface{}{
 			&quot;_id&quot;:         testUser,
@@ -136,19 +87,4 @@ It(&quot;should not effect any other fields of the DB collection&quot;, func() {
 		Expect(users[0].knownField).To(HaveLen(1))
 		Expect(users[0].knownField).To(HaveKeyWithValue(key, false))
 	})
-</code></pre>
-<h2 id=conclusion>Conclusion</h2>
-<p>I like this because it looks stupidly obvious once it’s been written.</p>
-<p>When you show your work to someone, the best response you can hope for is &ldquo;what, this took you all day?&rdquo;. It should look so obvious that all the other stuff you were trying out should seem like the naive meandering of a madman&mldr; or something like that.</p>
-<p>Anyway, that&rsquo;s it for this little insight into my process!</p>
-</div>
-<div class=post-tags>
-</div>
-</div>
-<div class="footer wrapper">
-<nav class=nav>
-<div> <a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div>
-</nav>
-</div>
-</body>
-</html>
+</code></pre><h2 id=conclusion>Conclusion</h2><p>I like this because it looks stupidly obvious once it’s been written.</p><p>When you show your work to someone, the best response you can hope for is &ldquo;what, this took you all day?&rdquo;. It should look so obvious that all the other stuff you were trying out should seem like the naive meandering of a madman&mldr; or something like that.</p><p>Anyway, that&rsquo;s it for this little insight into my process!</p></div><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div></body></html>
