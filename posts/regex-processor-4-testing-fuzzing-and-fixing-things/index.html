@@ -14,15 +14,15 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string reg
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
-<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/normalize.css>
-<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/main.css>
-<script src=https://leweym.github.iojs/main.js></script>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/main.css>
+<script src=https://leweym.github.io/js/main.js></script>
 </head>
 <body>
 <div class="container wrapper post">
 <div class=header>
-<base href=https://leweym.github.io>
-<h1 class=site-title><a href=https://leweym.github.io>Lewis Metcalf</a></h1>
+<base href=https://leweym.github.io/>
+<h1 class=site-title><a href=https://leweym.github.io/>Lewis Metcalf</a></h1>
 <div class=site-description><nav class="nav social">
 <ul class=flat></ul>
 </nav>
