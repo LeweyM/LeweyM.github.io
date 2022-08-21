@@ -7,3 +7,6 @@
 [submodule "personal-site/themes/hugo-theme-console"]
 	path = personal-site/themes/hugo-theme-console
 	url = https://github.com/mrmierzejewski/hugo-theme-console.git
+[submodule "personal-site/themes/ezhil"]
+	path = personal-site/themes/ezhil
+	url = https://github.com/LeweyM/ezhil
