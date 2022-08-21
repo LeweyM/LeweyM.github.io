@@ -8,7 +8,7 @@ The FSM data structure We can first think about our core data structures to repr
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-2-getting-into-some-code/"><meta property="article:section" content="posts">
+<meta property="og:url" content="https://leweym.github.io/posts/regex-processor-2-getting-into-some-code/"><meta property="article:section" content="posts">
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 2 Getting into some code">
 <meta name=twitter:description content="Let&rsquo;s start coding.
@@ -16,15 +16,15 @@ The FSM data structure We can first think about our core data structures to repr
 type State struct { connectedStates []State } We need a bit more information, however, as we need to know which character allows us to go from one state to another. We&rsquo;ll use a Transition struct to represent this.
 The Transition struct contains two things:">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
-<script src=https://LeweyM.github.iojs/main.js></script>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/main.css>
+<script src=https://leweym.github.iojs/main.js></script>
 </head>
 <body>
 <div class="container wrapper post">
 <div class=header>
-<base href=https://LeweyM.github.io>
-<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<base href=https://leweym.github.io>
+<h1 class=site-title><a href=https://leweym.github.io>Lewis Metcalf</a></h1>
 <div class=site-description><nav class="nav social">
 <ul class=flat></ul>
 </nav>
@@ -288,8 +288,8 @@ tests <span style=color:#000;font-weight:700>:=</span> []test{
 </code></pre></div><p>Here we&rsquo;re using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it&rsquo;s useful for now.</p>
 <p>If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!</p>
 <p>Note: Check out this part of the project on github <a href=https://github.com/LeweyM/search/tree/master/src/v1>here</a></p>
-<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
-<p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-1-intro/>Regex Processor 1 Intro</a></p>
+<p>Next:<a href=https://leweym.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
+<p>Prev:<a href=https://leweym.github.io/posts/regex-processor-1-intro/>Regex Processor 1 Intro</a></p>
 </div>
 <div class=post-tags>
 </div>

@@ -7,22 +7,22 @@
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/"><meta property="article:section" content="posts">
+<meta property="og:url" content="https://leweym.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/"><meta property="article:section" content="posts">
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
-<script src=https://LeweyM.github.iojs/main.js></script>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/main.css>
+<script src=https://leweym.github.iojs/main.js></script>
 </head>
 <body>
 <div class="container wrapper post">
 <div class=header>
-<base href=https://LeweyM.github.io>
-<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<base href=https://leweym.github.io>
+<h1 class=site-title><a href=https://leweym.github.io>Lewis Metcalf</a></h1>
 <div class=site-description><nav class="nav social">
 <ul class=flat></ul>
 </nav>
@@ -537,8 +537,8 @@ fuzz: elapsed: 21s, execs: <span style=color:#099>3654537</span> <span style=col
 }
 </code></pre></div><p>We&rsquo;re covering a lot of cases of odd input characters, but we&rsquo;re missing a lot of special characters which make regex so powerful. Let&rsquo;s start adding them!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v3>here</a></p>
-<p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-wildcards/>Regex Processor 5 Wildcards</a></p>
-<p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
+<p>Next:<a href=https://leweym.github.io/posts/regex-processor-5-wildcards/>Regex Processor 5 Wildcards</a></p>
+<p>Prev:<a href=https://leweym.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
 </div>
 <div class=post-tags>
 </div>

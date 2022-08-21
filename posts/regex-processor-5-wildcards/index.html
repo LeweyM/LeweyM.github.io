@@ -8,7 +8,7 @@ Wildcards The . character in a regular expression will match any character. To m
  abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-5-wildcards/"><meta property="article:section" content="posts">
+<meta property="og:url" content="https://leweym.github.io/posts/regex-processor-5-wildcards/"><meta property="article:section" content="posts">
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 5 Wildcards">
 <meta name=twitter:description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
@@ -16,15 +16,15 @@ Wildcards The . character in a regular expression will match any character. To m
  abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
-<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
-<script src=https://LeweyM.github.iojs/main.js></script>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://leweym.github.iocss/main.css>
+<script src=https://leweym.github.iojs/main.js></script>
 </head>
 <body>
 <div class="container wrapper post">
 <div class=header>
-<base href=https://LeweyM.github.io>
-<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<base href=https://leweym.github.io>
+<h1 class=site-title><a href=https://leweym.github.io>Lewis Metcalf</a></h1>
 <div class=site-description><nav class="nav social">
 <ul class=flat></ul>
 </nav>
@@ -172,7 +172,7 @@ Wildcards The . character in a regular expression will match any character. To m
 <p>Next up, modifiers!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v4>here</a></p>
 <p>Next: <em>coming soon</em></p>
-<p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/>Regex Processor 4 Testing, Fuzzing, and fixing things</a></p>
+<p>Prev:<a href=https://leweym.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/>Regex Processor 4 Testing, Fuzzing, and fixing things</a></p>
 </div>
 <div class=post-tags>
 </div>
