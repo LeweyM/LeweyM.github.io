@@ -1,16 +1,7 @@
-<!doctype html><html lang=en-us>
+<!doctype html><html>
 <head>
 <meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Regex Processor 5 Wildcards | Lewis Metcalf</title>
-<meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
-Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
- abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
-{&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
-<meta name=generator content="Hugo 0.91.2">
-<meta name=robots content="noindex, nofollow">
-<link rel=stylesheet href=/ananke/css/main.min.css>
+<meta http-equiv=x-ua-compatible content="IE=edge"><title>Regex Processor 5 Wildcards - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1">
 <meta property="og:title" content="Regex Processor 5 Wildcards">
 <meta property="og:description" content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
@@ -18,46 +9,37 @@ Wildcards The . character in a regular expression will match any character. To m
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-5-wildcards/"><meta property="article:section" content="posts">
-<meta itemprop=name content="Regex Processor 5 Wildcards">
-<meta itemprop=description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
-Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
- abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
-{&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
-<meta itemprop=wordCount content="774">
-<meta itemprop=keywords content><meta name=twitter:card content="summary">
+<meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 5 Wildcards">
 <meta name=twitter:description content="Let&rsquo;s start adding some special regex characters, starting with the '.' wildcard regular expression.
 Wildcards The . character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression ab.;
  abc -> success ab -> normal  So, let&rsquo;s add these as test cases in our code.
 {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;}, {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;}, {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;}, {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;}, { &#34;complex multibyte characters&#34;, string([]byte{0xef, 0xbf, 0xbd, 0x30}), string([]byte{0xcc, 0x87, 0x30}), }, + // wildcard + {&#34;wildcard regex matching&#34;, &#34;ab.">
+<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
+<script src=https://LeweyM.github.iojs/main.js></script>
 </head>
-<body class="ma0 avenir bg-near-white">
-<header>
-<div class=bg-black>
-<nav class="pv3 ph3 ph4-ns" role=navigation>
-<div class="flex-l justify-between items-center center">
-<a href=/ class="f3 fw2 hover-white no-underline white-90 dib">
-Lewis Metcalf
-</a>
-<div class="flex-l items-center">
-<div class=ananke-socials>
-</div>
-</div>
-</div>
+<body>
+<div class="container wrapper post">
+<div class=header>
+<base href=https://LeweyM.github.io>
+<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<div class=site-description><nav class="nav social">
+<ul class=flat></ul>
 </nav>
 </div>
-</header>
-<main class=pb7 role=main>
-<article class="flex-l flex-wrap justify-between mw8 center ph3">
-<header class="mt4 w-100">
-<aside class="instapaper_ignoref b helvetica tracked">
-POSTS
-</aside>
-<div id=sharing class="mt3 ananke-socials">
+<nav class=nav>
+<ul class=flat>
+</ul>
+</nav>
 </div>
-<h1 class="f1 athelas mt3 mb1">Regex Processor 5 Wildcards</h1>
-</header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>Let&rsquo;s start adding some special regex characters, starting with the <code>'.'</code> wildcard regular expression.</p>
+<div class=post-header>
+<h1 class=title>Regex Processor 5 Wildcards</h1>
+<div class=meta>Posted at &mdash; Jan 1, 0001</div>
+</div>
+<div class=markdown>
+<p>Let&rsquo;s start adding some special regex characters, starting with the <code>'.'</code> wildcard regular expression.</p>
 <h3 id=wildcards>Wildcards</h3>
 <p>The <code>.</code> character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression <code>ab.</code>;</p>
 <ul>
@@ -65,7 +47,7 @@ POSTS
 <li><code>ab</code> -> <code>normal</code></li>
 </ul>
 <p>So, let&rsquo;s add these as test cases in our code.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},
                 {&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},
                 {&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;},
                 {&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;},
@@ -74,14 +56,14 @@ POSTS
                         string([]byte{0xef, 0xbf, 0xbd, 0x30}),
                         string([]byte{0xcc, 0x87, 0x30}),
                 },
-<span style=color:#a6e22e>+               // wildcard
-</span><span style=color:#a6e22e>+               {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
-</span><span style=color:#a6e22e>+               {&#34;wildcard regex not matching&#34;, &#34;ab.&#34;, &#34;ab&#34;},
-</span><span style=color:#a6e22e></span>        }
+<span style=color:#000;background-color:#dfd>+               // wildcard
+</span><span style=color:#000;background-color:#dfd>+               {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
+</span><span style=color:#000;background-color:#dfd>+               {&#34;wildcard regex not matching&#34;, &#34;ab.&#34;, &#34;ab&#34;},
+</span><span style=color:#000;background-color:#dfd></span>        }
 </code></pre></div><p>We should get one failing test.</p>
 <p>Note: Why only one? Well, this is just us getting lucky. Our current implementation doesn&rsquo;t recognize the <code>.</code> character, so it treats the regex as though it were <code>ab</code>. This means that the input string <code>abc</code> correctly matches the regex <code>ab</code>, but we incorrectly match the input string <code>ab</code> - which should require another character to fulfil the regex <code>ab.</code>.</p>
 <p>As we already tokenize the <code>.</code> character in our lexer, we can move directly to the parser. Let&rsquo;s create a new <code>AST</code> node type to represent our wildcard.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> type CharacterLiteral struct {
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> type CharacterLiteral struct {
         Character rune
  }
  
@@ -89,10 +71,10 @@ POSTS
         g.ChildNodes = append(g.ChildNodes, node)
  }
  
-<span style=color:#a6e22e>+type WildcardLiteral struct{}
-</span><span style=color:#a6e22e></span>
+<span style=color:#000;background-color:#dfd>+type WildcardLiteral struct{}
+</span><span style=color:#000;background-color:#dfd></span>
 </code></pre></div><p>Before we implement the parser logic, let&rsquo;s add a case for it to our parser tests.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>        tests := []test{
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>        tests := []test{
                 {name: &#34;simple string&#34;, input: &#34;aBc&#34;, expectedResult: &amp;Group{
                         ChildNodes: []Node{
                                 CharacterLiteral{Character: &#39;a&#39;},
@@ -100,16 +82,16 @@ POSTS
                                 CharacterLiteral{Character: &#39;c&#39;},
                         },
                 }},
-<span style=color:#a6e22e>+               {name: &#34;wildcard character&#34;, input: &#34;ab.&#34;, expectedResult: &amp;Group{
-</span><span style=color:#a6e22e>+                       ChildNodes: []Node{
-</span><span style=color:#a6e22e>+                               CharacterLiteral{Character: &#39;a&#39;},
-</span><span style=color:#a6e22e>+                               CharacterLiteral{Character: &#39;b&#39;},
-</span><span style=color:#a6e22e>+                               WildcardLiteral{},
-</span><span style=color:#a6e22e>+                       },
-</span><span style=color:#a6e22e>+               }},
-</span><span style=color:#a6e22e></span>        }
+<span style=color:#000;background-color:#dfd>+               {name: &#34;wildcard character&#34;, input: &#34;ab.&#34;, expectedResult: &amp;Group{
+</span><span style=color:#000;background-color:#dfd>+                       ChildNodes: []Node{
+</span><span style=color:#000;background-color:#dfd>+                               CharacterLiteral{Character: &#39;a&#39;},
+</span><span style=color:#000;background-color:#dfd>+                               CharacterLiteral{Character: &#39;b&#39;},
+</span><span style=color:#000;background-color:#dfd>+                               WildcardLiteral{},
+</span><span style=color:#000;background-color:#dfd>+                       },
+</span><span style=color:#000;background-color:#dfd>+               }},
+</span><span style=color:#000;background-color:#dfd></span>        }
 </code></pre></div><p>The implementation should be quite similar to the <code>CharacterLiteral</code> parser implementation.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> func (p *Parser) Parse(tokens []token) Node {
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> func (p *Parser) Parse(tokens []token) Node {
         p.pushNewGroup()
  
         for _, t := range tokens {
@@ -118,18 +100,18 @@ POSTS
                         node := p.pop()
                         node.Append(CharacterLiteral{Character: t.letter})
                         p.push(node)
-<span style=color:#a6e22e>+               case AnyCharacter:
-</span><span style=color:#a6e22e>+                       node := p.pop()
-</span><span style=color:#a6e22e>+                       node.Append(WildcardLiteral{})
-</span><span style=color:#a6e22e>+                       p.push(node)
-</span><span style=color:#a6e22e></span>                }
+<span style=color:#000;background-color:#dfd>+               case AnyCharacter:
+</span><span style=color:#000;background-color:#dfd>+                       node := p.pop()
+</span><span style=color:#000;background-color:#dfd>+                       node.Append(WildcardLiteral{})
+</span><span style=color:#000;background-color:#dfd>+                       p.push(node)
+</span><span style=color:#000;background-color:#dfd></span>                }
         }
  
         return p.pop()
  }
 </code></pre></div><p>With our parser tests green again, we can implement the <code>compile</code> method. This will also be quite similar to the <code>CharacterLiteral</code>. The only difference is that the <code>WildcardLiteral</code> predicate will return <code>true</code> for every rune.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#75715e>@@ Compiler methods
-</span><span style=color:#75715e></span> 
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#aaa>@@ Compiler methods
+</span><span style=color:#aaa></span> 
  func (l CharacterLiteral) compile() (head *State, tail *State) {
         startingState := State{}
         endState := State{}
@@ -137,78 +119,68 @@ POSTS
         startingState.addTransition(&amp;endState, func(input rune) bool { return input == l.Character })
         return &amp;startingState, &amp;endState
  }
-<span style=color:#a6e22e>+
-</span><span style=color:#a6e22e>+func (w WildcardLiteral) compile() (head *State, tail *State) {
-</span><span style=color:#a6e22e>+       startingState := State{}
-</span><span style=color:#a6e22e>+       endState := State{}
-</span><span style=color:#a6e22e>+
-</span><span style=color:#a6e22e>+       startingState.addTransition(&amp;endState, func(input rune) bool { return true })
-</span><span style=color:#a6e22e>+       return &amp;startingState, &amp;endState
-</span><span style=color:#a6e22e>+}
+<span style=color:#000;background-color:#dfd>+
+</span><span style=color:#000;background-color:#dfd>+func (w WildcardLiteral) compile() (head *State, tail *State) {
+</span><span style=color:#000;background-color:#dfd>+       startingState := State{}
+</span><span style=color:#000;background-color:#dfd>+       endState := State{}
+</span><span style=color:#000;background-color:#dfd>+
+</span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, func(input rune) bool { return true })
+</span><span style=color:#000;background-color:#dfd>+       return &amp;startingState, &amp;endState
+</span><span style=color:#000;background-color:#dfd>+}
 </span></code></pre></div><p>And that&rsquo;s all there is to it! All of our tests should now be green, and we can now parse and match using wildcard characters!</p>
 <p>The only thing left to do is to remove our filter of <code>.</code> characters in our fuzz tests and to check that the fuzzer can&rsquo;t find any breaking inputs.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> func FuzzFSM(f *testing.F) {
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff> func FuzzFSM(f *testing.F) {
         f.Add(&#34;abc&#34;, &#34;abc&#34;)
         f.Add(&#34;abc&#34;, &#34;&#34;)
         f.Add(&#34;abc&#34;, &#34;xxx&#34;)
         f.Add(&#34;ca(t)(s)&#34;, &#34;dog&#34;)
  
         f.Fuzz(func(t *testing.T, regex, input string) {
-<span style=color:#f92672>-               if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+               if strings.ContainsAny(regex, &#34;[]{}$^|*+?\\&#34;) {
-</span><span style=color:#a6e22e></span>                        t.Skip()
+<span style=color:#000;background-color:#fdd>-               if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               if strings.ContainsAny(regex, &#34;[]{}$^|*+?\\&#34;) {
+</span><span style=color:#000;background-color:#dfd></span>                        t.Skip()
                 }
 
-</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜ go test ./src/v4/... -fuzz ^FuzzFSM$  
+</code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜ go <span style=color:#0086b3>test</span> ./src/v4/... -fuzz ^FuzzFSM$  
 </code></pre></div><p>We found one&mldr;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v4_test.go:126: Mismatch - 
-	Regex: <span style=color:#e6db74>&#39;..0&#39;</span> <span style=color:#f92672>(</span>as bytes: 2e2e30<span style=color:#f92672>)</span>, 
-	Input: <span style=color:#e6db74>&#39;0
-</span><span style=color:#e6db74>	0&#39;</span> <span style=color:#f92672>(</span>as bytes: 300a30<span style=color:#f92672>)</span> 
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v4_test.go:126: Mismatch - 
+	Regex: <span style=color:#d14>&#39;..0&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 2e2e30<span style=color:#000;font-weight:700>)</span>, 
+	Input: <span style=color:#d14>&#39;0
+</span><span style=color:#d14>	0&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 300a30<span style=color:#000;font-weight:700>)</span> 
 	-&gt; 
-	Go Regex Pkg: <span style=color:#e6db74>&#39;false&#39;</span>, 
-	Our regex result: <span style=color:#e6db74>&#39;true&#39;</span>
+	Go Regex Pkg: <span style=color:#d14>&#39;false&#39;</span>, 
+	Our regex result: <span style=color:#d14>&#39;true&#39;</span>
 
 </code></pre></div><p>Again, our fuzzer has uncovered some very interesting behavior of regular expression implementations.</p>
 <p>To make clearer what&rsquo;s going on here, let&rsquo;s add a test.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                // wildcard
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>                // wildcard
                 {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
                 {&#34;wildcard regex not matching&#34;, &#34;ab.&#34;, &#34;ab&#34;},
-<span style=color:#a6e22e>+               {&#34;wildcards matching newlines&#34;, &#34;..0&#34;, &#34;0\n0&#34;},
+<span style=color:#000;background-color:#dfd>+               {&#34;wildcards matching newlines&#34;, &#34;..0&#34;, &#34;0\n0&#34;},
 </span></code></pre></div><p>We can see here that the <code>.</code> wildcard character is matching against the newline character <code>\n</code>. In the go regex package, <a href="https://www.regular-expressions.info/dot.html#:~:text=The%20dot%20matches%20a%20single%20character%2C%20without%20caring%20what%20that%20character%20is.%20The%20only%20exception%20are%20line%20break%20characters.%20In%20all%20regex%20flavors%20discussed%20in%20this%20tutorial%2C%20the%20dot%20does%20not%20match%20line%20breaks%20by%20default.">and in most regex flavors</a>, the <code>.</code> wildcard does not match the <code>\n</code>. This is mainly to avoid common misuse of queries such as <code>.*</code> which would otherwise search indefinitely throughout the search input, instead of just limiting the search space to a single line.</p>
 <p>This can actually be disabled in most regex flavors with the <code>singleline</code> option, although this is disabled by default.</p>
 <p>The fix is simple.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func (w WildcardLiteral) compile() (head *State, tail *State) {
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func (w WildcardLiteral) compile() (head *State, tail *State) {
         startingState := State{}
         endState := State{}
  
-<span style=color:#f92672>-       startingState.addTransition(&amp;endState, func(input rune) bool { return true })
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+       startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#39;\n&#39; })
-</span><span style=color:#a6e22e></span>        return &amp;startingState, &amp;endState
+<span style=color:#000;background-color:#fdd>-       startingState.addTransition(&amp;endState, func(input rune) bool { return true })
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#39;\n&#39; })
+</span><span style=color:#000;background-color:#dfd></span>        return &amp;startingState, &amp;endState
  }
 </code></pre></div><p>Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we&rsquo;ve learned a bit more about regular expressions. Not bad!</p>
 <p>Next up, modifiers!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v4>here</a></p>
 <p>Next: <em>coming soon</em></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/>Regex Processor 4 Testing, Fuzzing, and fixing things</a></p>
-<ul class=pa0>
-</ul>
-<div class="mt6 instapaper_ignoref">
+</div>
+<div class=post-tags>
 </div>
 </div>
-<aside class="w-30-l mt6-l">
-</aside>
-</article>
-</main>
-<footer class="bg-black bottom-0 w-100 pa3" role=contentinfo>
-<div class="flex justify-between">
-<a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=https://LeweyM.github.io>
-&copy; Lewis Metcalf 2022
-</a>
-<div>
-<div class=ananke-socials>
-</div></div>
+<div class="footer wrapper">
+<nav class=nav>
+<div> <a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div>
+</nav>
 </div>
-</footer>
 </body>
 </html>

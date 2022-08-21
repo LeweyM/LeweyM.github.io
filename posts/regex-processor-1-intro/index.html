@@ -1,59 +1,43 @@
-<!doctype html><html lang=en-us>
+<!doctype html><html>
 <head>
 <meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Regex Processor 1 Intro | Lewis Metcalf</title>
-<meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
-Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
- A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta name=generator content="Hugo 0.91.2">
-<meta name=robots content="noindex, nofollow">
-<link rel=stylesheet href=/ananke/css/main.min.css>
+<meta http-equiv=x-ua-compatible content="IE=edge"><title>Regex Processor 1 Intro - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1">
 <meta property="og:title" content="Regex Processor 1 Intro">
 <meta property="og:description" content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-1-intro/"><meta property="article:section" content="posts">
-<meta itemprop=name content="Regex Processor 1 Intro">
-<meta itemprop=description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
-Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
- A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
-<meta itemprop=wordCount content="518">
-<meta itemprop=keywords content><meta name=twitter:card content="summary">
+<meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 1 Intro">
 <meta name=twitter:description content="So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using finite state machines.
 Finite State Machines finite state machines are both simple and useful. The simplest definition I can think of is something like this;
  A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input.">
+<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
+<script src=https://LeweyM.github.iojs/main.js></script>
 </head>
-<body class="ma0 avenir bg-near-white">
-<header>
-<div class=bg-black>
-<nav class="pv3 ph3 ph4-ns" role=navigation>
-<div class="flex-l justify-between items-center center">
-<a href=/ class="f3 fw2 hover-white no-underline white-90 dib">
-Lewis Metcalf
-</a>
-<div class="flex-l items-center">
-<div class=ananke-socials>
-</div>
-</div>
-</div>
+<body>
+<div class="container wrapper post">
+<div class=header>
+<base href=https://LeweyM.github.io>
+<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<div class=site-description><nav class="nav social">
+<ul class=flat></ul>
 </nav>
 </div>
-</header>
-<main class=pb7 role=main>
-<article class="flex-l flex-wrap justify-between mw8 center ph3">
-<header class="mt4 w-100">
-<aside class="instapaper_ignoref b helvetica tracked">
-POSTS
-</aside>
-<div id=sharing class="mt3 ananke-socials">
+<nav class=nav>
+<ul class=flat>
+</ul>
+</nav>
 </div>
-<h1 class="f1 athelas mt3 mb1">Regex Processor 1 Intro</h1>
-</header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using <strong>finite state machines</strong>.</p>
+<div class=post-header>
+<h1 class=title>Regex Processor 1 Intro</h1>
+<div class=meta>Posted at &mdash; Jan 1, 0001</div>
+</div>
+<div class=markdown>
+<p>So, one of the things I&rsquo;ve wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using <strong>finite state machines</strong>.</p>
 <h1 id=finite-state-machines>Finite State Machines</h1>
 <p>finite state machines are both simple and useful. The simplest definition I can think of is something like this;</p>
 <blockquote>
@@ -96,24 +80,14 @@ State 3 is saying &ldquo;you&rsquo;ve just seen <code>'abc'</code> so you&rsquo;
 <p><img src=/img/Pasted-image-20220710202159.png alt=Pasted-image-20220710202159.png></p>
 <p>That&rsquo;s really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.</p>
 <p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-2-getting-into-some-code/>Regex Processor 2 Getting into some code</a></p>
-<ul class=pa0>
-</ul>
-<div class="mt6 instapaper_ignoref">
+</div>
+<div class=post-tags>
 </div>
 </div>
-<aside class="w-30-l mt6-l">
-</aside>
-</article>
-</main>
-<footer class="bg-black bottom-0 w-100 pa3" role=contentinfo>
-<div class="flex justify-between">
-<a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=https://LeweyM.github.io>
-&copy; Lewis Metcalf 2022
-</a>
-<div>
-<div class=ananke-socials>
-</div></div>
+<div class="footer wrapper">
+<nav class=nav>
+<div> <a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div>
+</nav>
 </div>
-</footer>
 </body>
 </html>

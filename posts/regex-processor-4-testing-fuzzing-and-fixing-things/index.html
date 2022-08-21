@@ -1,231 +1,215 @@
-<!doctype html><html lang=en-us>
+<!doctype html><html>
 <head>
 <meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge,chrome=1">
-<title>Regex Processor 4 Testing, Fuzzing, and fixing things | Lewis Metcalf</title>
-<meta name=viewport content="width=device-width,minimum-scale=1">
-<meta name=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
-Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta name=generator content="Hugo 0.91.2">
-<meta name=robots content="noindex, nofollow">
-<link rel=stylesheet href=/ananke/css/main.min.css>
+<meta http-equiv=x-ua-compatible content="IE=edge"><title>Regex Processor 4 Testing, Fuzzing, and fixing things - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1">
 <meta property="og:title" content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta property="og:description" content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://LeweyM.github.io/posts/regex-processor-4-testing-fuzzing-and-fixing-things/"><meta property="article:section" content="posts">
-<meta itemprop=name content="Regex Processor 4 Testing, Fuzzing, and fixing things">
-<meta itemprop=description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
-Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
-func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
-<meta itemprop=wordCount content="2847">
-<meta itemprop=keywords content><meta name=twitter:card content="summary">
+<meta name=twitter:card content="summary">
 <meta name=twitter:title content="Regex Processor 4 Testing, Fuzzing, and fixing things">
 <meta name=twitter:description content="We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 Testing against the Go regex package As Go includes its own regex package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.
 func TestFSMAgainstGoRegexPkg(t *testing.T) { type test struct { name string regex string input string } tests := []test{ {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;}, {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;}, {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;}, {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;}, } for _, tt := range tests { t.">
+<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/normalize.css>
+<link rel=stylesheet type=text/css media=screen href=https://LeweyM.github.iocss/main.css>
+<script src=https://LeweyM.github.iojs/main.js></script>
 </head>
-<body class="ma0 avenir bg-near-white">
-<header>
-<div class=bg-black>
-<nav class="pv3 ph3 ph4-ns" role=navigation>
-<div class="flex-l justify-between items-center center">
-<a href=/ class="f3 fw2 hover-white no-underline white-90 dib">
-Lewis Metcalf
-</a>
-<div class="flex-l items-center">
-<div class=ananke-socials>
-</div>
-</div>
-</div>
+<body>
+<div class="container wrapper post">
+<div class=header>
+<base href=https://LeweyM.github.io>
+<h1 class=site-title><a href=https://LeweyM.github.io>Lewis Metcalf</a></h1>
+<div class=site-description><nav class="nav social">
+<ul class=flat></ul>
 </nav>
 </div>
-</header>
-<main class=pb7 role=main>
-<article class="flex-l flex-wrap justify-between mw8 center ph3">
-<header class="mt4 w-100">
-<aside class="instapaper_ignoref b helvetica tracked">
-POSTS
-</aside>
-<div id=sharing class="mt3 ananke-socials">
+<nav class=nav>
+<ul class=flat>
+</ul>
+</nav>
 </div>
-<h1 class="f1 athelas mt3 mb1">Regex Processor 4 Testing, Fuzzing, and fixing things</h1>
-</header>
-<div class="nested-copy-line-height lh-copy serif f4 nested-links mid-gray pr4-l w-two-thirds-l"><p>We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.</p>
+<div class=post-header>
+<h1 class=title>Regex Processor 4 Testing, Fuzzing, and fixing things</h1>
+<div class=meta>Posted at &mdash; Jan 1, 0001</div>
+</div>
+<div class=markdown>
+<p>We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.</p>
 <h3 id=testing-against-the-go-regex-package>Testing against the Go regex package</h3>
 <p>As Go includes its own <code>regex</code> package, we can use this to validate our own implementation. Let&rsquo;s add a test which compares the results from our own FSM and the Go regex library.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestFSMAgainstGoRegexPkg</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
-   <span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
-      <span style=color:#a6e22e>name</span>  <span style=color:#66d9ef>string</span>  
-      <span style=color:#a6e22e>regex</span> <span style=color:#66d9ef>string</span>  
-      <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>TestFSMAgainstGoRegexPkg</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
+   <span style=color:#000;font-weight:700>type</span> test <span style=color:#000;font-weight:700>struct</span> {  
+      name  <span style=color:#458;font-weight:700>string</span>  
+      regex <span style=color:#458;font-weight:700>string</span>  
+      input <span style=color:#458;font-weight:700>string</span>  
    }  
   
-   <span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
-      {<span style=color:#e6db74>&#34;empty string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>},  
-      {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>},  
-      {<span style=color:#e6db74>&#34;matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
-      {<span style=color:#e6db74>&#34;partial matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;ab&#34;</span>},  
+   tests <span style=color:#000;font-weight:700>:=</span> []test{  
+      {<span style=color:#d14>&#34;empty string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;&#34;</span>},  
+      {<span style=color:#d14>&#34;non matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;xxx&#34;</span>},  
+      {<span style=color:#d14>&#34;matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>},  
+      {<span style=color:#d14>&#34;partial matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;ab&#34;</span>},  
    }  
   
-   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>tt</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tests</span> {  
-      <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>name</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {  
-         <span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>input</span>)  
+   <span style=color:#000;font-weight:700>for</span> _, tt <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> tests {  
+      t.<span style=color:#900;font-weight:700>Run</span>(tt.name, <span style=color:#000;font-weight:700>func</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
+         result <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>matchRegex</span>(tt.regex, tt.input)  
   
-         <span style=color:#a6e22e>goRegexMatch</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>regexp</span>.<span style=color:#a6e22e>MustCompile</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>regex</span>).<span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>tt</span>.<span style=color:#a6e22e>input</span>)  
+         goRegexMatch <span style=color:#000;font-weight:700>:=</span> regexp.<span style=color:#900;font-weight:700>MustCompile</span>(tt.regex).<span style=color:#900;font-weight:700>MatchString</span>(tt.input)  
   
-         <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>goRegexMatch</span> {  
-		   <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(  
-			  <span style=color:#e6db74>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
-			  <span style=color:#a6e22e>regex</span>,  
-			  <span style=color:#a6e22e>input</span>,  
-			  <span style=color:#a6e22e>goRegexMatch</span>,  
-			  <span style=color:#a6e22e>result</span>)  
+         <span style=color:#000;font-weight:700>if</span> result <span style=color:#000;font-weight:700>!=</span> goRegexMatch {  
+		   t.<span style=color:#900;font-weight:700>Fatalf</span>(  
+			  <span style=color:#d14>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
+			  regex,  
+			  input,  
+			  goRegexMatch,  
+			  result)  
 		   } 
       })  
    }  
 }
 </code></pre></div><p>Most of the testing logic is in the <code>matchRegex</code> function, so let&rsquo;s define that also.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>bool</span> {  
-   <span style=color:#a6e22e>parser</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewParser</span>()  
-   <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>regex</span>)  
-   <span style=color:#a6e22e>ast</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>parser</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span>)  
-   <span style=color:#a6e22e>startState</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ast</span>.<span style=color:#a6e22e>compile</span>()  
-   <span style=color:#a6e22e>testRunner</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#a6e22e>startState</span>)  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>matchRegex</span>(regex, input <span style=color:#458;font-weight:700>string</span>) <span style=color:#458;font-weight:700>bool</span> {  
+   parser <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewParser</span>()  
+   tokens <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>lex</span>(regex)  
+   ast <span style=color:#000;font-weight:700>:=</span> parser.<span style=color:#900;font-weight:700>Parse</span>(tokens)  
+   startState, _ <span style=color:#000;font-weight:700>:=</span> ast.<span style=color:#900;font-weight:700>compile</span>()  
+   testRunner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewRunner</span>(startState)  
   
-   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
-      <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
+   <span style=color:#000;font-weight:700>for</span> _, character <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> input {  
+      testRunner.<span style=color:#900;font-weight:700>Next</span>(character)  
    }  
   
-   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>testRunner</span>.<span style=color:#a6e22e>GetStatus</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span> 
+   <span style=color:#000;font-weight:700>return</span> testRunner.<span style=color:#900;font-weight:700>GetStatus</span>() <span style=color:#000;font-weight:700>==</span> Success 
 }
 </code></pre></div><p>All we&rsquo;re doing here is setting up our lexer, parser, compiler and runner, then running through each character in the input. After running through the input string, we return the status.</p>
 <p>Our tests should still be green.</p>
 <p>Let&rsquo;s compare the test structs between this and our previous tests.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// old tests
-</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
-   <span style=color:#a6e22e>name</span>           <span style=color:#66d9ef>string</span>  
-   <span style=color:#a6e22e>input</span>          <span style=color:#66d9ef>string</span>  
-   <span style=color:#a6e22e>expectedStatus</span> <span style=color:#a6e22e>Status</span>  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#998;font-style:italic>// old tests
+</span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>type</span> test <span style=color:#000;font-weight:700>struct</span> {  
+   name           <span style=color:#458;font-weight:700>string</span>  
+   input          <span style=color:#458;font-weight:700>string</span>  
+   expectedStatus Status  
 }
 
-<span style=color:#75715e>// new tests
-</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>test</span> <span style=color:#66d9ef>struct</span> {  
-  <span style=color:#a6e22e>name</span>  <span style=color:#66d9ef>string</span>  
-  <span style=color:#a6e22e>regex</span> <span style=color:#66d9ef>string</span>  
-  <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>  
+<span style=color:#998;font-style:italic>// new tests
+</span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>type</span> test <span style=color:#000;font-weight:700>struct</span> {  
+  name  <span style=color:#458;font-weight:700>string</span>  
+  regex <span style=color:#458;font-weight:700>string</span>  
+  input <span style=color:#458;font-weight:700>string</span>  
 }  
 </code></pre></div><p>Notice that we no longer require the <code>Status</code> field. This is because we no longer need to specify the result, as the Go library does that for us!</p>
 <p>Adding a new test case is pretty simple, we just need the inputs and the test is ready to go;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>tests := []test{  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>tests := []test{  
    {&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;},  
    {&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;},  
    {&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;},  
    {&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;},  
-<span style=color:#a6e22e>+  {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},  
-</span><span style=color:#a6e22e></span>}
+<span style=color:#000;background-color:#dfd>+  {&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},  
+</span><span style=color:#000;background-color:#dfd></span>}
 </code></pre></div><p>Having a way of automatically computing the desired output for a test not only makes writing the tests less work, but also open up some interesting possibilities, such as Fuzzing.</p>
 <h3 id=fuzzing>Fuzzing</h3>
 <p>Go 1.18 introduced <a href=https://go.dev/doc/fuzz/>fuzzing</a> to its standard library, which is an automated way of barraging your code with semi-random input to try to find hidden errors.</p>
 <p>Let&rsquo;s write a simple fuzz test.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>FuzzFSM</span>(<span style=color:#a6e22e>f</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>F</span>) {  
-   <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>)  
-   <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>)  
-   <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>)  
-   <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;ca(t)(s)&#34;</span>, <span style=color:#e6db74>&#34;dog&#34;</span>)  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>FuzzFSM</span>(f <span style=color:#000;font-weight:700>*</span>testing.F) {  
+   f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>)  
+   f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;&#34;</span>)  
+   f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;xxx&#34;</span>)  
+   f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;ca(t)(s)&#34;</span>, <span style=color:#d14>&#34;dog&#34;</span>)  
   
-   <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Fuzz</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>, <span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) {  
-      <span style=color:#a6e22e>compiledGoRegex</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>regexp</span>.<span style=color:#a6e22e>Compile</span>(<span style=color:#a6e22e>regex</span>)  
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {  
-         <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Skip</span>()  
+   f.<span style=color:#900;font-weight:700>Fuzz</span>(<span style=color:#000;font-weight:700>func</span>(t <span style=color:#000;font-weight:700>*</span>testing.T, regex, input <span style=color:#458;font-weight:700>string</span>) {  
+      compiledGoRegex, err <span style=color:#000;font-weight:700>:=</span> regexp.<span style=color:#900;font-weight:700>Compile</span>(regex)  
+      <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+         t.<span style=color:#900;font-weight:700>Skip</span>()  
       }  
   
-      <span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span>)  
-      <span style=color:#a6e22e>goRegexMatch</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>compiledGoRegex</span>.<span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>input</span>)  
+      result <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>matchRegex</span>(regex, input)  
+      goRegexMatch <span style=color:#000;font-weight:700>:=</span> compiledGoRegex.<span style=color:#900;font-weight:700>MatchString</span>(input)  
   
-	  <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>goRegexMatch</span> {  
-	   <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(  
-		  <span style=color:#e6db74>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
-		  <span style=color:#a6e22e>regex</span>,  
-		  <span style=color:#a6e22e>input</span>,  
-		  <span style=color:#a6e22e>goRegexMatch</span>,  
-		  <span style=color:#a6e22e>result</span>)  
+	  <span style=color:#000;font-weight:700>if</span> result <span style=color:#000;font-weight:700>!=</span> goRegexMatch {  
+	   t.<span style=color:#900;font-weight:700>Fatalf</span>(  
+		  <span style=color:#d14>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
+		  regex,  
+		  input,  
+		  goRegexMatch,  
+		  result)  
 	   }  
    })  
 }
 </code></pre></div><p>Let&rsquo;s step through this a bit. First, we need to add a few examples of input to our test function so that Go can seed the test corpus.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>)  
-<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>)  
-<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>)  
-<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#e6db74>&#34;ca(t)(s)&#34;</span>, <span style=color:#e6db74>&#34;dog&#34;</span>)  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go>f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>)  
+f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;&#34;</span>)  
+f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;xxx&#34;</span>)  
+f.<span style=color:#900;font-weight:700>Add</span>(<span style=color:#d14>&#34;ca(t)(s)&#34;</span>, <span style=color:#d14>&#34;dog&#34;</span>)  
 </code></pre></div><p>Now for the test function;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Fuzz</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>, <span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) {  
-      <span style=color:#a6e22e>compiledGoRegex</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>regexp</span>.<span style=color:#a6e22e>Compile</span>(<span style=color:#a6e22e>regex</span>)  
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {  
-         <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Skip</span>()  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go>f.<span style=color:#900;font-weight:700>Fuzz</span>(<span style=color:#000;font-weight:700>func</span>(t <span style=color:#000;font-weight:700>*</span>testing.T, regex, input <span style=color:#458;font-weight:700>string</span>) {  
+      compiledGoRegex, err <span style=color:#000;font-weight:700>:=</span> regexp.<span style=color:#900;font-weight:700>Compile</span>(regex)  
+      <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+         t.<span style=color:#900;font-weight:700>Skip</span>()  
       }  
   
-      <span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span>)  
-      <span style=color:#a6e22e>goRegexMatch</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>compiledGoRegex</span>.<span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>input</span>)  
+      result <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>matchRegex</span>(regex, input)  
+      goRegexMatch <span style=color:#000;font-weight:700>:=</span> compiledGoRegex.<span style=color:#900;font-weight:700>MatchString</span>(input)  
   
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>goRegexMatch</span> {  
-		<span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(  
-			<span style=color:#e6db74>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
-			<span style=color:#a6e22e>regex</span>,  
-			<span style=color:#a6e22e>input</span>,  
-			<span style=color:#a6e22e>goRegexMatch</span>,  
-			<span style=color:#a6e22e>result</span>)  
+      <span style=color:#000;font-weight:700>if</span> result <span style=color:#000;font-weight:700>!=</span> goRegexMatch {  
+		t.<span style=color:#900;font-weight:700>Fatalf</span>(  
+			<span style=color:#d14>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
+			regex,  
+			input,  
+			goRegexMatch,  
+			result)  
 	  } 
    })  
 </code></pre></div><p>First, we only want to test valid regex statements, so any invalid statements we can simply ignore.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#a6e22e>compiledGoRegex</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>regexp</span>.<span style=color:#a6e22e>Compile</span>(<span style=color:#a6e22e>regex</span>)  
-<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {  
-	<span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Skip</span>()  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go>compiledGoRegex, err <span style=color:#000;font-weight:700>:=</span> regexp.<span style=color:#900;font-weight:700>Compile</span>(regex)  
+<span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+	t.<span style=color:#900;font-weight:700>Skip</span>()  
 }  
 </code></pre></div><p>After that, we can simply test in the same way as in our previous test.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go><span style=color:#a6e22e>result</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>matchRegex</span>(<span style=color:#a6e22e>regex</span>, <span style=color:#a6e22e>input</span>)  
-<span style=color:#a6e22e>goRegexMatch</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>compiledGoRegex</span>.<span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>input</span>)  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-Go data-lang=Go>result <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>matchRegex</span>(regex, input)  
+goRegexMatch <span style=color:#000;font-weight:700>:=</span> compiledGoRegex.<span style=color:#900;font-weight:700>MatchString</span>(input)  
 
-<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>goRegexMatch</span> {  
-	<span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(  
-		<span style=color:#e6db74>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
-		<span style=color:#a6e22e>regex</span>,  
-		<span style=color:#a6e22e>input</span>,  
-		<span style=color:#a6e22e>goRegexMatch</span>,  
-		<span style=color:#a6e22e>result</span>)  
+<span style=color:#000;font-weight:700>if</span> result <span style=color:#000;font-weight:700>!=</span> goRegexMatch {  
+	t.<span style=color:#900;font-weight:700>Fatalf</span>(  
+		<span style=color:#d14>&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;</span>,  
+		regex,  
+		input,  
+		goRegexMatch,  
+		result)  
 } 
 </code></pre></div><p>Let&rsquo;s see what happens when we run this fuzz test. Use the following command line instruction;</p>
-<pre tabindex=0><code>go test ./src/v3/... -fuzz ^FuzzFSM$
-</code></pre><p>Note: Your path might be different, use the path of the package with the test and FSM implementation.</p>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>go test ./src/v3/... -fuzz ^FuzzFSM$
+</code></pre></div><p>Note: Your path might be different, use the path of the package with the test and FSM implementation.</p>
 <p>We found an error!</p>
 <h3 id=lets-get-afixing>Let&rsquo;s get a&rsquo;fixing</h3>
 <p>Note: Your mileage may vary. Go fuzzing uses randomized input, so there&rsquo;s no guarantee that errors will show up in the same order as I show here.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#000;font-weight:700>(</span>master<span style=color:#000;font-weight:700>)</span> ✗ go <span style=color:#0086b3>test</span> ./src/v3/... -fuzz ^FuzzFSM$
 
 fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
-failure <span style=color:#66d9ef>while</span> testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
+failure <span style=color:#000;font-weight:700>while</span> testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
 fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
---- FAIL: FuzzFSM <span style=color:#f92672>(</span>0.21s<span style=color:#f92672>)</span>
-    --- FAIL: FuzzFSM <span style=color:#f92672>(</span>0.00s<span style=color:#f92672>)</span>
-        v3_test.go:106: Mismatch - Regex: <span style=color:#e6db74>&#39;aA&#39;</span>, Input: <span style=color:#e6db74>&#39;aaA&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;fail&#39;</span>
+--- FAIL: FuzzFSM <span style=color:#000;font-weight:700>(</span>0.21s<span style=color:#000;font-weight:700>)</span>
+    --- FAIL: FuzzFSM <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
+        v3_test.go:106: Mismatch - Regex: <span style=color:#d14>&#39;aA&#39;</span>, Input: <span style=color:#d14>&#39;aaA&#39;</span> -&gt; Go Regex Pkg: <span style=color:#d14>&#39;true&#39;</span>, Our regex result: <span style=color:#d14>&#39;fail&#39;</span>
 
 </code></pre></div><h4 id=problem-1>Problem 1</h4>
 <p>You should see that the fuzzer has saved this to a file at</p>
-<pre tabindex=0><code>testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
-</code></pre><pre tabindex=0><code>go test fuzz v1  
-string(&quot;aA&quot;)  
-string(&quot;aaA&quot;)
-</code></pre><p>It seems that passing <code>aaA</code> to the regex <code>aA</code> fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package <code>MatchString</code> method we&rsquo;re using will look for a match anywhere in the string, whereas we&rsquo;re looking only at the beginning of the string.</p>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>testdata/fuzz/FuzzFSM/08fa440d20a250cf53d6090f036f15915901b50eb6d2958bb4b00ce71de7ec7a
+</code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>go test fuzz v1  
+string(&#34;aA&#34;)  
+string(&#34;aaA&#34;)
+</code></pre></div><p>It seems that passing <code>aaA</code> to the regex <code>aA</code> fails for our implementation, but passes for the Go implementation. This makes sense, because the Go regex package <code>MatchString</code> method we&rsquo;re using will look for a match anywhere in the string, whereas we&rsquo;re looking only at the beginning of the string.</p>
 <p>Before we fix this, let&rsquo;s add a test for this case.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>	{&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;},  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>	{&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;},  
 	{&#34;matching string&#34;, &#34;abc&#34;, &#34;abc&#34;},  
 	{&#34;partial matching string&#34;, &#34;abc&#34;, &#34;ab&#34;},  
 	{&#34;nested expressions&#34;, &#34;a(b(d))c&#34;, &#34;abdc&#34;},  
-<span style=color:#a6e22e>+	{&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},
+<span style=color:#000;background-color:#dfd>+	{&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},
 </span></code></pre></div><p>Now let&rsquo;s modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) Status {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) Status {  
    parser := NewParser()  
    tokens := lex(regex)  
    ast := parser.Parse(tokens)  
@@ -234,54 +218,54 @@ string(&quot;aaA&quot;)
   
    for _, character := range input {  
       testRunner.Next(character)  
-<span style=color:#a6e22e>+     status := testRunner.GetStatus()  
-</span><span style=color:#a6e22e>+	  if status == Fail {  
-</span><span style=color:#a6e22e>+	    testRunner.Reset()  
-</span><span style=color:#a6e22e>+		testRunner.Next(character)
-</span><span style=color:#a6e22e>+       continue  
-</span><span style=color:#a6e22e>+     }  
-</span><span style=color:#a6e22e>+  
-</span><span style=color:#a6e22e>+	  if status != Normal {  
-</span><span style=color:#a6e22e>+	     return status  
-</span><span style=color:#a6e22e>+	  }
-</span><span style=color:#a6e22e></span>   }  
+<span style=color:#000;background-color:#dfd>+     status := testRunner.GetStatus()  
+</span><span style=color:#000;background-color:#dfd>+	  if status == Fail {  
+</span><span style=color:#000;background-color:#dfd>+	    testRunner.Reset()  
+</span><span style=color:#000;background-color:#dfd>+		testRunner.Next(character)
+</span><span style=color:#000;background-color:#dfd>+       continue  
+</span><span style=color:#000;background-color:#dfd>+     }  
+</span><span style=color:#000;background-color:#dfd>+  
+</span><span style=color:#000;background-color:#dfd>+	  if status != Normal {  
+</span><span style=color:#000;background-color:#dfd>+	     return status  
+</span><span style=color:#000;background-color:#dfd>+	  }
+</span><span style=color:#000;background-color:#dfd></span>   }  
   
    return testRunner.GetStatus()  
 }
 </code></pre></div><p>Notice that we need to run <code>testRunner.Next(character)</code> after the reset because the second <code>a</code> in the input string needs to be used in the second attempt. More on that later.</p>
 <p>Let&rsquo;s run the fuzzer again.</p>
 <h4 id=problem-2>Problem 2</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:126: Mismatch - Regex: <span style=color:#e6db74>&#39;&#39;</span>, Input: <span style=color:#e6db74>&#39;A&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:126: Mismatch - Regex: <span style=color:#d14>&#39;&#39;</span>, Input: <span style=color:#d14>&#39;A&#39;</span> -&gt; Go Regex Pkg: <span style=color:#d14>&#39;true&#39;</span>, Our regex result: <span style=color:#d14>&#39;false&#39;</span>
 </code></pre></div><p>or in the file;</p>
-<pre tabindex=0><code>go test fuzz v1  
-string(&quot;&quot;)  
-string(&quot;A&quot;)
-</code></pre><p>This time the issue is when the regex is an empty string. In these cases, any input should match. Let&rsquo;s write a test case.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>	{&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;},  
-<span style=color:#a6e22e>+	{&#34;empty regex&#34;, &#34;&#34;, &#34;abc&#34;},  
-</span><span style=color:#a6e22e></span>	{&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;},
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>go test fuzz v1  
+string(&#34;&#34;)  
+string(&#34;A&#34;)
+</code></pre></div><p>This time the issue is when the regex is an empty string. In these cases, any input should match. Let&rsquo;s write a test case.</p>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>	{&#34;empty string&#34;, &#34;abc&#34;, &#34;&#34;},  
+<span style=color:#000;background-color:#dfd>+	{&#34;empty regex&#34;, &#34;&#34;, &#34;abc&#34;},  
+</span><span style=color:#000;background-color:#dfd></span>	{&#34;non matching string&#34;, &#34;abc&#34;, &#34;xxx&#34;},
 </code></pre></div><p>And now we can solve this by adding a check in our <code>matchRegex</code> function;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) bool {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) bool {  
    parser := NewParser()  
    tokens := lex(regex)  
    ast := parser.Parse(tokens)  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
-<span style=color:#a6e22e>+   // for empty regex  
-</span><span style=color:#a6e22e>+   if testRunner.GetStatus() == Success {  
-</span><span style=color:#a6e22e>+      return true  
-</span><span style=color:#a6e22e>+   }
+<span style=color:#000;background-color:#dfd>+   // for empty regex  
+</span><span style=color:#000;background-color:#dfd>+   if testRunner.GetStatus() == Success {  
+</span><span style=color:#000;background-color:#dfd>+      return true  
+</span><span style=color:#000;background-color:#dfd>+   }
 </span></code></pre></div><p>Why does this work? In the case of an empty regex, the compiler would produce a single state FSM. As the FSM will have no outbound transitions, this will function as an end state. So, for an empty regex, we just need to check the status before we do any processing.</p>
 <p>Tests are green so back to the fuzzer.</p>
 <h4 id=problem-3>Problem 3</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:105: Mismatch - Regex: <span style=color:#e6db74>&#39;.&#39;</span>, Input: <span style=color:#e6db74>&#39;&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;false&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;success&#39;</span>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:105: Mismatch - Regex: <span style=color:#d14>&#39;.&#39;</span>, Input: <span style=color:#d14>&#39;&#39;</span> -&gt; Go Regex Pkg: <span style=color:#d14>&#39;false&#39;</span>, Our regex result: <span style=color:#d14>&#39;success&#39;</span>
 </code></pre></div><p>We&rsquo;re now failing when using the regex <code>.</code> and an input string. This makes sense because we haven&rsquo;t implemented the wildcard character <code>.</code> (yet). For now, let&rsquo;s ignore these special characters in our fuzz tests.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>f.Fuzz(func(t *testing.T, regex, input string) {  
-<span style=color:#a6e22e>+     if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {  
-</span><span style=color:#a6e22e>+        t.Skip()  
-</span><span style=color:#a6e22e>+     }  
-</span><span style=color:#a6e22e></span>  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>f.Fuzz(func(t *testing.T, regex, input string) {  
+<span style=color:#000;background-color:#dfd>+     if strings.ContainsAny(regex, &#34;[]{}$^|*+?.\\&#34;) {  
+</span><span style=color:#000;background-color:#dfd>+        t.Skip()  
+</span><span style=color:#000;background-color:#dfd>+     }  
+</span><span style=color:#000;background-color:#dfd></span>  
       compiledGoRegex, err := regexp.Compile(regex)  
       if err != nil {  
          t.Skip()  
@@ -301,166 +285,166 @@ string(&quot;A&quot;)
    })  
 </code></pre></div><p>Rinse. Repeat</p>
 <h4 id=problem-4>Problem 4</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:127: Mismatch - Regex: <span style=color:#e6db74>&#39;Ȥ&#39;</span>, Input: <span style=color:#e6db74>&#39;Ȥ&#39;</span> -&gt; Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:127: Mismatch - Regex: <span style=color:#d14>&#39;Ȥ&#39;</span>, Input: <span style=color:#d14>&#39;Ȥ&#39;</span> -&gt; Go Regex Pkg: <span style=color:#d14>&#39;true&#39;</span>, Our regex result: <span style=color:#d14>&#39;false&#39;</span>
 </code></pre></div><p>Now things are getting interesting. It seems that our regex matcher is having trouble with the non-alphanumeric character <code>Ȥ</code>. Let&rsquo;s start with a test and go from there.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>{<span style=color:#e6db74>&#34;multibyte characters&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>},
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>{<span style=color:#d14>&#34;multibyte characters&#34;</span>, <span style=color:#d14>&#34;Ȥ&#34;</span>, <span style=color:#d14>&#34;Ȥ&#34;</span>},
 </code></pre></div><p>I&rsquo;ve called this test <code>multibyte characters</code> because these characters are represented as more than one byte. Let&rsquo;s change our error message to show this more clearly.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if result != goRegexMatch {  
-<span style=color:#f92672>-	t.Fatalf(  
-</span><span style=color:#f92672>-		&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;,  
-</span><span style=color:#f92672>-		regex,  
-</span><span style=color:#f92672>-		input,  
-</span><span style=color:#f92672>-		goRegexMatch,
-</span><span style=color:#f92672>-	it’s 	result)  
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+   t.Fatalf(  
-</span><span style=color:#a6e22e>+      &#34;Mismatch - \nRegex: &#39;%s&#39; (as bytes: %x), \nInput: &#39;%s&#39; (as bytes: %x) \n-&gt; \nGo Regex Pkg: &#39;%t&#39;, \nOur regex result: &#39;%v&#39;&#34;,  
-</span><span style=color:#a6e22e>+      regex,  
-</span><span style=color:#a6e22e>+      []byte(regex),  
-</span><span style=color:#a6e22e>+      input,  
-</span><span style=color:#a6e22e>+      []byte(input),  
-</span><span style=color:#a6e22e>+      goRegexMatch,  
-</span><span style=color:#a6e22e>+      result)  
-</span><span style=color:#a6e22e></span>}
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if result != goRegexMatch {  
+<span style=color:#000;background-color:#fdd>-	t.Fatalf(  
+</span><span style=color:#000;background-color:#fdd>-		&#34;Mismatch - Regex: &#39;%s&#39;, Input: &#39;%s&#39; -&gt; Go Regex Pkg: &#39;%t&#39;, Our regex result: &#39;%v&#39;&#34;,  
+</span><span style=color:#000;background-color:#fdd>-		regex,  
+</span><span style=color:#000;background-color:#fdd>-		input,  
+</span><span style=color:#000;background-color:#fdd>-		goRegexMatch,
+</span><span style=color:#000;background-color:#fdd>-	it’s 	result)  
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   t.Fatalf(  
+</span><span style=color:#000;background-color:#dfd>+      &#34;Mismatch - \nRegex: &#39;%s&#39; (as bytes: %x), \nInput: &#39;%s&#39; (as bytes: %x) \n-&gt; \nGo Regex Pkg: &#39;%t&#39;, \nOur regex result: &#39;%v&#39;&#34;,  
+</span><span style=color:#000;background-color:#dfd>+      regex,  
+</span><span style=color:#000;background-color:#dfd>+      []byte(regex),  
+</span><span style=color:#000;background-color:#dfd>+      input,  
+</span><span style=color:#000;background-color:#dfd>+      []byte(input),  
+</span><span style=color:#000;background-color:#dfd>+      goRegexMatch,  
+</span><span style=color:#000;background-color:#dfd>+      result)  
+</span><span style=color:#000;background-color:#dfd></span>}
 </code></pre></div><p>Running the fuzzer again we now get this;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:94: Mismatch - 
-	Regex: <span style=color:#e6db74>&#39;Ȥ&#39;</span> <span style=color:#f92672>(</span>as bytes: c8a4<span style=color:#f92672>)</span>, 
-	Input: <span style=color:#e6db74>&#39;Ȥ&#39;</span> <span style=color:#f92672>(</span>as bytes: c8a4<span style=color:#f92672>)</span> 
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>v3_test.go:94: Mismatch - 
+	Regex: <span style=color:#d14>&#39;Ȥ&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: c8a4<span style=color:#000;font-weight:700>)</span>, 
+	Input: <span style=color:#d14>&#39;Ȥ&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: c8a4<span style=color:#000;font-weight:700>)</span> 
 	-&gt; 
-	Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, 
-	Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+	Go Regex Pkg: <span style=color:#d14>&#39;true&#39;</span>, 
+	Our regex result: <span style=color:#d14>&#39;false&#39;</span>
 </code></pre></div><p>As we can see here, the character <code>Ȥ</code> is made up of the two bytes <code>c8</code> and <code>a4</code>. If we look up <code>c8a4</code> in the <a href="https://design215.com/toolbox/ascii-utf8.php#:~:text=%C8%A4-,c8%20a4,-%C8%A5%0Ac8%20a5">ASCII value table</a> we see that it represents <code>Ȥ</code>. So what could be going wrong with our program?</p>
 <p>The problem in this case is with our lexer. Here&rsquo;s what we&rsquo;re doing at the moment.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) []<span style=color:#a6e22e>token</span> {  
-   <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>tokens</span> []<span style=color:#a6e22e>token</span>  
-   <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>  
-   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> &lt; len(<span style=color:#a6e22e>input</span>) {  
-      <span style=color:#a6e22e>tokens</span> = append(<span style=color:#a6e22e>tokens</span>, <span style=color:#a6e22e>lexRune</span>(rune(<span style=color:#a6e22e>input</span>[<span style=color:#a6e22e>i</span>])))  
-      <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>lex</span>(input <span style=color:#458;font-weight:700>string</span>) []token {  
+   <span style=color:#000;font-weight:700>var</span> tokens []token  
+   i <span style=color:#000;font-weight:700>:=</span> <span style=color:#099>0</span>  
+   <span style=color:#000;font-weight:700>for</span> i &lt; <span style=color:#0086b3>len</span>(input) {  
+      tokens = <span style=color:#0086b3>append</span>(tokens, <span style=color:#900;font-weight:700>lexRune</span>(<span style=color:#0086b3>rune</span>(input[i])))  
+      i<span style=color:#000;font-weight:700>++</span>  
    }  
-   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>tokens</span>  
+   <span style=color:#000;font-weight:700>return</span> tokens  
 }
 </code></pre></div><p>We are looping over the bytes and converting them to runes. This means that multibyte words such as <code>Ȥ</code> will create two tokens; one for <code>c8</code>, and another for <code>a4</code>. This is not what we want.</p>
 <p>Solving this is quite simple, we just need to use a <code>range</code> loop over the input. Go knows how to split a string into runes, which are <code>int32</code> types and can support all Unicode characters. It will do so when casting a string to runes, or when using the <code>range</code> keyword.</p>
 <p>For example;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>([]byte(<span style=color:#e6db74>&#34;café&#34;</span>)) <span style=color:#75715e>// [99 97 102 195 169]
-</span><span style=color:#75715e></span><span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>([]rune(<span style=color:#e6db74>&#34;café&#34;</span>)) <span style=color:#75715e>// [99 97 102 233]
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>fmt.<span style=color:#900;font-weight:700>Println</span>([]<span style=color:#0086b3>byte</span>(<span style=color:#d14>&#34;café&#34;</span>)) <span style=color:#998;font-style:italic>// [99 97 102 195 169]
+</span><span style=color:#998;font-style:italic></span>fmt.<span style=color:#900;font-weight:700>Println</span>([]<span style=color:#0086b3>rune</span>(<span style=color:#d14>&#34;café&#34;</span>)) <span style=color:#998;font-style:italic>// [99 97 102 233]
 </span></code></pre></div><p>So, let&rsquo;s change our lexer.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func lex(input string) []token {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func lex(input string) []token {  
    var tokens []token  
-<span style=color:#f92672>-   i := 0  
-</span><span style=color:#f92672>-   for i &lt; len(input) {  
-</span><span style=color:#f92672>-      tokens = append(tokens, lexRune(rune(input[i])))  
-</span><span style=color:#f92672>-      i++  
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+   for _, character := range input {  
-</span><span style=color:#a6e22e>+     tokens = append(tokens, lexRune(character))    
-</span><span style=color:#a6e22e></span>   }  
+<span style=color:#000;background-color:#fdd>-   i := 0  
+</span><span style=color:#000;background-color:#fdd>-   for i &lt; len(input) {  
+</span><span style=color:#000;background-color:#fdd>-      tokens = append(tokens, lexRune(rune(input[i])))  
+</span><span style=color:#000;background-color:#fdd>-      i++  
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   for _, character := range input {  
+</span><span style=color:#000;background-color:#dfd>+     tokens = append(tokens, lexRune(character))    
+</span><span style=color:#000;background-color:#dfd></span>   }  
    return tokens  
 }
 </code></pre></div><h4 id=problem-5>Problem 5</h4>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>Regex: <span style=color:#e6db74>&#39;B&#39;</span> <span style=color:#f92672>(</span>as bytes: 42<span style=color:#f92672>)</span>, 
-Input: <span style=color:#e6db74>&#39;ABA&#39;</span> <span style=color:#f92672>(</span>as bytes: 414241<span style=color:#f92672>)</span> 
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>Regex: <span style=color:#d14>&#39;B&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 42<span style=color:#000;font-weight:700>)</span>, 
+Input: <span style=color:#d14>&#39;ABA&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 414241<span style=color:#000;font-weight:700>)</span> 
 -&gt; 
-Go Regex Pkg: <span style=color:#e6db74>&#39;true&#39;</span>, 
-Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
+Go Regex Pkg: <span style=color:#d14>&#39;true&#39;</span>, 
+Our regex result: <span style=color:#d14>&#39;false&#39;</span>
 
 </code></pre></div><p>Interesting. This is similar to a problem we already solved, but with a slight variation. Here we need to find all sub-matches, not just the match from the start of the input string, but in this case we don&rsquo;t need to use any of the already processed characters to make the match work.</p>
 <p>With the test;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},  
-<span style=color:#a6e22e>+{&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;},
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;substring match with reset needed&#34;, &#34;aA&#34;, &#34;aaA&#34;},  
+<span style=color:#000;background-color:#dfd>+{&#34;substring match without reset needed&#34;, &#34;B&#34;, &#34;ABA&#34;},
 </span></code></pre></div><p>We can solve this by removing the extra call to <code>Next</code> from before;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if status == Fail {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>if status == Fail {  
    testRunner.Reset()  
-<span style=color:#f92672>-   testRunner.Next(character)  
-</span><span style=color:#f92672></span>   continue  
+<span style=color:#000;background-color:#fdd>-   testRunner.Next(character)  
+</span><span style=color:#000;background-color:#fdd></span>   continue  
 }
 </code></pre></div><p>But doing so will break the previous test. We need to reprocess the string in some situations and not in others.</p>
 <p>Actually, there&rsquo;s a better way of looking at this problem. What we actually need to do, is to <em>check for a match against every substring of the input</em>. We can do this by changing our <code>matchRegex</code> method like so;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) bool {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegex(regex, input string) bool {  
    parser := NewParser()  
    tokens := lex(regex)  
    ast := parser.Parse(tokens)  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
-<span style=color:#f92672>-   // for empty regex  
-</span><span style=color:#f92672>-   if testRunner.GetStatus() == Success {  
-</span><span style=color:#f92672>-      return true  
-</span><span style=color:#f92672>-   }  
-</span><span style=color:#f92672></span>  
-<span style=color:#f92672>-   for _, character := range input {  
-</span><span style=color:#f92672>-      testRunner.Next(character)  
-</span><span style=color:#f92672>-      status := testRunner.GetStatus()  
-</span><span style=color:#f92672>-      if status == Fail {  
-</span><span style=color:#f92672>-         testRunner.Reset()  
-</span><span style=color:#f92672>-         //testRunner.Next(character)  
-</span><span style=color:#f92672>-         continue  
-</span><span style=color:#f92672>-      }  
-</span><span style=color:#f92672>-  
-</span><span style=color:#f92672>-      if status == Success {  
-</span><span style=color:#f92672>-         return true  
-</span><span style=color:#f92672>-      }  
-</span><span style=color:#f92672>-   }  
-</span><span style=color:#f92672>-  
-</span><span style=color:#f92672>-   return testRunner.GetStatus() == Success
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+   match(testRunner, input)
-</span><span style=color:#a6e22e></span>}
+<span style=color:#000;background-color:#fdd>-   // for empty regex  
+</span><span style=color:#000;background-color:#fdd>-   if testRunner.GetStatus() == Success {  
+</span><span style=color:#000;background-color:#fdd>-      return true  
+</span><span style=color:#000;background-color:#fdd>-   }  
+</span><span style=color:#000;background-color:#fdd></span>  
+<span style=color:#000;background-color:#fdd>-   for _, character := range input {  
+</span><span style=color:#000;background-color:#fdd>-      testRunner.Next(character)  
+</span><span style=color:#000;background-color:#fdd>-      status := testRunner.GetStatus()  
+</span><span style=color:#000;background-color:#fdd>-      if status == Fail {  
+</span><span style=color:#000;background-color:#fdd>-         testRunner.Reset()  
+</span><span style=color:#000;background-color:#fdd>-         //testRunner.Next(character)  
+</span><span style=color:#000;background-color:#fdd>-         continue  
+</span><span style=color:#000;background-color:#fdd>-      }  
+</span><span style=color:#000;background-color:#fdd>-  
+</span><span style=color:#000;background-color:#fdd>-      if status == Success {  
+</span><span style=color:#000;background-color:#fdd>-         return true  
+</span><span style=color:#000;background-color:#fdd>-      }  
+</span><span style=color:#000;background-color:#fdd>-   }  
+</span><span style=color:#000;background-color:#fdd>-  
+</span><span style=color:#000;background-color:#fdd>-   return testRunner.GetStatus() == Success
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   match(testRunner, input)
+</span><span style=color:#000;background-color:#dfd></span>}
 </code></pre></div><p>Ok, so far we&rsquo;ve just piled everything into a new private method <code>match</code>, let&rsquo;s build that now</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>bool</span> {  
-   <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Reset</span>()  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>match</span>(runner <span style=color:#000;font-weight:700>*</span>runner, input <span style=color:#458;font-weight:700>string</span>) <span style=color:#458;font-weight:700>bool</span> {  
+   runner.<span style=color:#900;font-weight:700>Reset</span>()  
   
-   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
-      <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
-      <span style=color:#a6e22e>status</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>()  
+   <span style=color:#000;font-weight:700>for</span> _, character <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> input {  
+      runner.<span style=color:#900;font-weight:700>Next</span>(character)  
+      status <span style=color:#000;font-weight:700>:=</span> runner.<span style=color:#900;font-weight:700>GetStatus</span>()  
   
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {    
-         <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+      <span style=color:#000;font-weight:700>if</span> status <span style=color:#000;font-weight:700>==</span> Fail {    
+         <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>match</span>(runner, input[<span style=color:#099>1</span>:])  
       }  
   
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span> {  
-         <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>  
+      <span style=color:#000;font-weight:700>if</span> status <span style=color:#000;font-weight:700>==</span> Success {  
+         <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>true</span>  
       }  
    }  
   
-   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span>  
+   <span style=color:#000;font-weight:700>return</span> runner.<span style=color:#900;font-weight:700>GetStatus</span>() <span style=color:#000;font-weight:700>==</span> Success  
 }
 </code></pre></div><p>This is similar to our previous implementation with one major difference: In the case of a failure, we attempt to match again on a substring of <code>input</code>.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {    
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>if</span> status <span style=color:#000;font-weight:700>==</span> Fail {    
+	<span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>match</span>(runner, input[<span style=color:#099>1</span>:])  
 } 
 </code></pre></div><p>This means that we will test for a match on every substring of input.</p>
 <p>Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we&rsquo;re just concerned with correctness, we can go back and optimize later, but it&rsquo;s something to bear in mind.</p>
 <h4 id=problem-6>Problem 6</h4>
 <p>Ok, we&rsquo;re starting to make progress now. Let&rsquo;s see our next issue.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>v3_test.go:128: Mismatch - 
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>v3_test.go:128: Mismatch - 
 	Regex: &#39;�0&#39; (as bytes: efbfbd30), 
 	Input: &#39;̇0&#39; (as bytes: cc8730) 
 	-&gt; 
 	Go Regex Pkg: &#39;false&#39;, 
 	Our regex result: &#39;true&#39;
 </code></pre></div><p>This looks like an extension of the multibyte problem, so let&rsquo;s add an additional test;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;},  
-<span style=color:#a6e22e>+{  
-</span><span style=color:#a6e22e>+   &#34;complex multibyte characters&#34;,  
-</span><span style=color:#a6e22e>+   string([]byte{0xef, 0xbf, 0xbd, 0x30}),  
-</span><span style=color:#a6e22e>+   string([]byte{0xcc, 0x87, 0x30}),  
-</span><span style=color:#a6e22e>+},
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>{&#34;multibyte characters&#34;, &#34;Ȥ&#34;, &#34;Ȥ&#34;},  
+<span style=color:#000;background-color:#dfd>+{  
+</span><span style=color:#000;background-color:#dfd>+   &#34;complex multibyte characters&#34;,  
+</span><span style=color:#000;background-color:#dfd>+   string([]byte{0xef, 0xbf, 0xbd, 0x30}),  
+</span><span style=color:#000;background-color:#dfd>+   string([]byte{0xcc, 0x87, 0x30}),  
+</span><span style=color:#000;background-color:#dfd>+},
 </span></code></pre></div><p>This time, the problem is in our <code>match</code> function, which takes a string and recurses on a substring.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>match</span>(runner, input[<span style=color:#099>1</span>:])
 </code></pre></div><p>See the problem? We&rsquo;re recursing on a substring of <em>bytes</em>, not a substring of <em>runes</em>. Let&rsquo;s fix this by having the function accept a rune slice instead of a string.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegexOLD(regex, input string) bool {  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>func matchRegexOLD(regex, input string) bool {  
    parser := NewParser()  
    tokens := lex(regex)  
    ast := parser.Parse(tokens)  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
-<span style=color:#f92672>-   return match(testRunner, input)  
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+   return match(testRunner, []rune(input))  
-</span><span style=color:#a6e22e></span>}
+<span style=color:#000;background-color:#fdd>-   return match(testRunner, input)  
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   return match(testRunner, []rune(input))  
+</span><span style=color:#000;background-color:#dfd></span>}
 
-<span style=color:#f92672>-func match(runner *runner, input string) bool {  
-</span><span style=color:#f92672></span><span style=color:#a6e22e>+func match(runner *runner, input []rune) bool {  
-</span><span style=color:#a6e22e></span>   runner.Reset()  
+<span style=color:#000;background-color:#fdd>-func match(runner *runner, input string) bool {  
+</span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+func match(runner *runner, input []rune) bool {  
+</span><span style=color:#000;background-color:#dfd></span>   runner.Reset()  
   
    for _, character := range input {  
       runner.Next(character)  
@@ -479,100 +463,90 @@ Our regex result: <span style=color:#e6db74>&#39;false&#39;</span>
 }
 </code></pre></div><h4 id=and-then-silence>And then, silence&mldr;</h4>
 <p>If we run the fuzzer now, we see something like this;</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#f92672>(</span>master<span style=color:#f92672>)</span> ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh>➜  search git:<span style=color:#000;font-weight:700>(</span>master<span style=color:#000;font-weight:700>)</span> ✗ go <span style=color:#0086b3>test</span> ./src/v3/... -fuzz ^FuzzFSM$
 
 fuzz: elapsed: 0s, gathering baseline coverage: 0/1110 completed
-fuzz: elapsed: 0s, gathering baseline coverage: 1110/1110 completed, now fuzzing with <span style=color:#ae81ff>8</span> workers
-fuzz: elapsed: 3s, execs: <span style=color:#ae81ff>481830</span> <span style=color:#f92672>(</span>160569/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>0</span> <span style=color:#f92672>(</span>total: 1110<span style=color:#f92672>)</span>
-fuzz: elapsed: 6s, execs: <span style=color:#ae81ff>1041643</span> <span style=color:#f92672>(</span>186630/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>0</span> <span style=color:#f92672>(</span>total: 1110<span style=color:#f92672>)</span>
-fuzz: elapsed: 9s, execs: <span style=color:#ae81ff>1540600</span> <span style=color:#f92672>(</span>166326/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>1</span> <span style=color:#f92672>(</span>total: 1111<span style=color:#f92672>)</span>
-fuzz: elapsed: 12s, execs: <span style=color:#ae81ff>1997730</span> <span style=color:#f92672>(</span>152333/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>1</span> <span style=color:#f92672>(</span>total: 1111<span style=color:#f92672>)</span>
-fuzz: elapsed: 15s, execs: <span style=color:#ae81ff>2593993</span> <span style=color:#f92672>(</span>198784/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
-fuzz: elapsed: 18s, execs: <span style=color:#ae81ff>3120415</span> <span style=color:#f92672>(</span>175505/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
-fuzz: elapsed: 21s, execs: <span style=color:#ae81ff>3654537</span> <span style=color:#f92672>(</span>178003/sec<span style=color:#f92672>)</span>, new interesting: <span style=color:#ae81ff>2</span> <span style=color:#f92672>(</span>total: 1112<span style=color:#f92672>)</span>
+fuzz: elapsed: 0s, gathering baseline coverage: 1110/1110 completed, now fuzzing with <span style=color:#099>8</span> workers
+fuzz: elapsed: 3s, execs: <span style=color:#099>481830</span> <span style=color:#000;font-weight:700>(</span>160569/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>0</span> <span style=color:#000;font-weight:700>(</span>total: 1110<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 6s, execs: <span style=color:#099>1041643</span> <span style=color:#000;font-weight:700>(</span>186630/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>0</span> <span style=color:#000;font-weight:700>(</span>total: 1110<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 9s, execs: <span style=color:#099>1540600</span> <span style=color:#000;font-weight:700>(</span>166326/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>1</span> <span style=color:#000;font-weight:700>(</span>total: 1111<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 12s, execs: <span style=color:#099>1997730</span> <span style=color:#000;font-weight:700>(</span>152333/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>1</span> <span style=color:#000;font-weight:700>(</span>total: 1111<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 15s, execs: <span style=color:#099>2593993</span> <span style=color:#000;font-weight:700>(</span>198784/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>2</span> <span style=color:#000;font-weight:700>(</span>total: 1112<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 18s, execs: <span style=color:#099>3120415</span> <span style=color:#000;font-weight:700>(</span>175505/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>2</span> <span style=color:#000;font-weight:700>(</span>total: 1112<span style=color:#000;font-weight:700>)</span>
+fuzz: elapsed: 21s, execs: <span style=color:#099>3654537</span> <span style=color:#000;font-weight:700>(</span>178003/sec<span style=color:#000;font-weight:700>)</span>, new interesting: <span style=color:#099>2</span> <span style=color:#000;font-weight:700>(</span>total: 1112<span style=color:#000;font-weight:700>)</span>
 </code></pre></div><p>Fuzzing won&rsquo;t give us a green light like tests will. Fuzzing is an <a href="https://www.synopsys.com/blogs/software-security/fuzzing-test-cases-not-all-random/#:~:text=Fuzzing%20is%20an%20infinite%20space%20problem.%20For%20any%20piece%20of%20software%2C%20you%20can%20create%20an%20infinite%20number%20of%20malformed%20inputs.%20To%20get%20useful%20results%20in%20a%20reasonable%20amount%20of%20time%2C%20the%20trick%20is%20to%20select%20inputs%20that%20are%20most%20likely%20to%20cause%20failures%20in%20the%20target%20software.">infinite space problem</a>, meaning that it will never &lsquo;finish&rsquo;, but if we run it long enough we can be fairly confident that our algorithm is pretty error-proof. I let it run for a few minutes before I declared it a success.</p>
 <p>I hope that the power of techniques like fuzzing is clear here. We&rsquo;ve managed to uncover lots of subtle (and some not so subtle) bugs and issues with our code, and we&rsquo;re now pretty confident that we&rsquo;re providing the same behavior as the Go regex package!</p>
 <h3 id=some-clean-up>Some clean up</h3>
 <p>Let&rsquo;s refactor a bit before we move on.</p>
 <p>The <code>matchRegex</code> function in our tests is doing a lot of work. I think it makes sense here to move it out of a test file and into the actual logic of our regex. Let&rsquo;s create a <code>myRegex</code> struct with some methods we can expose to handle finding a match in a string.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>myRegex</span> <span style=color:#66d9ef>struct</span> {  
-   <span style=color:#a6e22e>fsm</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>State</span>  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#000;font-weight:700>type</span> myRegex <span style=color:#000;font-weight:700>struct</span> {  
+   fsm <span style=color:#000;font-weight:700>*</span>State  
 }  
   
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewMyRegex</span>(<span style=color:#a6e22e>re</span> <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>myRegex</span> {  
-   <span style=color:#a6e22e>tokens</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lex</span>(<span style=color:#a6e22e>re</span>)  
-   <span style=color:#a6e22e>parser</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewParser</span>()  
-   <span style=color:#a6e22e>ast</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>parser</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>tokens</span>)  
-   <span style=color:#a6e22e>state</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ast</span>.<span style=color:#a6e22e>compile</span>()  
-   <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>myRegex</span>{<span style=color:#a6e22e>fsm</span>: <span style=color:#a6e22e>state</span>}  
+<span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>NewMyRegex</span>(re <span style=color:#458;font-weight:700>string</span>) <span style=color:#000;font-weight:700>*</span>myRegex {  
+   tokens <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>lex</span>(re)  
+   parser <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewParser</span>()  
+   ast <span style=color:#000;font-weight:700>:=</span> parser.<span style=color:#900;font-weight:700>Parse</span>(tokens)  
+   state, _ <span style=color:#000;font-weight:700>:=</span> ast.<span style=color:#900;font-weight:700>compile</span>()  
+   <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>&amp;</span>myRegex{fsm: state}  
 }  
   
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>m</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>myRegex</span>) <span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>input</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>bool</span> {  
-   <span style=color:#a6e22e>testRunner</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewRunner</span>(<span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>fsm</span>)  
-   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>testRunner</span>, []rune(<span style=color:#a6e22e>input</span>))  
+<span style=color:#000;font-weight:700>func</span> (m <span style=color:#000;font-weight:700>*</span>myRegex) <span style=color:#900;font-weight:700>MatchString</span>(input <span style=color:#458;font-weight:700>string</span>) <span style=color:#458;font-weight:700>bool</span> {  
+   testRunner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewRunner</span>(m.fsm)  
+   <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>match</span>(testRunner, []<span style=color:#0086b3>rune</span>(input))  
 }  
   
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span> []<span style=color:#66d9ef>rune</span>) <span style=color:#66d9ef>bool</span> {  
-   <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Reset</span>()  
+<span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>match</span>(runner <span style=color:#000;font-weight:700>*</span>runner, input []<span style=color:#458;font-weight:700>rune</span>) <span style=color:#458;font-weight:700>bool</span> {  
+   runner.<span style=color:#900;font-weight:700>Reset</span>()  
   
-   <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>character</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>input</span> {  
-      <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>character</span>)  
-      <span style=color:#a6e22e>status</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>()  
+   <span style=color:#000;font-weight:700>for</span> _, character <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> input {  
+      runner.<span style=color:#900;font-weight:700>Next</span>(character)  
+      status <span style=color:#000;font-weight:700>:=</span> runner.<span style=color:#900;font-weight:700>GetStatus</span>()  
   
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Fail</span> {  
-         <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>match</span>(<span style=color:#a6e22e>runner</span>, <span style=color:#a6e22e>input</span>[<span style=color:#ae81ff>1</span>:])  
+      <span style=color:#000;font-weight:700>if</span> status <span style=color:#000;font-weight:700>==</span> Fail {  
+         <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>match</span>(runner, input[<span style=color:#099>1</span>:])  
       }  
   
-      <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span> {  
-         <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>  
+      <span style=color:#000;font-weight:700>if</span> status <span style=color:#000;font-weight:700>==</span> Success {  
+         <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>true</span>  
       }  
    }  
   
-   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>runner</span>.<span style=color:#a6e22e>GetStatus</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>Success</span>  
+   <span style=color:#000;font-weight:700>return</span> runner.<span style=color:#900;font-weight:700>GetStatus</span>() <span style=color:#000;font-weight:700>==</span> Success  
 }
 </code></pre></div><p>And then let&rsquo;s call these from our tests.</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#a6e22e>+ result := NewMyRegex(regex).MatchString(input)  
-</span><span style=color:#a6e22e></span><span style=color:#f92672>- result := matchRegex(regex, input)
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=color:#000;background-color:#dfd>+ result := NewMyRegex(regex).MatchString(input)  
+</span><span style=color:#000;background-color:#dfd></span><span style=color:#000;background-color:#fdd>- result := matchRegex(regex, input)
 </span></code></pre></div><h4 id=onwards-and-upwards>Onwards and upwards</h4>
 <p>We&rsquo;ve covered a lot of ground here. Our tests now look like so:</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>tests</span> <span style=color:#f92672>:=</span> []<span style=color:#a6e22e>test</span>{  
-   {<span style=color:#e6db74>&#34;empty string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>},  
-   {<span style=color:#e6db74>&#34;empty regex&#34;</span>, <span style=color:#e6db74>&#34;&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
-   {<span style=color:#e6db74>&#34;non matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;xxx&#34;</span>},  
-   {<span style=color:#e6db74>&#34;matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>},  
-   {<span style=color:#e6db74>&#34;partial matching string&#34;</span>, <span style=color:#e6db74>&#34;abc&#34;</span>, <span style=color:#e6db74>&#34;ab&#34;</span>},  
-   {<span style=color:#e6db74>&#34;nested expressions&#34;</span>, <span style=color:#e6db74>&#34;a(b(d))c&#34;</span>, <span style=color:#e6db74>&#34;abdc&#34;</span>},  
-   {<span style=color:#e6db74>&#34;substring match with reset needed&#34;</span>, <span style=color:#e6db74>&#34;aA&#34;</span>, <span style=color:#e6db74>&#34;aaA&#34;</span>},  
-   {<span style=color:#e6db74>&#34;substring match without reset needed&#34;</span>, <span style=color:#e6db74>&#34;B&#34;</span>, <span style=color:#e6db74>&#34;ABA&#34;</span>},  
-   {<span style=color:#e6db74>&#34;multibyte characters&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>, <span style=color:#e6db74>&#34;Ȥ&#34;</span>},  
+<div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>tests <span style=color:#000;font-weight:700>:=</span> []test{  
+   {<span style=color:#d14>&#34;empty string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;&#34;</span>},  
+   {<span style=color:#d14>&#34;empty regex&#34;</span>, <span style=color:#d14>&#34;&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>},  
+   {<span style=color:#d14>&#34;non matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;xxx&#34;</span>},  
+   {<span style=color:#d14>&#34;matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>},  
+   {<span style=color:#d14>&#34;partial matching string&#34;</span>, <span style=color:#d14>&#34;abc&#34;</span>, <span style=color:#d14>&#34;ab&#34;</span>},  
+   {<span style=color:#d14>&#34;nested expressions&#34;</span>, <span style=color:#d14>&#34;a(b(d))c&#34;</span>, <span style=color:#d14>&#34;abdc&#34;</span>},  
+   {<span style=color:#d14>&#34;substring match with reset needed&#34;</span>, <span style=color:#d14>&#34;aA&#34;</span>, <span style=color:#d14>&#34;aaA&#34;</span>},  
+   {<span style=color:#d14>&#34;substring match without reset needed&#34;</span>, <span style=color:#d14>&#34;B&#34;</span>, <span style=color:#d14>&#34;ABA&#34;</span>},  
+   {<span style=color:#d14>&#34;multibyte characters&#34;</span>, <span style=color:#d14>&#34;Ȥ&#34;</span>, <span style=color:#d14>&#34;Ȥ&#34;</span>},  
    {  
-      <span style=color:#e6db74>&#34;complex multibyte characters&#34;</span>,  
-      string([]<span style=color:#66d9ef>byte</span>{<span style=color:#ae81ff>0xef</span>, <span style=color:#ae81ff>0xbf</span>, <span style=color:#ae81ff>0xbd</span>, <span style=color:#ae81ff>0x30</span>}),  
-      string([]<span style=color:#66d9ef>byte</span>{<span style=color:#ae81ff>0xcc</span>, <span style=color:#ae81ff>0x87</span>, <span style=color:#ae81ff>0x30</span>}),  
+      <span style=color:#d14>&#34;complex multibyte characters&#34;</span>,  
+      <span style=color:#0086b3>string</span>([]<span style=color:#458;font-weight:700>byte</span>{<span style=color:#099>0xef</span>, <span style=color:#099>0xbf</span>, <span style=color:#099>0xbd</span>, <span style=color:#099>0x30</span>}),  
+      <span style=color:#0086b3>string</span>([]<span style=color:#458;font-weight:700>byte</span>{<span style=color:#099>0xcc</span>, <span style=color:#099>0x87</span>, <span style=color:#099>0x30</span>}),  
    },  
 }
 </code></pre></div><p>We&rsquo;re covering a lot of cases of odd input characters, but we&rsquo;re missing a lot of special characters which make regex so powerful. Let&rsquo;s start adding them!</p>
 <p>Note: Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v3>here</a></p>
 <p>Next:<a href=https://LeweyM.github.io/posts/regex-processor-5-wildcards/>Regex Processor 5 Wildcards</a></p>
 <p>Prev:<a href=https://LeweyM.github.io/posts/regex-processor-3-starting-the-compiler/>Regex Processor 3 Starting the compiler</a></p>
-<ul class=pa0>
-</ul>
-<div class="mt6 instapaper_ignoref">
+</div>
+<div class=post-tags>
 </div>
 </div>
-<aside class="w-30-l mt6-l">
-</aside>
-</article>
-</main>
-<footer class="bg-black bottom-0 w-100 pa3" role=contentinfo>
-<div class="flex justify-between">
-<a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=https://LeweyM.github.io>
-&copy; Lewis Metcalf 2022
-</a>
-<div>
-<div class=ananke-socials>
-</div></div>
+<div class="footer wrapper">
+<nav class=nav>
+<div> <a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div>
+</nav>
 </div>
-</footer>
 </body>
 </html>
