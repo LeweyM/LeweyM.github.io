@@ -295,7 +295,7 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 0((0)) -."merge".->1((0))
 1((1)) --"a"--> 2((2))</div><p>Becomes&mldr;</p><div class=mermaid>graph LR
 10((0)) --"a"--> 20((2))
-30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When copying the transitions, let&rsquo;s look at the node we&rsquo;re going to, find the nodes which point to them, and delete those transitions.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>// adds the transitions of other State (s2) to this State (s).//  
+30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When merging transitions, we want to;</p><ol><li>copy the transitions from <code>State 1</code> to <code>State 0</code></li><li>remove those transitions from <code>State 1</code></li></ol><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>// adds the transitions of other State (s2) to this State (s).//  
 </span></span><span style=display:flex><span>// warning: do not use if State s2 has any incoming transitions.  
 </span></span><span style=display:flex><span>func (s *State) merge(s2 *State) {  
 </span></span><span style=display:flex><span>   if len(s2.incoming) != 0 {  
@@ -303,13 +303,29 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   for _, t := range s2.transitions {  
-</span></span><span style=display:flex><span>      s.addTransition(t.to, t.predicate, t.debugSymbol)  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     // 1. copy s2 transitions to s
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>	  s.addTransition(t.to, t.predicate, t.debugSymbol)  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      // remove where t.to.incoming = s2  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      t.to.incoming = filterState(t.to.incoming, s2)  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     // 2. remove s2 transitions  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     s2.removeTransition(t)
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   }  
 </span></span><span style=display:flex><span>}  
-</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ func (s *State) removeTransition(target Transition) {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    newTransitions := []Transition{}  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    // 1. remove the target transition from s  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    for _, transition := range s.transitions {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if transition == target {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+          newTransitions = append(newTransitions, transition)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    s.transitions = newTransitions  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    // 2. remove s from transition destination incoming states  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    target.to.incoming = filterState(target.to.incoming, target.from)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ }
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>  
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ func filterState(states []*State, s2 *State) []*State {  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    for i, state := range states {  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if s2 == state {  
