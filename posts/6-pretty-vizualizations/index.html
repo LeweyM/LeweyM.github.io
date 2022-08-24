@@ -72,8 +72,9 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span><span style=color:#099>3.</span> Mark the current node as visited.
 </span></span><span style=display:flex><span><span style=color:#099>4.</span> Recur on the destination node of every outgoing transition.
 </span></span><span style=display:flex><span><span style=color:#099>5.</span> Recur on the source node of every incoming transition.
-</span></span></code></pre></div><p>The order of the recursions is important here. We want to first collect the outgoing transitions of all the nodes, and then, starting from the last node and going backwards, collect the transitions of any unvisited nodes connected by incoming transitions.</p><p>I won&rsquo;t labor the point here, as it&rsquo;s tricky to visualize what&rsquo;s going on and distracts from what we&rsquo;re trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.</p><p>We&rsquo;re going to build something to make this algorithm easier, a data structure to store the set of Transitions.</p><h3 id=the-transitionset>The TransitionSet</h3><p>This object has two <strong>invariants</strong> (qualities which never change).</p><ol><li>All transitions in the set are unique.</li><li>The insertion order is maintained.</li></ol><p>Let&rsquo;s code it.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// TransitionSet maintains an ordered set of unique Transitionstype TransitionSet struct {  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   transitionSet  <span style=color:#000;font-weight:700>map</span>[Transition]<span style=color:#458;font-weight:700>bool</span>  
+</span></span></code></pre></div><p>The order of the recursions is important here. We want to first collect the outgoing transitions of all the nodes, and then, starting from the last node and going backwards, collect the transitions of any unvisited nodes connected by incoming transitions.</p><p>I won&rsquo;t labor the point here, as it&rsquo;s tricky to visualize what&rsquo;s going on and distracts from what we&rsquo;re trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.</p><p>We&rsquo;re going to build something to make this algorithm easier, a data structure to store the set of Transitions.</p><h3 id=the-transitionset>The TransitionSet</h3><p>This object has two <strong>invariants</strong> (qualities which never change).</p><ol><li>All transitions in the set are unique.</li><li>The insertion order is maintained.</li></ol><p>Let&rsquo;s code it.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// TransitionSet maintains an ordered set of unique Transitions
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>type</span> TransitionSet <span style=color:#000;font-weight:700>struct</span> {  
+</span></span><span style=display:flex><span>   transitionSet  <span style=color:#000;font-weight:700>map</span>[Transition]<span style=color:#458;font-weight:700>bool</span>  
 </span></span><span style=display:flex><span>   transitionList []Transition  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>We&rsquo;ll maintain two structures in parallel. The <code>map</code> will ensure that our <code>Transitions</code> are unique, and the <code>slice</code> will keep the insertion order.</p><p>We&rsquo;ll write two simple methods for checking if an element is present in the set, and another returning the ordered list of <code>Transitions</code>. We&rsquo;ll call these methods <code>has</code> and <code>list</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (ts <span style=color:#000;font-weight:700>*</span>TransitionSet) <span style=color:#900;font-weight:700>has</span>(t Transition) <span style=color:#458;font-weight:700>bool</span> {  
@@ -93,37 +94,290 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>      ts.transitionList = <span style=color:#0086b3>append</span>(ts.transitionList, t)  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Fantastic. We also need a similar data structure for keeping track of already &lsquo;visited&rsquo; nodes, making sure we don&rsquo;t get caught in any circular loops. As we don&rsquo;t care about the insertion order here though, a simple <code>map[*State]bool</code> will be enough.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// stateMap
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>sm <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>map</span>[<span style=color:#000;font-weight:700>*</span>State]<span style=color:#458;font-weight:700>bool</span>
+</span></span></code></pre></div><p>Fantastic. We also need a similar data structure for keeping track of already &lsquo;visited&rsquo; nodes, making sure we don&rsquo;t get caught in any circular loops. We also want to keep track of the order of visited nodes so that we can use that order as the number labels of the nodes.</p><p>What we actually want is a generic data structure which is a set which keeps the order of it&rsquo;s items. We&rsquo;ll call this an <code>OrderedSet</code>.</p><h3 id=generics>Generics</h3><p>We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both &lsquo;visited&rsquo; <code>*States</code> and <code>Transitions</code>.</p><p>Note: Notice that we want a set of <code>State</code> pointers, and a set of concrete <code>Transitions</code>. This is because <code>Transitions</code> contain all of their identifying information, such as their <code>to</code> and <code>from</code> states, and the predicate, as fields in the struct. <code>States</code>, on the other hand, require a reference to be identified.</p><p>Before we get into the generic implementation, we need to do some refactoring of <code>Transition</code> in order to make it <code>comparable</code> in Go (not a slice, map, or function type). This means that all of its fields must also be <code>comparable</code>, and currently the <code>predicate</code> field is a function type. Let&rsquo;s change that now.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#000;background-color:#fdd>- type Predicate func(input rune) bool
+</span></span></span></code></pre></div><p>Instead, let&rsquo;s use a struct which can have either a string of allowed or disallowed chars<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> Predicate <span style=color:#000;font-weight:700>struct</span> {  
+</span></span><span style=display:flex><span>   allowedChars    <span style=color:#458;font-weight:700>string</span>  
+</span></span><span style=display:flex><span>   disallowedChars <span style=color:#458;font-weight:700>string</span>  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (p Predicate) <span style=color:#900;font-weight:700>test</span>(input <span style=color:#458;font-weight:700>rune</span>) <span style=color:#458;font-weight:700>bool</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> p.allowedChars <span style=color:#000;font-weight:700>!=</span> <span style=color:#d14>&#34;&#34;</span> <span style=color:#000;font-weight:700>&amp;&amp;</span> p.disallowedChars <span style=color:#000;font-weight:700>!=</span> <span style=color:#d14>&#34;&#34;</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(<span style=color:#d14>&#34;must be mutually exclusive&#34;</span>)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(p.allowedChars) &gt; <span style=color:#099>0</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span> strings.<span style=color:#900;font-weight:700>ContainsRune</span>(p.allowedChars, input)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(p.disallowedChars) &gt; <span style=color:#099>0</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span> !strings.<span style=color:#900;font-weight:700>ContainsRune</span>(p.disallowedChars, input)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>false</span>  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And let&rsquo;s make a few changes so that our problem compiles.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span> func (s *State) firstMatchingTransition(input rune) destination {
+</span></span><span style=display:flex><span>        for _, t := range s.transitions {
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               if t.predicate.test(input) {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span><span style=color:#000;background-color:#fdd>-               if t.predicate(input) {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span>                        return t.to
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// has
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>hasState <span style=color:#000;font-weight:700>:=</span> sm[state]
+</span></span><span style=display:flex><span>	return nil
+</span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// add 
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>sm[state]
-</span></span></code></pre></div><p>Now we have all the pieces we need for our traversal algorithm.</p><h3 id=writing-the-node-traversal-algorithm>Writing the node traversal algorithm</h3><p>Because of the useful data structures we&rsquo;ve just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>visitNodes</span>(node <span style=color:#000;font-weight:700>*</span>State, transitions <span style=color:#000;font-weight:700>*</span>TransitionSet, visited <span style=color:#000;font-weight:700>map</span>[<span style=color:#000;font-weight:700>*</span>State]<span style=color:#458;font-weight:700>bool</span>) {  
-</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// 1. If the current node has already been visited, stop.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	<span style=color:#000;font-weight:700>if</span> visited[node] {  
-</span></span><span style=display:flex><span>	   <span style=color:#000;font-weight:700>return</span>  
-</span></span><span style=display:flex><span>	}  
-</span></span><span style=display:flex><span>	  
-</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// 2. Add the transitions from this node to a set of transitions.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	<span style=color:#000;font-weight:700>for</span> _, transition <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.transitions {  
-</span></span><span style=display:flex><span>	   transitions.<span style=color:#900;font-weight:700>add</span>(transition)  
-</span></span><span style=display:flex><span>	}  
-</span></span><span style=display:flex><span>	  
-</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// 3. Mark the current node as visited.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	visited[node] = <span style=color:#000;font-weight:700>true</span>  
-</span></span><span style=display:flex><span>	  
-</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// 4. Recur on the destination node of every outgoing transition.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	<span style=color:#000;font-weight:700>for</span> _, transition <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.transitions {  
-</span></span><span style=display:flex><span>	   destinationNode <span style=color:#000;font-weight:700>:=</span> transition.to  
-</span></span><span style=display:flex><span>	   <span style=color:#900;font-weight:700>visitNodes</span>(destinationNode, transitions, visited)  
-</span></span><span style=display:flex><span>	}  
-</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// 5. Recur on the source node of every incoming transition.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	<span style=color:#000;font-weight:700>for</span> _, sourceNode <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.incoming {  
-</span></span><span style=display:flex><span>	   <span style=color:#900;font-weight:700>visitNodes</span>(sourceNode, transitions, visited)  
+</span></span><span style=display:flex><span>// ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>func (l CharacterLiteral) compile() (head *State, tail *State) {
+</span></span><span style=display:flex><span>        startingState := State{}
+</span></span><span style=display:flex><span>        endState := State{}
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       startingState.addTransition(&amp;endState, func(input rune) bool { return input == l.Character }, string(l.Character))
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, Predicate{allowedChars: string(l.Character)}, string(l.Character))
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        return &amp;startingState, &amp;endState
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>// ...
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>func (w WildcardLiteral) compile() (head *State, tail *State) {  
+</span></span><span style=display:flex><span>   startingState := State{}  
+</span></span><span style=display:flex><span>   endState := State{}  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-  startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#34;\n&#34; }, string(l.Character))  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+  startingState.addTransition(&amp;endState, Predicate{disallowedChars: &#34;\n&#34;}, &#34;.&#34;)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   return &amp;startingState, &amp;endState  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And now, let&rsquo;s change our <code>TransitionSet</code> to be a generic <code>OrderedSet</code> struct.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#000;background-color:#fdd>- type TransitionSet struct {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-    transitionSet  map[Transition]bool  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-    transitionList []Transition  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>- }
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// OrderedSet maintains an ordered set of unique items of type &lt;T&gt;
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>type</span> OrderedSet[T comparable] <span style=color:#000;font-weight:700>struct</span> {  
+</span></span><span style=display:flex><span>   set       <span style=color:#000;font-weight:700>map</span>[T]<span style=color:#458;font-weight:700>int</span>  
+</span></span><span style=display:flex><span>   nextIndex <span style=color:#458;font-weight:700>int</span>  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>add</span>(t T) {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> o.set <span style=color:#000;font-weight:700>==</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      o.set = <span style=color:#0086b3>make</span>(<span style=color:#000;font-weight:700>map</span>[T]<span style=color:#458;font-weight:700>int</span>)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> !o.<span style=color:#900;font-weight:700>has</span>(t) {  
+</span></span><span style=display:flex><span>      o.set[t] = o.nextIndex  
+</span></span><span style=display:flex><span>      o.nextIndex<span style=color:#000;font-weight:700>++</span>  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>has</span>(t T) <span style=color:#458;font-weight:700>bool</span> {  
+</span></span><span style=display:flex><span>   _, hasItem <span style=color:#000;font-weight:700>:=</span> o.set[t]  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> hasItem  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>list</span>() []T {  
+</span></span><span style=display:flex><span>   size <span style=color:#000;font-weight:700>:=</span> <span style=color:#0086b3>len</span>(o.set)  
+</span></span><span style=display:flex><span>   list <span style=color:#000;font-weight:700>:=</span> <span style=color:#0086b3>make</span>([]T, size)  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> t, i <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> o.set {  
+</span></span><span style=display:flex><span>      list[i] = t  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> list  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>We&rsquo;ve changed the implementation here slightly by storing the index in the <code>set</code> field. This makes our <code>list</code> method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>getIndex</span>(t T) <span style=color:#458;font-weight:700>int</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> o.set[t]  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Now we have all the pieces we need for our traversal algorithm.</p><h3 id=writing-the-node-traversal-algorithm>Writing the node traversal algorithm</h3><p>Because of the useful data structures we&rsquo;ve just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>visitNodes</span>(  
+</span></span><span style=display:flex><span>   node <span style=color:#000;font-weight:700>*</span>State,  
+</span></span><span style=display:flex><span>   transitions <span style=color:#000;font-weight:700>*</span>OrderedSet[Transition],  
+</span></span><span style=display:flex><span>   visited <span style=color:#000;font-weight:700>*</span>OrderedSet[<span style=color:#000;font-weight:700>*</span>State],  
+</span></span><span style=display:flex><span>) {  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 1. If the current node has already been visited, stop.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>if</span> visited.<span style=color:#900;font-weight:700>has</span>(node) {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span>  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 2. Add the transitions from this node to a set of transitions.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, transition <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.transitions {  
+</span></span><span style=display:flex><span>      transitions.<span style=color:#900;font-weight:700>add</span>(transition)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 3. Mark the current node as visited.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   visited.<span style=color:#900;font-weight:700>add</span>(node)  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 4. Recur on the destination node of every outgoing transition.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, transition <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.transitions {  
+</span></span><span style=display:flex><span>      destinationNode <span style=color:#000;font-weight:700>:=</span> transition.to  
+</span></span><span style=display:flex><span>      <span style=color:#900;font-weight:700>visitNodes</span>(destinationNode, transitions, visited)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 5. Recur on the source node of every incoming transition.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, sourceNode <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.incoming {  
+</span></span><span style=display:flex><span>      <span style=color:#900;font-weight:700>visitNodes</span>(sourceNode, transitions, visited)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>It&rsquo;s important that the <code>transitions</code> and the <code>visited</code> <code>OrderedSets</code> are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect <code>Transitions</code> and mark <code>Nodes</code> as visited across the whole graph.</p><p>Once we have collected the <code>Transitions</code>, we now just have to draw them as lines in our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>Draw</span>() <span style=color:#458;font-weight:700>string</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// initialize sets  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   transitionSet <span style=color:#000;font-weight:700>:=</span> OrderedSet[Transition]{}  
+</span></span><span style=display:flex><span>   nodeSet <span style=color:#000;font-weight:700>:=</span> OrderedSet[<span style=color:#000;font-weight:700>*</span>State]{}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// collect transitions  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#900;font-weight:700>visitNodes</span>(s, <span style=color:#000;font-weight:700>&amp;</span>transitionSet, <span style=color:#000;font-weight:700>&amp;</span>nodeSet)  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   output <span style=color:#000;font-weight:700>:=</span> []<span style=color:#458;font-weight:700>string</span>{  
+</span></span><span style=display:flex><span>      <span style=color:#d14>&#34;graph LR&#34;</span>,  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// draw transitions  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> transitionSet.<span style=color:#900;font-weight:700>list</span>() {  
+</span></span><span style=display:flex><span>      fromId <span style=color:#000;font-weight:700>:=</span> nodeSet.<span style=color:#900;font-weight:700>getIndex</span>(t.from)  
+</span></span><span style=display:flex><span>      toId <span style=color:#000;font-weight:700>:=</span> nodeSet.<span style=color:#900;font-weight:700>getIndex</span>(t.to)  
+</span></span><span style=display:flex><span>      output = <span style=color:#0086b3>append</span>(output, fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;%d((%d)) --\&#34;%s\&#34;--&gt; %d((%d))&#34;</span>, fromId, fromId, t.debugSymbol, toId, toId))  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> strings.<span style=color:#900;font-weight:700>Join</span>(output, <span style=color:#d14>&#34;\n&#34;</span>)  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Once all the hard work of collecting the <code>Nodes</code> and <code>Transitions</code> is done, it&rsquo;s quite simple to concatenate the strings required to build the <code>mermaid.js</code> code. I won&rsquo;t go into much more detail here, as the code seems to speak for itself.</p><p>With all this in place, let&rsquo;s run our tests.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   <span style=color:teal>TestState_Draw</span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   TestState_Draw/abc
+</span></span><span style=display:flex><span>    draw_test.go:38: Expected drawing to be 
+</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
+</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))&#34;</span>, got
+</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
+</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        4((4)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        5((5)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        6((6)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   TestState_Draw/a_b
+</span></span><span style=display:flex><span>    draw_test.go:38: Expected drawing to be 
+</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
+</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span> <span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 3((3))&#34;</span>, got
+</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
+</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span> <span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 3((3))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        4((4)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 3((3))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        5((5)) --&#34;</span> <span style=color:#d14>&#34;--&gt; 2((2))
+</span></span></span><span style=display:flex><span><span style=color:#d14>        6((6)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))&#34;</span>
+</span></span><span style=display:flex><span>--- FAIL: TestState_Draw <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>    --- FAIL: TestState_Draw/abc <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    --- FAIL: TestState_Draw/a_b <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
+</span></span></code></pre></div><p>Hmm, interesting. Not quite what we were expecting. To see what&rsquo;s going on, let&rsquo;s plug the output graph of our <code>abc</code> test into <a href=https://mermaid.live/>mermaids live coding site</a> and see what we&rsquo;re looking at.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>graph LR
+</span></span><span style=display:flex><span>        0((0)) --&#34;a&#34;--&gt; 1((1))
+</span></span><span style=display:flex><span>        1((1)) --&#34;b&#34;--&gt; 2((2))
+</span></span><span style=display:flex><span>        2((2)) --&#34;c&#34;--&gt; 3((3))
+</span></span><span style=display:flex><span>        4((4)) --&#34;c&#34;--&gt; 3((3))
+</span></span><span style=display:flex><span>        5((5)) --&#34;b&#34;--&gt; 2((2))
+</span></span><span style=display:flex><span>        6((6)) --&#34;a&#34;--&gt; 1((1))
+</span></span></code></pre></div><div class=mermaid>graph LR
+0((0)) --"a"--> 1((1))
+1((1)) --"b"--> 2((2))
+2((2)) --"c"--> 3((3))
+4((4)) --"c"--> 3((3))
+5((5)) --"b"--> 2((2))
+6((6)) --"a"--> 1((1))</div><p>That&rsquo;s certainly not right. We seem to have dangling <code>Nodes</code> which still have <code>Transitions</code> to intermediary nodes. This should not affect the accuracy of our regex engine, as <code>States</code> <code>4</code>, <code>5</code>, and <code>6</code> cannot be reached, but it does make our drawing a bit distracting.</p><p>The error here is in our <code>state.Merge</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// adds the transitions of other State (s2) to this State (s).
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>//  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// warning: do not use if State s2 has any incoming transitions.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>merge</span>(s2 <span style=color:#000;font-weight:700>*</span>State) {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(s2.incoming) <span style=color:#000;font-weight:700>!=</span> <span style=color:#099>0</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;</span>, <span style=color:#000;font-weight:700>*</span>s2, s.incoming))  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s2.transitions {  
+</span></span><span style=display:flex><span>      s.<span style=color:#900;font-weight:700>addTransition</span>(t.to, t.predicate, t.debugSymbol)  
 </span></span><span style=display:flex><span>	}
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>It&rsquo;s important that the <code>TransitionSet</code> and the <code>visited</code> map are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect <code>Transitions</code> and mark <code>Nodes</code> as visited across the whole graph.</p><p>Once we have collected the <code>Transitions</code>, we now just have to draw them as lines in our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go></code></pre></div></div><p>Previous: <a href=/posts/5-wildcards/>5 Wildcards</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
+</span></span></code></pre></div><p>Let&rsquo;s see this in a simpler example, the regex <code>a</code>.</p><div class=mermaid>graph LR
+0((0)) --"a"--> 1((1))
+2((2)) --"a"--> 1((1))</div><p>Remember how the <code>compile</code> method of a <code>Group</code> node works? We start with a single node, which we then merge our two-state <code>a</code> FSM onto.</p><div class=mermaid>graph LR
+0((0)) -."merge".->1((0))
+1((1)) --"a"--> 2((2))</div><p>Becomes&mldr;</p><div class=mermaid>graph LR
+10((0)) --"a"--> 20((2))
+30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>// adds the transitions of other State (s2) to this State (s).//  
+</span></span><span style=display:flex><span>// warning: do not use if State s2 has any incoming transitions.  
+</span></span><span style=display:flex><span>func (s *State) merge(s2 *State) {  
+</span></span><span style=display:flex><span>   if len(s2.incoming) != 0 {  
+</span></span><span style=display:flex><span>      panic(fmt.Sprintf(&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;, *s2, s.incoming))  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   for _, t := range s2.transitions {  
+</span></span><span style=display:flex><span>      s.addTransition(t.to, t.predicate, t.debugSymbol)  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      // remove where t.to.incoming = s2  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      t.to.incoming = filterState(t.to.incoming, s2)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   }  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ func filterState(states []*State, s2 *State) []*State {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    for i, state := range states {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if s2 == state {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+          return append(states[:i], states[i+1:]...)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    return states  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ }
+</span></span></span></code></pre></div><p>Running our tests now should pass, and the output of our <code>abc</code> regex FSM now looks correct.</p><div class=mermaid>graph LR
+0((0)) --"a"--> 1((1))
+1((1)) --"b"--> 2((2))
+2((2)) --"c"--> 3((3))</div><p>Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.</p><h3 id=a-quick-command-line-tool>A quick command line tool</h3><p>Let&rsquo;s add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let&rsquo;s make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.</p><p>Let&rsquo;s setup a <code>main</code> function[^2].</p><p>[2^]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call <code>Draw</code> from the <code>main</code> package.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> main
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>main</span>() {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>switch</span> os.Args[<span style=color:#099>1</span>] {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>case</span> <span style=color:#d14>&#34;v5&#34;</span>:  
+</span></span><span style=display:flex><span>      v5.<span style=color:#900;font-weight:700>Main</span>(os.Args[<span style=color:#099>2</span>:])  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span>  
+</span></span><span style=display:flex><span>   }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> v5
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// Main just used for linking up the main functions
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Main</span>(args []<span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>switch</span> args[<span style=color:#099>0</span>] {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>case</span> <span style=color:#d14>&#34;draw&#34;</span>:  
+</span></span><span style=display:flex><span>      <span style=color:#900;font-weight:700>Draw</span>(args[<span style=color:#099>1</span>])  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>default</span>:  
+</span></span><span style=display:flex><span>      fmt.<span style=color:#900;font-weight:700>Println</span>(<span style=color:#d14>&#34;command not recognized&#34;</span>)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>With that, we can call <code>Draw</code> from our command. Let&rsquo;s test that things are set up correctly.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Draw</span>(input <span style=color:#458;font-weight:700>string</span>) {
+</span></span><span style=display:flex><span>	fmt.<span style=color:#900;font-weight:700>Println</span>(<span style=color:#d14>&#34;Draw called with &#34;</span> <span style=color:#000;font-weight:700>+</span> input)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>We can run the program with <code>go run ./.. v5 draw {input}</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>➜  search git:<span style=color:#000;font-weight:700>(</span>master<span style=color:#000;font-weight:700>)</span> ✗ go run ./... v5 draw <span style=color:#d14>&#34;abc&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Draw called with abc
+</span></span></code></pre></div><p>Great, now let&rsquo;s make <code>Draw()</code> open a browser and display our <code>mermaid</code> code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Draw</span>(input <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   tokens <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>lex</span>(input)  
+</span></span><span style=display:flex><span>   parser <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewParser</span>()  
+</span></span><span style=display:flex><span>   ast <span style=color:#000;font-weight:700>:=</span> parser.<span style=color:#900;font-weight:700>Parse</span>(tokens)  
+</span></span><span style=display:flex><span>   head, _ <span style=color:#000;font-weight:700>:=</span> ast.<span style=color:#900;font-weight:700>compile</span>()  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   stateDrawing <span style=color:#000;font-weight:700>:=</span> head.<span style=color:#900;font-weight:700>Draw</span>()  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   t, err <span style=color:#000;font-weight:700>:=</span> template.<span style=color:#900;font-weight:700>New</span>(<span style=color:#d14>&#34;graph&#34;</span>).<span style=color:#900;font-weight:700>Parse</span>(<span style=color:#d14>`  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script src=&#34;https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js&#34;&gt;&lt;/script&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script&gt;mermaid.initialize({startOnLoad:true});  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;/script&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;div class=&#34;mermaid&#34;&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>    </span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:teal>.</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&lt;/div&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;div&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;span style=&#34;white-space: pre-wrap&#34;&gt;</span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:teal>.</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&lt;/span&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;/div&gt;  
+</span></span></span><span style=display:flex><span><span style=color:#d14>`</span>)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   w <span style=color:#000;font-weight:700>:=</span> bytes.Buffer{}  
+</span></span><span style=display:flex><span>   err = t.<span style=color:#900;font-weight:700>Execute</span>(<span style=color:#000;font-weight:700>&amp;</span>w, stateDrawing)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span>  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   reader <span style=color:#000;font-weight:700>:=</span> strings.<span style=color:#900;font-weight:700>NewReader</span>(w.<span style=color:#900;font-weight:700>String</span>())  
+</span></span><span style=display:flex><span>   err = browser.<span style=color:#900;font-weight:700>OpenReader</span>(reader)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span>  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Let&rsquo;s try that again. It should now open a browser with a visualization of your compiled FSM! This is going to come in very handy as our program grows in complexity.</p><p>That&rsquo;s enough for visualizations for now, we can now move onto adding new features to our regex engine.</p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the <code>comparable</code> interface. So far, generics are still tricky to make work in Go, but it&rsquo;s still early days.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><p>Previous: <a href=/posts/5-wildcards/>5 Wildcards</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
 <script>mermaid.initialize({startOnLoad:!0})</script></body></html>
