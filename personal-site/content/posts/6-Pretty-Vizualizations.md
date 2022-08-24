@@ -645,6 +645,14 @@ func Draw(input string) {
 }
 ```
 
-Let's try that again. It should now open a browser with a visualization of your compiled FSM! This is going to come in very handy as our program grows in complexity.
+Let's try that again. It should now open a browser with a visualization of your compiled FSM!
+
+```mermaid
+graph LR 
+0((0)) --"a"--> 1((1)) 
+1((1)) --"b"--> 2((2)) 
+2((2)) --"c"--> 3((3))
+```
+That's better. This tool is going to come in very handy as our program grows in complexity.
 
 That's enough for visualizations for now, we can now move onto adding new features to our regex engine.
