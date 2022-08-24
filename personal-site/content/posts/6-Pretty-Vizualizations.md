@@ -562,7 +562,7 @@ Let's add one more thing before we finish with our vizualizer. We want to be abl
 
 Let's set up a `main` function[^2].
 
-[2^]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call `Draw` from the `main` package.
+[^2]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call `Draw` from the `main` package.
 
 ```go
 package main
