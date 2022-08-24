@@ -474,7 +474,15 @@ graph LR
 2((2)) --"a"--> 1((1))
 ```
 
-Remember how the `compile` method of a `Group` node works? We start with a single node, which we then merge our two-state `a` FSM onto.
+Remember how the `compile` method of a `Group` node works? First we compile the `CharacterLiteral(a)` Node into a two-state FSM. We then create a new `State`, onto the tail of which we will merge all the children FSMs
+
+```mermaid
+graph LR
+0((0))
+1((1)) --"a"--> 2((2))
+```
+
+In this simple example, there is one merge operation, during which we copy all the transitions from ` State 1` onto `State 0`. So...
 
 ```mermaid
 graph LR
@@ -492,7 +500,7 @@ graph LR
 
 The problem is that the transition from `1` to `2` remains, which leads to the dangling `State` `1` remaining in our drawing.
 
-Let's remove those dangling transitions.
+Let's remove those dangling transitions. When copying the transitions, let's look at the node we're going to, find the nodes which point to them, and delete those transitions.
 
 ```diff
 // adds the transitions of other State (s2) to this State (s).//  
@@ -520,7 +528,7 @@ func (s *State) merge(s2 *State) {
 + }
 ```
 
-Running our tests now should pass, and the output of our `abc` regex FSM now looks correct.
+Now, running our tests should pass, and the output of our `abc` regex FSM should look correct.
 
 ```mermaid
 graph LR 
@@ -534,7 +542,7 @@ Although nothing was strictly broken in our system, I hope that this demonstrate
 
 Let's add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let's make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.
 
-Let's setup a `main` function[^2].
+Let's set up a `main` function[^2].
 
 [2^]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call `Draw` from the `main` package.
 
