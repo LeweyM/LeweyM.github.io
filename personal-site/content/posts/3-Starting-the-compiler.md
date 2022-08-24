@@ -5,7 +5,7 @@ series: ["making regex from scratch in GO"]
 ---
 Now we have a working FSM and way to process strings, let's take a look at building FSMs automatically from regular expressions using a **compiler**.
 
-### Compiling a Finite State Machine
+## Compiling a Finite State Machine
 
 We can break down the previous example of writing an FSM for the regular expression `abc` into  at least 2 discrete steps;
 
@@ -26,11 +26,11 @@ Let's do even more decomposition of this problem and break the compilation step 
 
 Let's go through these 3 steps in detail.
 
-### Lexing
+## Lexing
 
 Before we start turning strings into complex abstract objects, it helps to turn them into something a bit easier to work with. In the 'Lexing' stage, that's what we do. We simply convert the different types of characters into `tokens` which can be more easily interpreted by our program.
 
-### Parsing
+## Parsing
 
 Once we have our `tokens`, we want to build something called an 'Abstract Syntax Tree' - or an `AST` for short. The `AST` is a tree which represents the *hierarchical relationship* of the regular expression. In other words, in this stage we describe the **structure** of the expression.
 
@@ -48,7 +48,7 @@ The important thing to know about this step is that here we are describing the *
 
 Having this structure will make our lives a lot easier in the next step.
 
-### Compile
+## Compile
 
 Here, we actually build the `States` from the `AST` we created in the previous step.
 
@@ -58,7 +58,7 @@ This is where we see the power of recursive structures, as each node must produc
 
 Now that we've described our three phases, let's jump into some code.
 
-### Coding the lexer
+## Coding the lexer
 
 In this implementation, we're going to support a subset of regex special characters;
 
@@ -138,7 +138,7 @@ That's really all there is to it. Now instead of a string of characters, we have
 
 We'll now use those `tokens` to build our `AST`
 
-### Coding the parser
+## Coding the parser
 
 For our simple example of parsing the regular expression `abc`, we just need two types of `AST`node: `Group` and `CharacterLiteral`.
 
@@ -199,7 +199,7 @@ type CompositeNode interface {
 
 Ok, now we have our `AST` nodes defined, let's take a look at how to parse a string into a tree.
 
-### Building the Abstract Syntax Tree
+## Building the Abstract Syntax Tree
 
 Building the parser is going to be one of the more complex pieces of this project, so it helps to have tests just for this. Let's start with a simple test to make it clear what we're trying to produce.
 
@@ -274,7 +274,7 @@ As our tests are now green, let's leave it there and move onto the next step - t
 
 Now, turning an `AST` into a compiled FSM.
 
-### Our first compiler
+## Our first compiler
 
 Compiling the `AST` into `State` objects can be tricky. The trick to keeping this step simple (and it can very quickly become **not** simple) is to let each node of the `AST` decide how it should be compiled.
 
@@ -387,13 +387,13 @@ func (g *Group) compile() (head *State, tail *State) {
 }
 ```
 
-### The power of structure
+## The power of structure
 
 Here, I hope it starts to become clear why we separate the `compiling` from the `lexing` and `parsing` stages. Once we have the **structure** of the expression, it's much easier to decompose the compilation into leaf nodes, such as a single letter, and composing nodes which hold collections of other nodes. Once we have these two types, we can simply tell composing nodes how to group their children, and tell leaf nodes the expected compiled form. 
 
 Having this separation of concerns will make life a lot easier for use when we introduce more complicated structures.
 
-### Changing our tests
+## Changing our tests
 
 Before we get ahead of ourselves, let's modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.
 

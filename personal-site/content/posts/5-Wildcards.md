@@ -5,7 +5,7 @@ series: ["making regex from scratch in GO"]
 ---
 Let's start adding some special regex characters, starting with the `'.'` wildcard regular expression.
 
-### Wildcards
+## Wildcards
 
 The `.` character in a regular expression will match any character. To make this clear, here are a few example cases for the regular expression `ab.`;
 

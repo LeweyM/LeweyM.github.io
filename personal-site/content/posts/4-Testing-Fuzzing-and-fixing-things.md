@@ -5,7 +5,7 @@ series: ["making regex from scratch in GO"]
 ---
 We can spend some time here doing some interesting things to our tests, which should make our lives a bit easier down the road.
 
-### Testing against the Go regex package
+## Testing against the Go regex package
 
 As Go includes its own `regex` package, we can use this to validate our own implementation. Let's add a test which compares the results from our own FSM and the Go regex library.
 
@@ -99,7 +99,7 @@ tests := []test{
 
 Having a way of automatically computing the desired output for a test not only makes writing the tests less work, but also open up some interesting possibilities, such as Fuzzing.
 
-### Fuzzing
+## Fuzzing
 
 Go 1.18 introduced [fuzzing](https://go.dev/doc/fuzz/) to its standard library, which is an automated way of barraging your code with semi-random input to try to find hidden errors.
 
@@ -200,7 +200,7 @@ Note: Your path might be different, use the path of the package with the test an
 
 We found an error!
 
-### Let's get a'fixing
+## Let's get a'fixing
 
 Note: Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
 
@@ -216,7 +216,7 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 
 ```
 
-#### Problem 1
+## Problem 1
 
 You should see that the fuzzer has saved this to a file at  
 ```
@@ -273,7 +273,7 @@ Notice that we need to run `testRunner.Next(character)` after the reset because 
 
 Let's run the fuzzer again.
 
-#### Problem 2
+## Problem 2
 
 ```zsh
 v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
@@ -315,7 +315,7 @@ Why does this work? In the case of an empty regex, the compiler would produce a 
 
 Tests are green so back to the fuzzer.
 
-#### Problem 3
+## Problem 3
 
 ```zsh
 v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
@@ -350,7 +350,7 @@ f.Fuzz(func(t *testing.T, regex, input string) {
 
 Rinse. Repeat
 
-#### Problem 4
+## Problem 4
 
 ```zsh
 v3_test.go:127: Mismatch - Regex: 'Ȥ', Input: 'Ȥ' -> Go Regex Pkg: 'true', Our regex result: 'false'
@@ -436,7 +436,7 @@ func lex(input string) []token {
 }
 ```
 
-#### Problem 5
+## Problem 5
 
 ```zsh
 Regex: 'B' (as bytes: 42), 
@@ -537,7 +537,7 @@ This means that we will test for a match on every substring of input.
 
 Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
 
-#### Problem 6
+## Problem 6
 
 Ok, we're starting to make progress now. Let's see our next issue.
 
@@ -602,7 +602,7 @@ func matchRegexOLD(regex, input string) bool {
 }
 ```
 
-#### And then, silence...
+## And then, silence...
 
 If we run the fuzzer now, we see something like this;
 
@@ -624,7 +624,7 @@ Fuzzing won't give us a green light like tests will. Fuzzing is an [infinite spa
 
 I hope that the power of techniques like fuzzing is clear here. We've managed to uncover lots of subtle (and some not so subtle) bugs and issues with our code, and we're now pretty confident that we're providing the same behavior as the Go regex package!
 
-### Some clean up
+## Some clean up
 
 Let's refactor a bit before we move on. 
 
@@ -675,7 +675,7 @@ And then let's call these from our tests.
 - result := matchRegex(regex, input)
 ```
 
-#### Onwards and upwards
+## Onwards and upwards
 
 We've covered a lot of ground here. Our tests now look like so:
 

@@ -9,7 +9,7 @@ As a side note, I also think it's worth mentioning that an important part of bui
 
 So, let's build something to help us *see*.
 
-### Visualizing Graphs
+## Visualizing Graphs
 
 The issue we have is that it's not very easy to visualize a set of connected nodes (a graph) using variables and text. We *could* do it, and trace the pointer hashes from one object to the next, but it's not going to be very fun. As our system scales in complexity, this method will get more and more tedious.
 
@@ -33,7 +33,7 @@ This visual representation of our FSM will give us a quick insight into whether 
 
 This was created using `mermaid.js`.
 
-### Mermaid.js for graphs
+## Mermaid.js for graphs
 
 `mermaid.js` is a fantastic tool which allows us to write graphs in standard markdown which can be then rendered in the browser. The markdown for the above graph is the following;
 
@@ -123,7 +123,7 @@ Here are our test cases. They're quite simple also, as they show simple cases of
 
 Now that we have some red tests, we can start implementing the `Draw` method.
 
-### Traversal
+## Traversal
 
 We need a line for every `Transition` in our FSM. Generically speaking, this means we need to look at every 'vertex' in our 'directed graph' (digraph). So, what we have here is a **graph traversal problem**. 
 
@@ -147,7 +147,7 @@ I won't labor the point here, as it's tricky to visualize what's going on and di
 
 We're going to build something to make this algorithm easier, a data structure to store the set of Transitions.
 
-### The TransitionSet
+## The TransitionSet
 
 This object has two **invariants** (qualities which never change).
 1. All transitions in the set are unique.
@@ -198,7 +198,7 @@ Fantastic. We also need a similar data structure for keeping track of already 'v
 
 What we actually want is a generic data structure which is a set which keeps the order of it's items. We'll call this an `OrderedSet`.
 
-### Generics
+## Generics
 
 We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both 'visited' `*States` and `Transitions`.
 
@@ -325,7 +325,7 @@ func (o *OrderedSet[T]) getIndex(t T) int {
 
 Now we have all the pieces we need for our traversal algorithm.
 
-### Writing the node traversal algorithm
+## Writing the node traversal algorithm
 
 Because of the useful data structures we've just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.
 
@@ -556,7 +556,7 @@ graph LR
 ```
 Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.
 
-### A quick command line tool
+## A quick command line tool
 
 Let's add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let's make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.
 

@@ -5,7 +5,7 @@ series: ["making regex from scratch in GO"]
 ---
 Let's start coding.
 
-### The FSM data structure
+## The FSM data structure
 We can first think about our core data structures to represent the FSM. The FSM is essentially a linked list of `state` objects.
 
 ```go
@@ -51,7 +51,7 @@ type State struct {
 
 ```
 
-### Running Our State machine
+## Running Our State machine
 
 Inorder to use our state machine, we'll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we'll call this a **Runner**.
 
@@ -63,7 +63,7 @@ type runner struct {
 
 For now, all our runner needs to have is a pointer to the root (or `head`) node of our FSM.
 
-### Tests first
+## Tests first
 
 We'll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.
 
@@ -255,7 +255,7 @@ Note: One might take a look at this test and say "The states are being instantia
 
 Now that we have our first test, let's implement the missing methods and make these tests pass.
 
-### Runner
+## Runner
 
 The first method we need to implement is a simple constructor function.
 
