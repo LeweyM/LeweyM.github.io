@@ -1,6 +1,7 @@
 ---
 title: 6 Pretty Vizualizations
-draft: true
+draft: false
+series: ["making regex from scratch in GO"]
 ---
 Now that we have a few features working, this is a good time to take a step back and build some things to help us see what we're working with. The tools we're going to build now will help with debugging as our features become more complex, and will give us a clearer picture of the logic of the systems we're working with.
 
