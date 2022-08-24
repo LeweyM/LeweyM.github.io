@@ -500,7 +500,9 @@ graph LR
 
 The problem is that the transition from `1` to `2` remains, which leads to the dangling `State` `1` remaining in our drawing.
 
-Let's remove those dangling transitions. When copying the transitions, let's look at the node we're going to, find the nodes which point to them, and delete those transitions.
+Let's remove those dangling transitions. When merging transitions, we want to;
+1. copy the transitions from `State 1` to `State 0`
+2. remove those transitions from `State 1`
 
 ```diff
 // adds the transitions of other State (s2) to this State (s).//  
@@ -511,12 +513,28 @@ func (s *State) merge(s2 *State) {
    }  
   
    for _, t := range s2.transitions {  
-      s.addTransition(t.to, t.predicate, t.debugSymbol)  
++     // 1. copy s2 transitions to s
+	  s.addTransition(t.to, t.predicate, t.debugSymbol)  
   
-+      // remove where t.to.incoming = s2  
-+      t.to.incoming = filterState(t.to.incoming, s2)  
++     // 2. remove s2 transitions  
++     s2.removeTransition(t)
    }  
 }  
+
++ func (s *State) removeTransition(target Transition) {  
++    newTransitions := []Transition{}  
++   
++    // 1. remove the target transition from s  
++    for _, transition := range s.transitions {  
++       if transition == target {  
++          newTransitions = append(newTransitions, transition)  
++       }  
++    }  
++    s.transitions = newTransitions  
++   
++    // 2. remove s from transition destination incoming states  
++    target.to.incoming = filterState(target.to.incoming, target.from)  
++ }
   
 + func filterState(states []*State, s2 *State) []*State {  
 +    for i, state := range states {  
