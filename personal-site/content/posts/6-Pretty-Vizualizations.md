@@ -156,7 +156,8 @@ This object has two **invariants** (qualities which never change).
 Let's code it.
 
 ```go
-// TransitionSet maintains an ordered set of unique Transitionstype TransitionSet struct {  
+// TransitionSet maintains an ordered set of unique Transitions
+type TransitionSet struct {  
    transitionSet  map[Transition]bool  
    transitionList []Transition  
 }
@@ -193,17 +194,133 @@ func (ts *TransitionSet) add(t Transition) {
 }
 ```
 
-Fantastic. We also need a similar data structure for keeping track of already 'visited' nodes, making sure we don't get caught in any circular loops. As we don't care about the insertion order here though, a simple `map[*State]bool` will be enough.
+Fantastic. We also need a similar data structure for keeping track of already 'visited' nodes, making sure we don't get caught in any circular loops. We also want to keep track of the order of visited nodes so that we can use that order as the number labels of the nodes.
+
+What we actually want is a generic data structure which is a set which keeps the order of it's items. We'll call this an `OrderedSet`.
+
+### Generics
+
+We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both 'visited' `*States` and `Transitions`.
+
+Note: Notice that we want a set of `State` pointers, and a set of concrete `Transitions`. This is because `Transitions` contain all of their identifying information, such as their `to` and `from` states, and the predicate, as fields in the struct. `States`, on the other hand, require a reference to be identified.
+
+Before we get into the generic implementation, we need to do some refactoring of `Transition` in order to make it `comparable` in Go (not a slice, map, or function type). This means that all of its fields must also be `comparable`, and currently the `predicate` field is a function type. Let's change that now.
+
+```diff
+- type Predicate func(input rune) bool
+```
+
+Instead, let's use a struct which can have either a string of allowed or disallowed chars[^generics].
+
+[^generics]: This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the `comparable` interface. So far, generics are still tricky to make work in Go, but it's still early days.
 
 ```go
-// stateMap
-sm := map[*State]bool
+type Predicate struct {  
+   allowedChars    string  
+   disallowedChars string  
+}  
+  
+func (p Predicate) test(input rune) bool {  
+   if p.allowedChars != "" && p.disallowedChars != "" {  
+      panic("must be mutually exclusive")  
+   }  
+  
+   if len(p.allowedChars) > 0 {  
+      return strings.ContainsRune(p.allowedChars, input)  
+   }  
+   if len(p.disallowedChars) > 0 {  
+      return !strings.ContainsRune(p.disallowedChars, input)  
+   }  
+   return false  
+}
+```
 
-// has
-hasState := sm[state]
+And let's make a few changes so that our problem compiles.
 
-// add 
-sm[state]
+```diff
+ func (s *State) firstMatchingTransition(input rune) destination {
+        for _, t := range s.transitions {
++               if t.predicate.test(input) {
+-               if t.predicate(input) {
+                        return t.to
+                }
+        }
+
+	return nil
+}
+
+// ...
+
+func (l CharacterLiteral) compile() (head *State, tail *State) {
+        startingState := State{}
+        endState := State{}
+ 
+-       startingState.addTransition(&endState, func(input rune) bool { return input == l.Character }, string(l.Character))
++       startingState.addTransition(&endState, Predicate{allowedChars: string(l.Character)}, string(l.Character))
+        return &startingState, &endState
+
+// ...
+
+func (w WildcardLiteral) compile() (head *State, tail *State) {  
+   startingState := State{}  
+   endState := State{}  
+-  startingState.addTransition(&endState, func(input rune) bool { return input != "\n" }, string(l.Character))  
++  startingState.addTransition(&endState, Predicate{disallowedChars: "\n"}, ".")  
+   return &startingState, &endState  
+}
+
+```
+
+And now, let's change our `TransitionSet` to be a generic `OrderedSet` struct.
+
+```diff
+- type TransitionSet struct {  
+-    transitionSet  map[Transition]bool  
+-    transitionList []Transition  
+- }
+```
+```go
+// OrderedSet maintains an ordered set of unique items of type <T>
+type OrderedSet[T comparable] struct {  
+   set       map[T]int  
+   nextIndex int  
+}  
+  
+func (o *OrderedSet[T]) add(t T) {  
+   if o.set == nil {  
+      o.set = make(map[T]int)  
+   }  
+  
+   if !o.has(t) {  
+      o.set[t] = o.nextIndex  
+      o.nextIndex++  
+   }  
+}  
+  
+func (o *OrderedSet[T]) has(t T) bool {  
+   _, hasItem := o.set[t]  
+   return hasItem  
+}  
+  
+func (o *OrderedSet[T]) list() []T {  
+   size := len(o.set)  
+   list := make([]T, size)  
+  
+   for t, i := range o.set {  
+      list[i] = t  
+   }  
+  
+   return list  
+}
+```
+
+We've changed the implementation here slightly by storing the index in the `set` field. This makes our `list` method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.
+
+```go
+  
+func (o *OrderedSet[T]) getIndex(t T) int {  
+   return o.set[t]  
+}
 ```
 
 Now we have all the pieces we need for our traversal algorithm.
@@ -213,36 +330,295 @@ Now we have all the pieces we need for our traversal algorithm.
 Because of the useful data structures we've just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.
 
 ```go
-func visitNodes(node *State, transitions *TransitionSet, visited map[*State]bool) {  
-	// 1. If the current node has already been visited, stop.  
-	if visited[node] {  
-	   return  
-	}  
-	  
-	// 2. Add the transitions from this node to a set of transitions.  
-	for _, transition := range node.transitions {  
-	   transitions.add(transition)  
-	}  
-	  
-	// 3. Mark the current node as visited.  
-	visited[node] = true  
-	  
-	// 4. Recur on the destination node of every outgoing transition.  
-	for _, transition := range node.transitions {  
-	   destinationNode := transition.to  
-	   visitNodes(destinationNode, transitions, visited)  
-	}  
-	// 5. Recur on the source node of every incoming transition.  
-	for _, sourceNode := range node.incoming {  
-	   visitNodes(sourceNode, transitions, visited)  
-	}
+func visitNodes(  
+   node *State,  
+   transitions *OrderedSet[Transition],  
+   visited *OrderedSet[*State],  
+) {  
+   // 1. If the current node has already been visited, stop.  
+   if visited.has(node) {  
+      return  
+   }  
+  
+   // 2. Add the transitions from this node to a set of transitions.  
+   for _, transition := range node.transitions {  
+      transitions.add(transition)  
+   }  
+  
+   // 3. Mark the current node as visited.  
+   visited.add(node)  
+  
+   // 4. Recur on the destination node of every outgoing transition.  
+   for _, transition := range node.transitions {  
+      destinationNode := transition.to  
+      visitNodes(destinationNode, transitions, visited)  
+   }  
+   // 5. Recur on the source node of every incoming transition.  
+   for _, sourceNode := range node.incoming {  
+      visitNodes(sourceNode, transitions, visited)  
+   }  
 }
 ```
 
-It's important that the `TransitionSet` and the `visited` map are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect `Transitions` and mark `Nodes` as visited across the whole graph.
+It's important that the `transitions` and the `visited` `OrderedSets` are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect `Transitions` and mark `Nodes` as visited across the whole graph.
 
 Once we have collected the `Transitions`, we now just have to draw them as lines in our `mermaid` markdown.
 
 ```go
-
+func (s *State) Draw() string {  
+   // initialize sets  
+   transitionSet := OrderedSet[Transition]{}  
+   nodeSet := OrderedSet[*State]{}  
+  
+   // collect transitions  
+   visitNodes(s, &transitionSet, &nodeSet)  
+  
+   output := []string{  
+      "graph LR",  
+   }  
+  
+   // draw transitions  
+   for _, t := range transitionSet.list() {  
+      fromId := nodeSet.getIndex(t.from)  
+      toId := nodeSet.getIndex(t.to)  
+      output = append(output, fmt.Sprintf("%d((%d)) --\"%s\"--> %d((%d))", fromId, fromId, t.debugSymbol, toId, toId))  
+   }  
+   return strings.Join(output, "\n")  
+}
 ```
+
+Once all the hard work of collecting the `Nodes` and `Transitions` is done, it's quite simple to concatenate the strings required to build the `mermaid.js` code. I won't go into much more detail here, as the code seems to speak for itself.
+
+With all this in place, let's run our tests.
+
+```zsh
+=== RUN   TestState_Draw
+=== RUN   TestState_Draw/abc
+    draw_test.go:38: Expected drawing to be 
+        "graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --"b"--> 2((2))
+        2((2)) --"c"--> 3((3))", got
+        "graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --"b"--> 2((2))
+        2((2)) --"c"--> 3((3))
+        4((4)) --"c"--> 3((3))
+        5((5)) --"b"--> 2((2))
+        6((6)) --"a"--> 1((1))"
+=== RUN   TestState_Draw/a_b
+    draw_test.go:38: Expected drawing to be 
+        "graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --" "--> 2((2))
+        2((2)) --"b"--> 3((3))", got
+        "graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --" "--> 2((2))
+        2((2)) --"b"--> 3((3))
+        4((4)) --"b"--> 3((3))
+        5((5)) --" "--> 2((2))
+        6((6)) --"a"--> 1((1))"
+--- FAIL: TestState_Draw (0.00s)
+    --- FAIL: TestState_Draw/abc (0.00s)
+
+    --- FAIL: TestState_Draw/a_b (0.00s)
+```
+
+Hmm, interesting. Not quite what we were expecting. To see what's going on, let's plug the output graph of our `abc` test into [mermaids live coding site](https://mermaid.live/) and see what we're looking at.
+
+```markdown
+graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --"b"--> 2((2))
+        2((2)) --"c"--> 3((3))
+        4((4)) --"c"--> 3((3))
+        5((5)) --"b"--> 2((2))
+        6((6)) --"a"--> 1((1))
+```
+
+```mermaid
+graph LR
+        0((0)) --"a"--> 1((1))
+        1((1)) --"b"--> 2((2))
+        2((2)) --"c"--> 3((3))
+        4((4)) --"c"--> 3((3))
+        5((5)) --"b"--> 2((2))
+        6((6)) --"a"--> 1((1))
+```
+
+That's certainly not right. We seem to have dangling `Nodes` which still have `Transitions` to intermediary nodes. This should not affect the accuracy of our regex engine, as `States` `4`, `5`, and `6` cannot be reached, but it does make our drawing a bit distracting.
+
+The error here is in our `state.Merge` method.
+
+```go
+// adds the transitions of other State (s2) to this State (s).
+//  
+// warning: do not use if State s2 has any incoming transitions.  
+func (s *State) merge(s2 *State) {  
+   if len(s2.incoming) != 0 {  
+      panic(fmt.Sprintf("State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v", *s2, s.incoming))  
+   }  
+  
+   for _, t := range s2.transitions {  
+      s.addTransition(t.to, t.predicate, t.debugSymbol)  
+	}
+}
+```
+
+Let's see this in a simpler example, the regex `a`.
+
+```mermaid
+graph LR 
+0((0)) --"a"--> 1((1)) 
+2((2)) --"a"--> 1((1))
+```
+
+Remember how the `compile` method of a `Group` node works? We start with a single node, which we then merge our two-state `a` FSM onto.
+
+```mermaid
+graph LR
+0((0)) -."merge".->1((0))
+1((1)) --"a"--> 2((2))
+```
+
+Becomes...
+
+```mermaid
+graph LR
+10((0)) --"a"--> 20((2))
+30((1)) --"a"--> 20((2))
+```
+
+The problem is that the transition from `1` to `2` remains, which leads to the dangling `State` `1` remaining in our drawing.
+
+Let's remove those dangling transitions.
+
+```diff
+// adds the transitions of other State (s2) to this State (s).//  
+// warning: do not use if State s2 has any incoming transitions.  
+func (s *State) merge(s2 *State) {  
+   if len(s2.incoming) != 0 {  
+      panic(fmt.Sprintf("State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v", *s2, s.incoming))  
+   }  
+  
+   for _, t := range s2.transitions {  
+      s.addTransition(t.to, t.predicate, t.debugSymbol)  
+  
++      // remove where t.to.incoming = s2  
++      t.to.incoming = filterState(t.to.incoming, s2)  
+   }  
+}  
+  
++ func filterState(states []*State, s2 *State) []*State {  
++    for i, state := range states {  
++       if s2 == state {  
++          return append(states[:i], states[i+1:]...)  
++       }  
++    }  
++    return states  
++ }
+```
+
+Running our tests now should pass, and the output of our `abc` regex FSM now looks correct.
+
+```mermaid
+graph LR 
+0((0)) --"a"--> 1((1)) 
+1((1)) --"b"--> 2((2)) 
+2((2)) --"c"--> 3((3))
+```
+Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.
+
+### A quick command line tool
+
+Let's add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let's make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.
+
+Let's setup a `main` function[^2].
+
+[2^]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call `Draw` from the `main` package.
+
+```go
+package main
+
+func main() {  
+   switch os.Args[1] {  
+   case "v5":  
+      v5.Main(os.Args[2:])  
+      return  
+   }
+}
+```
+
+```go
+package v5
+
+// Main just used for linking up the main functions
+func Main(args []string) {  
+   switch args[0] {  
+   case "draw":  
+      Draw(args[1])  
+   default:  
+      fmt.Println("command not recognized")  
+   }  
+}
+```
+
+With that, we can call `Draw` from our command. Let's test that things are set up correctly.
+
+```go
+func Draw(input string) {
+	fmt.Println("Draw called with " + input)
+}
+```
+
+We can run the program with `go run ./.. v5 draw {input}`.
+
+```zsh
+➜  search git:(master) ✗ go run ./... v5 draw "abc"
+
+Draw called with abc
+```
+
+Great, now let's make `Draw()` open a browser and display our `mermaid` code.
+
+```go
+func Draw(input string) {  
+   tokens := lex(input)  
+   parser := NewParser()  
+   ast := parser.Parse(tokens)  
+   head, _ := ast.compile()  
+  
+   stateDrawing := head.Draw()  
+  
+   t, err := template.New("graph").Parse(`  
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>  
+<script>mermaid.initialize({startOnLoad:true});  
+</script>  
+<div class="mermaid">  
+    {{ . }}</div>  
+<div>  
+<span style="white-space: pre-wrap">{{ . }}</span>  
+</div>  
+`)  
+   if err != nil {  
+      panic(err)  
+   }  
+   w := bytes.Buffer{}  
+   err = t.Execute(&w, stateDrawing)  
+   if err != nil {  
+      return  
+   }  
+  
+   reader := strings.NewReader(w.String())  
+   err = browser.OpenReader(reader)  
+   if err != nil {  
+      panic(err)  
+   }  
+   return  
+}
+```
+
+Let's try that again. It should now open a browser with a visualization of your compiled FSM! This is going to come in very handy as our program grows in complexity.
+
+That's enough for visualizations for now, we can now move onto adding new features to our regex engine.
