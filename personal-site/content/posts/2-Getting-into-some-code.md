@@ -274,7 +274,7 @@ func NewRunner(head *State) *runner {
 
 This is a simple constructor which requires that we store two pointers to the root `State`. The `head` state will remain constant incase we want to reset the `runner`. The `current` state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.
 
-{{% notice note % }} 
+{{% notice note %}} 
 This assumes that we can only be in one place at a time in our FSM, more on that later..
 {{% /notice %}}
 
