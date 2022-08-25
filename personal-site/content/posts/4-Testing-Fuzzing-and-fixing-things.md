@@ -196,13 +196,17 @@ Let's see what happens when we run this fuzz test. Use the following command lin
 go test ./src/v3/... -fuzz ^FuzzFSM$
 ```
 
-Note: Your path might be different, use the path of the package with the test and FSM implementation.
+{{% notice info %}} 
+Your path might be different, use the path of the package with the test and FSM implementation.
+{{% /notice %}} 
 
 We found an error!
 
 ## Let's get a'fixing
 
-Note: Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
+{{% notice info %}} 
+Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
+{{% /notice %}} 
 
 ```zsh
 ➜  search git:(master) ✗ go test ./src/v3/... -fuzz ^FuzzFSM$
@@ -216,7 +220,7 @@ fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 
 ```
 
-## Problem 1
+### Problem 1
 
 You should see that the fuzzer has saved this to a file at  
 ```
@@ -273,7 +277,7 @@ Notice that we need to run `testRunner.Next(character)` after the reset because 
 
 Let's run the fuzzer again.
 
-## Problem 2
+### Problem 2
 
 ```zsh
 v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
@@ -315,7 +319,7 @@ Why does this work? In the case of an empty regex, the compiler would produce a 
 
 Tests are green so back to the fuzzer.
 
-## Problem 3
+### Problem 3
 
 ```zsh
 v3_test.go:105: Mismatch - Regex: '.', Input: '' -> Go Regex Pkg: 'false', Our regex result: 'success'
@@ -350,7 +354,7 @@ f.Fuzz(func(t *testing.T, regex, input string) {
 
 Rinse. Repeat
 
-## Problem 4
+### Problem 4
 
 ```zsh
 v3_test.go:127: Mismatch - Regex: 'Ȥ', Input: 'Ȥ' -> Go Regex Pkg: 'true', Our regex result: 'false'
@@ -436,7 +440,7 @@ func lex(input string) []token {
 }
 ```
 
-## Problem 5
+### Problem 5
 
 ```zsh
 Regex: 'B' (as bytes: 42), 
@@ -535,9 +539,11 @@ if status == Fail {
 
 This means that we will test for a match on every substring of input.
 
-Note: This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
+{{% notice info %}} 
+This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
+{{% /notice %}} 
 
-## Problem 6
+### Problem 6
 
 Ok, we're starting to make progress now. Let's see our next issue.
 
@@ -602,7 +608,7 @@ func matchRegexOLD(regex, input string) bool {
 }
 ```
 
-## And then, silence...
+### And then, silence...
 
 If we run the fuzzer now, we see something like this;
 
@@ -700,4 +706,6 @@ tests := []test{
 
 We're covering a lot of cases of odd input characters, but we're missing a lot of special characters which make regex so powerful. Let's start adding them!
 
-Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v3)
+{{% notice tip %}} 
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v3)
+{{% /notice %}} 

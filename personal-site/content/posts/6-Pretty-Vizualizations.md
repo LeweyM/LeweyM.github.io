@@ -46,7 +46,9 @@ Graph LR
 	4((4)) --e--> 6((6))
 ```
 
-Note: `mermaid` is much more powerful than this and has all sorts of wild and wonderful features. Check out [the docs](https://mermaid-js.github.io/mermaid) and see.
+{{% notice info %}} 
+`mermaid` is much more powerful than this and has all sorts of wild and wonderful features. Check out [the docs](https://mermaid-js.github.io/mermaid) and see.
+{{% /notice %}} 
 
 This is simple enough, we just need to parse our `States` and `Transitions` into the numbers and arrows in the markdown above.
 
@@ -202,7 +204,9 @@ What we actually want is a generic data structure which is a set which keeps the
 
 We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both 'visited' `*States` and `Transitions`.
 
-Note: Notice that we want a set of `State` pointers, and a set of concrete `Transitions`. This is because `Transitions` contain all of their identifying information, such as their `to` and `from` states, and the predicate, as fields in the struct. `States`, on the other hand, require a reference to be identified.
+{{% notice info %}} 
+Notice that we want a set of `State` pointers, and a set of concrete `Transitions`. This is because `Transitions` contain all of their identifying information, such as their `to` and `from` states, and the predicate, as fields in the struct. `States`, on the other hand, require a reference to be identified.
+{{% /notice %}} 
 
 Before we get into the generic implementation, we need to do some refactoring of `Transition` in order to make it `comparable` in Go (not a slice, map, or function type). This means that all of its fields must also be `comparable`, and currently the `predicate` field is a function type. Let's change that now.
 

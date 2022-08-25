@@ -32,7 +32,9 @@ So, let's add these as test cases in our code.
 
 We should get one failing test.
 
-Note: Why only one? Well, this is just us getting lucky. Our current implementation doesn't recognize the `.` character, so it treats the regex as though it were `ab`. This means that the input string `abc` correctly matches the regex `ab`, but we incorrectly match the input string `ab` - which should require another character to fulfil the regex `ab.`.
+{{% notice info %}} 
+Why only one? Well, this is just us getting lucky. Our current implementation doesn't recognize the `.` character, so it treats the regex as though it were `ab`. This means that the input string `abc` correctly matches the regex `ab`, but we incorrectly match the input string `ab` - which should require another character to fulfil the regex `ab.`.
+{{% /notice %}} 
 
 As we already tokenize the `.` character in our lexer, we can move directly to the parser. Let's create a new `AST` node type to represent our wildcard.
 
@@ -183,4 +185,6 @@ Tests are green again, our fuzzer whizzes along for a few minutes without any co
 
 Next up, modifiers!
 
-Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
+{{% notice tip %}} 
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
+{{% /notice %}} 

@@ -251,9 +251,11 @@ func TestHandmadeFSM(t *testing.T) {
 
 ```
 
-Note: One might take a look at this test and say "The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another." and I would totally agree. The only reason we're getting away with it here is because our State Machines are **stateless**, meaning they don't contain any information about the state of the process. On the other hand, our `runner` instance is **stateful**, so we want to create a new instance for every test case.
+{{% notice note %}} 
+One might take a look at this test and say "The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another." and I would totally agree. The only reason we're getting away with it here is because our State Machines are **stateless**, meaning they don't contain any information about the state of the process. On the other hand, our `runner` instance is **stateful**, so we want to create a new instance for every test case.
+{{% /notice %}}
 
-Now that we have our first test, let's implement the missing methods and make these tests pass.
+ow that we have our first test, let's implement the missing methods and make these tests pass.
 
 ## Runner
 
@@ -272,7 +274,9 @@ func NewRunner(head *State) *runner {
 
 This is a simple constructor which requires that we store two pointers to the root `State`. The `head` state will remain constant incase we want to reset the `runner`. The `current` state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.
 
-Note: This assumes that we can only be in one place at a time in our FSM, more on that later..
+{{% notice note % }} 
+This assumes that we can only be in one place at a time in our FSM, more on that later..
+{{% /notice %}}
 
 Now, the `Next` method.
 
@@ -340,4 +344,6 @@ Here we're using an assumption. The assumption is; if a transition leads to no o
 
 If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!
 
-Note: Check out this part of the project on github [here](https://github.com/LeweyM/search/tree/master/src/v1)
+{{% notice tip %}} 
+Check out this part of the project on github [here](https://github.com/LeweyM/search/tree/master/src/v1)
+{{% /notice %}}

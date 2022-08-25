@@ -463,4 +463,6 @@ And with that, our tests should be green!
 
 We've now created a fully compiled - although very limited - state machine. Congrats!
 
-Note: Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v2)
+{{% notice tip %}} 
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v2)
+{{% /notice %}} 
