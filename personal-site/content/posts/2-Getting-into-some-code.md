@@ -39,6 +39,12 @@ here we're using [`rune`](https://go.dev/blog/strings) to avoid [multi-byte char
 type Predicate func(input rune) bool
 ```
 
+And let's just add one more thing, a convenience type for our `*State` which refers to a `destination`
+
+```go
+type destination *State
+```
+
 To put this all together, let's make some changes to our `State` struct definition in order to use our `Predicate` and `Transition` types.
 
 ```go
@@ -62,10 +68,11 @@ In order to use our state machine, we'll need something that can process a strin
 ```go
 type runner struct {  
    head      *State  
+   current   *State  
 }
 ```
 
-For now, all our runner needs to have is a pointer to the root (or `head`) node of our FSM.
+For now, all our runner needs to have is a pointer to the root (or `head`) node of our FSM, as well as another pointer which tracks where we are in the state machine (the red dot in our diagrams).
 
 ## Tests first
 
@@ -189,7 +196,7 @@ for _, tt := range tests {
          testRunner.Next(character)  
       }  
   
-      result := testRunner.getTotalState()  
+      result := testRunner.getStatus()  
       if tt.expectedStatus != result {  
          t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
       }  
@@ -245,7 +252,7 @@ func TestHandmadeFSM(t *testing.T) {
             testRunner.Next(character)  
          }  
   
-         result := testRunner.getTotalState()  
+         result := testRunner.getStatus()  
          if tt.expectedStatus != result {  
             t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
          }  
