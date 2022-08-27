@@ -6,7 +6,7 @@ series: ["making regex from scratch in GO"]
 So, one of the things I've wanted to play around with is search and regex. Searching through text for matches to a regular expression can be efficiently implemented using **finite state machines**.
 
 # Finite State Machines
-finite state machines are both simple and useful. The simplest definition I can think of is something like this;
+Finite state machines are both simple and useful. The simplest definition I can think of is something like this:
 
 > A finite State Machine (FSM) is a series of states. The machine start in some state, then decides the next state to go to based on some input. 
 
@@ -31,7 +31,7 @@ This is all lovely, but what can we actually do with this? We're going to use th
 
 ## Text search
 
-let's create a state machine which checks if a string matches against a simple regular expression query `abc`. This means that any string containing the substring `abc` will match. For example: 
+Let's create a state machine which checks if a string matches against a simple regular expression query `abc`. This means that any string containing the substring `abc` will match. For example: 
 - `"zabcz"` -> match
 - `"abc"` -> match
 - `"abd"` -> no match
@@ -48,7 +48,7 @@ State 1 is saying: "you've just seen `'a'`"
 State 2 is saying: "you've just seen `'ab'`"
 State 3 is saying "you've just seen `'abc'` so you're done!"
 
-let's get into these states and what they're saying a little more to try to understand all of these arrows.
+Let's get into these states and what they're saying a little more to try to understand all of these arrows.
 
 At state 0, I still haven't seen anything interesting until I see an `'a'`, that's pretty straight forward.
 

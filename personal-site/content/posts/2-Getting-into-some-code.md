@@ -29,7 +29,11 @@ type Transition struct {
 }  
 ```
 
-The `Predicate` is a simple function that takes in a character (here we're using `rune` to avoid multi-byte character issues).
+The `Predicate` is a simple function that takes in a character. 
+
+{{% notice note %}}
+here we're using [`rune`](https://go.dev/blog/strings) to avoid [multi-byte character issues](https://www.geeksforgeeks.org/rune-in-golang/)).
+{{% /notice %}}
 
 ```go
 type Predicate func(input rune) bool
