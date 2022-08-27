@@ -311,7 +311,7 @@ func (s *State) firstMatchingTransition(input rune) destination {
 }
 ```
 
-This is alse pretty simple. The function loops over the transitions of the state and returns the `destination` state of the first transition, which passes the `predicate` test function. Notice that if the state has no `transition` which matches the predicate, the function returns `nil` - this is the same as the red dot in our diagrams leaving the FSM and represents a `Fail` case.
+This is also pretty simple. The function loops over the transitions of the state and returns the `destination` state of the first transition, which passes the `predicate` test function. Notice that if the state has no `transition` which matches the predicate, the function returns `nil` - this is the same as the red dot in our diagrams leaving the FSM and represents a `Fail` case.
 
 Finally, we just need to determine the status of the FSM at any time.
 
