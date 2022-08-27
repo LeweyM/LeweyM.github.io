@@ -10,7 +10,7 @@ We can first think about our core data structures to represent the FSM. The FSM 
 
 ```go
 type State struct {  
-	connectedStates []State  
+	connectedStates []*State  
 }
 ```
 
@@ -32,14 +32,14 @@ type Transition struct {
 The `Predicate` is a simple function that takes in a character. 
 
 {{% notice note %}}
-here we're using [`rune`](https://go.dev/blog/strings) to avoid [multi-byte character issues](https://www.geeksforgeeks.org/rune-in-golang/)).
+here we're using [`rune`](https://go.dev/blog/strings) to avoid [multi-byte character issues](https://www.geeksforgeeks.org/rune-in-golang/).
 {{% /notice %}}
 
 ```go
 type Predicate func(input rune) bool
 ```
 
-Putting that together;
+To put this all together, let's make some changes to our `State` struct definition in order to use our `Predicate` and `Transition` types.
 
 ```go
 type Predicate func(input rune) bool
@@ -57,7 +57,7 @@ type State struct {
 
 ## Running Our State machine
 
-Inorder to use our state machine, we'll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we'll call this a **Runner**.
+In order to use our state machine, we'll need something that can process a string by running through the states, and that can give information on matches. As this is an object that runs through our state machine, we'll call this a **Runner**.
 
 ```go
 type runner struct {  
@@ -71,7 +71,7 @@ For now, all our runner needs to have is a pointer to the root (or `head`) node 
 
 We'll be following TDD principles when convenient in order to make sure things are working as expected (and because, personally, I find it more fun). As we now have our fundamental objects mapped out, we can now start writing some tests.
 
-Our first test will check the behaviour of a simple FSM which represents the regex expression `abc`. The first thing to do is contruct the FSM. We'll do this 'by hand' for now, and later we'll work on a **compiler** that can take a string like `"abc"` and build an FSM automatically.
+Our first test will check the behaviour of a simple FSM which represents the regex expression `abc`. The first thing to do is construct the FSM. We'll do this 'by hand' for now, and later we'll work on a **compiler** that can take a string like `"abc"` and build an FSM automatically.
 
 ```go
 func TestHandmadeFSM(t *testing.T) {
@@ -121,7 +121,7 @@ startState.transitions = append(startState.transitions, Transition{
 })  
 ```
 
-Same goes for the remaining states.
+The same goes for the remaining states.
 
 ```go
 	stateA.transitions = append(stateA.transitions, Transition{  
@@ -142,7 +142,7 @@ The outcome of running a string through an FSM should result in one of 3 statuse
 2. `Success`. The FSM has found a match.
 3. `fail`. The FSM has found that the string does not match.
 
-We can define these as consts of a specific type.
+We can define these as constants of a specific type.
 
 ```go
 type Status string  
@@ -154,14 +154,14 @@ const (
 )
 ```
 
-With that in mind we can think of a few cases to test our FSM and runner logic;
+With that in mind, we can think of a few cases to test our FSM and runner logic;
 
-- `""` -> `normal`
-- `"xxx"` -> `fail`
-- `"abc"` -> `success` 
-- `"ab"` -> `normal` 
+- `""` → `normal`
+- `"xxx"` → `fail`
+- `"abc"` → `success` 
+- `"ab"` → `normal` 
 
-Writing these up into table-style tests we get the following;
+Writing these up into table-style tests, we get the following;
 
 ```go
 type test struct {  
@@ -256,10 +256,10 @@ func TestHandmadeFSM(t *testing.T) {
 ```
 
 {{% notice note %}} 
-One might take a look at this test and say "The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another." and I would totally agree. The only reason we're getting away with it here is because our State Machines are **stateless**, meaning they don't contain any information about the state of the process. On the other hand, our `runner` instance is **stateful**, so we want to create a new instance for every test case.
+One might take a look at this test and say, "The states are being instantiated once and then used in every test. This is a bad practice as one test might affect the outcome of another." and I would totally agree. The only reason we're getting away with it here is because our State Machines are **stateless**, meaning they don't contain any information about the state of the process. On the other hand, our `runner` instance is **stateful**, so we want to create a new instance for every test case.
 {{% /notice %}}
 
-ow that we have our first test, let's implement the missing methods and make these tests pass.
+Now that we have our first test, let's implement the missing methods and make these tests pass.
 
 ## Runner
 
@@ -276,7 +276,7 @@ func NewRunner(head *State) *runner {
 }
 ```
 
-This is a simple constructor which requires that we store two pointers to the root `State`. The `head` state will remain constant incase we want to reset the `runner`. The `current` state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.
+This is a simple constructor which requires that we store two pointers to the root `State`. The `head` state will remain constant in case we want to reset the `runner`. The `current` state will represent where we are in the FSM, as represented by the red dot in our state machine diagrams.
 
 {{% notice note %}} 
 This assumes that we can only be in one place at a time in our FSM, more on that later..
@@ -311,7 +311,7 @@ func (s *State) firstMatchingTransition(input rune) destination {
 }
 ```
 
-This is pretty simple also. The function loops over the transitions of the state and returns the `destination` state of the first transition which passes the `predicate` test function. Notice that if the state has no `transition` which matches the predicate, the function returns `nil` - this is the same as the red dot in our diagrams leaving the FSM and represents a `Fail` case.
+This is alse pretty simple. The function loops over the transitions of the state and returns the `destination` state of the first transition, which passes the `predicate` test function. Notice that if the state has no `transition` which matches the predicate, the function returns `nil` - this is the same as the red dot in our diagrams leaving the FSM and represents a `Fail` case.
 
 Finally, we just need to determine the status of the FSM at any time.
 
@@ -344,7 +344,7 @@ func (s *State) isSuccessState() bool {
 }
 ```
 
-Here we're using an assumption. The assumption is; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it's useful for now.
+Here we're making an assumption; if a transition leads to no other states, we can consider it a success state. This is not strictly true, but it's useful for now.
 
 If we run the tests again, they should now be green! We now have a working, although pretty simple, finite state machine regex processor!
 
