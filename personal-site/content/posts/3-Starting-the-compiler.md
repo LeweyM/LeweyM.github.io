@@ -152,7 +152,7 @@ Let's create two structs to represent these nodes.
 
 ```go
 type Group struct {  
-   ChildNodes []Ast  
+   ChildNodes []Node  
 }  
   
 type CharacterLiteral struct {  
@@ -183,7 +183,7 @@ func (g *Group) compile() (head *State, tail *State) {
    panic("implement me")
 }  
   
-func (l *CharacterLiteral) compile() (head *State, tail *State) {  
+func (l CharacterLiteral) compile() (head *State, tail *State) {  
    panic("implement me") 
 }
 ```
