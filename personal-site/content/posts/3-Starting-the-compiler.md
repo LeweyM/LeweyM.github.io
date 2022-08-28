@@ -36,13 +36,29 @@ Once we have our `tokens`, we want to build something called an 'Abstract Syntax
 
 An example of the structure of regular expression `(cat)` might look like this;
 
-![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
+
+```mermaid
+graph TD
+0(Group) --> 1[c]
+0(Group) --> 2[a]
+0(Group) --> 3[t]
+```
 
 This tree shows the relationship between a `group` (whatever is inside the parenthesis) and the three `char` literals which make up the expression `cat`. To simplify things, we're going to imagine that all regular expressions exist inside a top-level `group`, so `cat` is equivalent to `(cat)`. 
 
 This hierarchy can become more complicated when things like nested groups or `branches` are involved. For example, the `AST` for `(ca(r|t)s)` looks like this;
 
-![Pasted-image-20220807173959.png](/img/Pasted-image-20220807173959.png)
+```mermaid
+graph TD
+
+10(Group) --> 11[c]
+10(Group) --> 21[a]
+10(Group) --> 31(Group)
+31(Group) --> 32(Branch)
+32 --> 41[r]
+32 --> 42[t]
+10(Group) --> 51[s]
+```
 
 The important thing to know about this step is that here we are describing the **structure** of the expression, and that this structure is **recursive**. We can isolate any node and process its children, without needing knowledge from elsewhere in the tree. In other words, each **subtree** can be treated in the same way as the **tree**, which is very useful in reducing complexity. 
 
@@ -144,7 +160,15 @@ For our simple example of parsing the regular expression `abc`, we just need two
 
 Let's remind ourselves quickly of how these AST nodes relate to each other with our `AST` diagram.
 
-![Pasted-image-20220807173722.png](/img/Pasted-image-20220807173722.png)
+
+
+```mermaid
+graph TD
+0(Group) --> 1[c]
+0(Group) --> 2[a]
+0(Group) --> 3[t]
+```
+```
 
 A `group` **contains** three child nodes. The child nodes are `characterLiterals` and are the **leaf nodes** of the tree.
 
