@@ -213,7 +213,6 @@ Take the string abc and create a linked list of 'states' with conditional transi
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   for _, tt := range tests {  
 </span></span><span style=display:flex><span>      t.Run(tt.name, func(t *testing.T) {  
-</span></span><span style=display:flex><span>         testRunner := NewRunner(startState)  
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-        testRunner := NewRunner(&amp;startState)
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+        testRunner := NewRunner(startState)
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>  
