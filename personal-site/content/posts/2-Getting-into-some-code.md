@@ -110,6 +110,16 @@ First, let's remind ourselves of the FSM structure for the regex `abc`
 
 ![Pasted-image-20220710201842.png](/img/Pasted-image-20220710201842.png)
 
+```mermaid
+graph LR
+	0((0)) --a--> 1((1))
+	1((1)) --b--> 2((2))
+	2((2)) --c--> 3((3))
+
+	style 0 fill:#ff0000;
+```
+
+
 There are 4 states which we have to define first.
 
 ```go

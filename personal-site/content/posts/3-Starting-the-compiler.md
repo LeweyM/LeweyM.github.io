@@ -442,7 +442,6 @@ Before we get ahead of ourselves, let's modify our tests to use our new lexer, p
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-         testRunner := NewRunner(startState)  
 -        testRunner := NewRunner(&startState)
 +        testRunner := NewRunner(startState)
   
