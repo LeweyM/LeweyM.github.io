@@ -168,8 +168,6 @@ graph TD
 0(Group) --> 2[a]
 0(Group) --> 3[t]
 ```
-```
-
 A `group` **contains** three child nodes. The child nodes are `characterLiterals` and are the **leaf nodes** of the tree.
 
 Let's create two structs to represent these nodes.
