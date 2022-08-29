@@ -304,25 +304,21 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When merging transitions, we want to;</p><ol><li>copy the transitions from <code>State 1</code> to <code>State 0</code></li><li>delete <code>State 1</code></li></ol><p>Let&rsquo;s create a couple of methods on the <code>State</code> struct to delete a node. In our context, &lsquo;deleting&rsquo; means removing all the incoming and outgoing transitions<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#0086b3>delete</span>() {  
 </span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 1. remove s from incoming of connected nodes.  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s.transitions {  
-</span></span><span style=display:flex><span>      (<span style=color:#000;font-weight:700>*</span>State)(t.to).<span style=color:#900;font-weight:700>removeIncoming</span>(s)  
+</span></span><span style=display:flex><span>	  t.to.<span style=color:#900;font-weight:700>removeIncoming</span>(s)
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 2. remove the outgoing transitions  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   s.transitions = <span style=color:#000;font-weight:700>nil</span>  
-</span></span><span style=display:flex><span>}  
-</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>} 
+</span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>removeIncoming</span>(target <span style=color:#000;font-weight:700>*</span>State) {  
-</span></span><span style=display:flex><span>   s.incoming = <span style=color:#900;font-weight:700>filterState</span>(s.incoming, target)  
-</span></span><span style=display:flex><span>}  
-</span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>filterState</span>(states []<span style=color:#000;font-weight:700>*</span>State, s2 <span style=color:#000;font-weight:700>*</span>State) []<span style=color:#000;font-weight:700>*</span>State {  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>var</span> result []<span style=color:#000;font-weight:700>*</span>State  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, state <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> states {  
-</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> s2 <span style=color:#000;font-weight:700>!=</span> state {  
-</span></span><span style=display:flex><span>         result = <span style=color:#0086b3>append</span>(result, state)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>var</span> newIncoming []<span style=color:#000;font-weight:700>*</span>State  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, state <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s.incoming {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> target <span style=color:#000;font-weight:700>!=</span> state {  
+</span></span><span style=display:flex><span>         newIncoming = <span style=color:#0086b3>append</span>(newIncoming, state)  
 </span></span><span style=display:flex><span>      }  
 </span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> result  
+</span></span><span style=display:flex><span>   s.incoming = newIncoming  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>And now let&rsquo;s delete our extra <code>State</code> after the merge is complete.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>func (s *State) merge(s2 *State) {  
 </span></span><span style=display:flex><span>		// [...]  
