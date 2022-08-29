@@ -11,7 +11,9 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>	3((3)) --c--&gt;
 </span></span><span style=display:flex><span>	4((4)) --d--&gt; 5((5))
 </span></span><span style=display:flex><span>	4((4)) --e--&gt; 6((6))
-</span></span></code></pre></div><div class="notices info"><p><code>mermaid</code> is much more powerful than this and has all sorts of wild and wonderful features. Check out <a href=https://mermaid-js.github.io/mermaid>the docs</a> and see.</p></div><p>This is simple enough, we just need to parse our <code>States</code> and <code>Transitions</code> into the numbers and arrows in the markdown above.</p><p>As always, let&rsquo;s start with some tests to help define our objective.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>TestState_Draw</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
+</span></span></code></pre></div><div class="notices info"><p><code>mermaid</code> is much more powerful than this and has all sorts of wild and wonderful features. Check out <a href=https://mermaid-js.github.io/mermaid>the docs</a> and see.</p></div><p>This is simple enough, we just need to parse our <code>States</code> and <code>Transitions</code> into the numbers and arrows in the markdown above.</p><p>As always, let&rsquo;s start with some tests to help define our objective.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw_test.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>TestState_Draw</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>type</span> test <span style=color:#000;font-weight:700>struct</span> {  
 </span></span><span style=display:flex><span>      input, expected <span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>   }  
@@ -48,8 +50,12 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>         }  
 </span></span><span style=display:flex><span>      })  
 </span></span><span style=display:flex><span>   }
-</span></span></code></pre></div><p>This test is pretty straight forward, let&rsquo;s just zoom in on a couple of things.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>drawing <span style=color:#000;font-weight:700>:=</span> fsm.<span style=color:#900;font-weight:700>Draw</span>()  
-</span></span></code></pre></div><p>This is what we want to produce. It&rsquo;s a new method on the <code>State</code> struct, which will produce a <code>string</code> with the lines and numbers needed for our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>   tests <span style=color:#000;font-weight:700>:=</span> []test{  
+</span></span></code></pre></div><p>This test is pretty straight forward, let&rsquo;s just zoom in on a couple of things.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw_test.go 
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span>drawing <span style=color:#000;font-weight:700>:=</span> fsm.<span style=color:#900;font-weight:700>Draw</span>()  
+</span></span></code></pre></div><p>This is what we want to produce. It&rsquo;s a new method on the <code>State</code> struct, which will produce a <code>string</code> with the lines and numbers needed for our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw_test.go 
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span>   tests <span style=color:#000;font-weight:700>:=</span> []test{  
 </span></span><span style=display:flex><span>      {  
 </span></span><span style=display:flex><span>         input: <span style=color:#d14>&#34;abc&#34;</span>,  
 </span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
@@ -113,7 +119,7 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>false</span>  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>And let&rsquo;s make a few changes so that our problem compiles.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span> func (s *State) firstMatchingTransition(input rune) destination {
+</span></span></code></pre></div><p>And let&rsquo;s make a few changes so that our problem compiles.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span> func (s *State) firstMatchingTransition(input rune) *State {
 </span></span><span style=display:flex><span>        for _, t := range s.transitions {
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               if t.predicate.test(input) {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span><span style=color:#000;background-color:#fdd>-               if t.predicate(input) {
@@ -295,49 +301,46 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 0((0)) -."merge".->1((0))
 1((1)) --"a"--> 2((2))</div><p>Becomes&mldr;</p><div class=mermaid>graph LR
 10((0)) --"a"--> 20((2))
-30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When merging transitions, we want to;</p><ol><li>copy the transitions from <code>State 1</code> to <code>State 0</code></li><li>remove those transitions from <code>State 1</code></li></ol><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>// adds the transitions of other State (s2) to this State (s).//  
-</span></span><span style=display:flex><span>// warning: do not use if State s2 has any incoming transitions.  
-</span></span><span style=display:flex><span>func (s *State) merge(s2 *State) {  
-</span></span><span style=display:flex><span>   if len(s2.incoming) != 0 {  
-</span></span><span style=display:flex><span>      panic(fmt.Sprintf(&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;, *s2, s.incoming))  
+30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When merging transitions, we want to;</p><ol><li>copy the transitions from <code>State 1</code> to <code>State 0</code></li><li>delete <code>State 1</code></li></ol><p>Let&rsquo;s create a couple of methods on the <code>State</code> struct to delete a node. In our context, &lsquo;deleting&rsquo; means removing all the incoming and outgoing transitions<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#0086b3>delete</span>() {  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 1. remove s from incoming of connected nodes.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s.transitions {  
+</span></span><span style=display:flex><span>      (<span style=color:#000;font-weight:700>*</span>State)(t.to).<span style=color:#900;font-weight:700>removeIncoming</span>(s)  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   for _, t := range s2.transitions {  
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     // 1. copy s2 transitions to s
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>	  s.addTransition(t.to, t.predicate, t.debugSymbol)  
-</span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     // 2. remove s2 transitions  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     s2.removeTransition(t)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 2. remove the outgoing transitions  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   s.transitions = <span style=color:#000;font-weight:700>nil</span>  
 </span></span><span style=display:flex><span>}  
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ func (s *State) removeTransition(target Transition) {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    newTransitions := []Transition{}  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    // 1. remove the target transition from s  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    for _, transition := range s.transitions {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if transition == target {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+          newTransitions = append(newTransitions, transition)  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    }  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    s.transitions = newTransitions  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    // 2. remove s from transition destination incoming states  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    target.to.incoming = filterState(target.to.incoming, target.from)  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ }
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>  
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ func filterState(states []*State, s2 *State) []*State {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    for i, state := range states {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if s2 == state {  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+          return append(states[:i], states[i+1:]...)  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    }  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+    return states  
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+ }
-</span></span></span></code></pre></div><p>Now, running our tests should pass, and the output of our <code>abc</code> regex FSM should look correct.</p><div class=mermaid>graph LR
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>removeIncoming</span>(target <span style=color:#000;font-weight:700>*</span>State) {  
+</span></span><span style=display:flex><span>   s.incoming = <span style=color:#900;font-weight:700>filterState</span>(s.incoming, target)  
+</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>filterState</span>(states []<span style=color:#000;font-weight:700>*</span>State, s2 <span style=color:#000;font-weight:700>*</span>State) []<span style=color:#000;font-weight:700>*</span>State {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>var</span> result []<span style=color:#000;font-weight:700>*</span>State  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, state <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> states {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> s2 <span style=color:#000;font-weight:700>!=</span> state {  
+</span></span><span style=display:flex><span>         result = <span style=color:#0086b3>append</span>(result, state)  
+</span></span><span style=display:flex><span>      }  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> result  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And now let&rsquo;s delete our extra <code>State</code> after the merge is complete.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>func (s *State) merge(s2 *State) {  
+</span></span><span style=display:flex><span>		// [...]  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>        for _, t := range s2.transitions {
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               // 1. copy s2 transitions to s
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                s.addTransition(t.to, t.predicate, t.debugSymbol)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       // 2. remove s2
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       s2.delete()
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}  
+</span></span></code></pre></div><p>Now, running our tests should pass, and the output of our <code>abc</code> regex FSM should look correct.</p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
-2((2)) --"c"--> 3((3))</div><p>Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.</p><h2 id=a-quick-command-line-tool>A quick command line tool</h2><p>Let&rsquo;s add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let&rsquo;s make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.</p><p>Let&rsquo;s set up a <code>main</code> function<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> main
+2((2)) --"c"--> 3((3))</div><p>Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.</p><h2 id=a-quick-command-line-tool>A quick command line tool</h2><p>Let&rsquo;s add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let&rsquo;s make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.</p><p>Let&rsquo;s set up a <code>main</code> function<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> main
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>main</span>() {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>switch</span> os.Args[<span style=color:#099>1</span>] {  
@@ -400,5 +403,5 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span></code></pre></div><p>Let&rsquo;s try that again. It should now open a browser with a visualization of your compiled FSM!</p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
-2((2)) --"c"--> 3((3))</div><p>That&rsquo;s better. This tool is going to come in very handy as our program grows in complexity.</p><p>That&rsquo;s enough for visualizations for now, we can now move onto adding new features to our regex engine.</p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the <code>comparable</code> interface. So far, generics are still tricky to make work in Go, but it&rsquo;s still early days.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p>I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call <code>Draw</code> from the <code>main</code> package.&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><p>Previous: <a href=/posts/5-wildcards/>5 Wildcards</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
+2((2)) --"c"--> 3((3))</div><p>That&rsquo;s better. This tool is going to come in very handy as our program grows in complexity.</p><p>That&rsquo;s enough for visualizations for now, we can now move onto adding new features to our regex engine.</p><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the <code>comparable</code> interface. So far, generics are still tricky to make work in Go, but it&rsquo;s still early days.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p>Technically it&rsquo;s not really being deleted as it will still exist in memory. However, as we have removed all pointers to and from the <code>State</code>, it will not have any effect on our program, and it will eventually be removed by the garbage collector.&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3><p>I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call <code>Draw</code> from the <code>main</code> package.&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><p>Previous: <a href=/posts/5-wildcards/>5 Wildcards</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
 <script>mermaid.initialize({startOnLoad:!0})</script></body></html>
