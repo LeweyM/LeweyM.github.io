@@ -55,6 +55,8 @@ This is simple enough, we just need to parse our `States` and `Transitions` into
 As always, let's start with some tests to help define our objective.
 
 ```go
+// draw_test.go
+
 func TestState_Draw(t *testing.T) {  
    type test struct {  
       input, expected string  
@@ -97,12 +99,16 @@ func TestState_Draw(t *testing.T) {
 This test is pretty straight forward, let's just zoom in on a couple of things.
 
 ```go
+// draw_test.go 
+
 drawing := fsm.Draw()  
 ```
 
 This is what we want to produce. It's a new method on the `State` struct, which will produce a `string` with the lines and numbers needed for our `mermaid` markdown.
 
 ```go
+// draw_test.go 
+
    tests := []test{  
       {  
          input: "abc",  
@@ -242,7 +248,7 @@ func (p Predicate) test(input rune) bool {
 And let's make a few changes so that our problem compiles.
 
 ```diff
- func (s *State) firstMatchingTransition(input rune) destination {
+ func (s *State) firstMatchingTransition(input rune) *State {
         for _, t := range s.transitions {
 +               if t.predicate.test(input) {
 -               if t.predicate(input) {
@@ -506,48 +512,53 @@ The problem is that the transition from `1` to `2` remains, which leads to the d
 
 Let's remove those dangling transitions. When merging transitions, we want to;
 1. copy the transitions from `State 1` to `State 0`
-2. remove those transitions from `State 1`
+2. delete `State 1`
 
-```diff
-// adds the transitions of other State (s2) to this State (s).//  
-// warning: do not use if State s2 has any incoming transitions.  
-func (s *State) merge(s2 *State) {  
-   if len(s2.incoming) != 0 {  
-      panic(fmt.Sprintf("State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v", *s2, s.incoming))  
+Let's create a couple of methods on the `State` struct to delete a node. In our context, 'deleting' means removing all the incoming and outgoing transitions[^gc].
+[^gc]: Technically it's not really being deleted as it will still exist in memory. However, as we have removed all pointers to and from the `State`, it will not have any effect on our program, and it will eventually be removed by the garbage collector.
+
+```go
+func (s *State) delete() {  
+   // 1. remove s from incoming of connected nodes.  
+   for _, t := range s.transitions {  
+      (*State)(t.to).removeIncoming(s)  
    }  
   
-   for _, t := range s2.transitions {  
-+     // 1. copy s2 transitions to s
-	  s.addTransition(t.to, t.predicate, t.debugSymbol)  
+   // 2. remove the outgoing transitions  
+   s.transitions = nil  
+}  
   
-+     // 2. remove s2 transitions  
-+     s2.removeTransition(t)
+func (s *State) removeIncoming(target *State) {  
+   s.incoming = filterState(s.incoming, target)  
+}  
+  
+func filterState(states []*State, s2 *State) []*State {  
+   var result []*State  
+   for _, state := range states {  
+      if s2 != state {  
+         result = append(result, state)  
+      }  
+   }  
+   return result  
+}
+```
+
+And now let's delete our extra `State` after the merge is complete.
+
+```diff 
+func (s *State) merge(s2 *State) {  
+		// [...]  
+  
+        for _, t := range s2.transitions {
++               // 1. copy s2 transitions to s
+                s.addTransition(t.to, t.predicate, t.debugSymbol)
+        }
++
++       // 2. remove s2
++       s2.delete()
+
    }  
 }  
-
-+ func (s *State) removeTransition(target Transition) {  
-+    newTransitions := []Transition{}  
-+   
-+    // 1. remove the target transition from s  
-+    for _, transition := range s.transitions {  
-+       if transition == target {  
-+          newTransitions = append(newTransitions, transition)  
-+       }  
-+    }  
-+    s.transitions = newTransitions  
-+   
-+    // 2. remove s from transition destination incoming states  
-+    target.to.incoming = filterState(target.to.incoming, target.from)  
-+ }
-  
-+ func filterState(states []*State, s2 *State) []*State {  
-+    for i, state := range states {  
-+       if s2 == state {  
-+          return append(states[:i], states[i+1:]...)  
-+       }  
-+    }  
-+    return states  
-+ }
 ```
 
 Now, running our tests should pass, and the output of our `abc` regex FSM should look correct.

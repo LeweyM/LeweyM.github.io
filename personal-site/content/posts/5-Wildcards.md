@@ -15,6 +15,8 @@ The `.` character in a regular expression will match any character. To make this
 So, let's add these as test cases in our code.
 
 ```diff
+@@ // fsm_test.go
+
                 {"nested expressions", "a(b(d))c", "abdc"},
                 {"substring match with reset needed", "aA", "aaA"},
                 {"substring match without reset needed", "B", "ABA"},
@@ -39,6 +41,8 @@ Why only one? Well, this is just us getting lucky. Our current implementation do
 As we already tokenize the `.` character in our lexer, we can move directly to the parser. Let's create a new `AST` node type to represent our wildcard.
 
 ```diff
+@@ // ast.go
+
  type CharacterLiteral struct {
         Character rune
  }
@@ -54,6 +58,8 @@ As we already tokenize the `.` character in our lexer, we can move directly to t
 Before we implement the parser logic, let's add a case for it to our parser tests.
 
 ```diff
+@@ // parser_test.go
+
         tests := []test{
                 {name: "simple string", input: "aBc", expectedResult: &Group{
                         ChildNodes: []Node{
@@ -75,6 +81,8 @@ Before we implement the parser logic, let's add a case for it to our parser test
 The implementation should be quite similar to the `CharacterLiteral` parser implementation.
 
 ```diff
+@@ // parser.go
+
  func (p *Parser) Parse(tokens []token) Node {
         p.pushNewGroup()
  
@@ -98,7 +106,7 @@ The implementation should be quite similar to the `CharacterLiteral` parser impl
 With our parser tests green again, we can implement the `compile` method. This will also be quite similar to the `CharacterLiteral`. The only difference is that the `WildcardLiteral` predicate will return `true` for every rune.
 
 ```diff
-@@ Compiler methods
+@@ // parser.go
  
  func (l CharacterLiteral) compile() (head *State, tail *State) {
         startingState := State{}
@@ -122,6 +130,8 @@ And that's all there is to it! All of our tests should now be green, and we can 
 The only thing left to do is to remove our filter of `.` characters in our fuzz tests and to check that the fuzzer can't find any breaking inputs.
 
 ```diff
+@@ // fsm_test.go
+
  func FuzzFSM(f *testing.F) {
         f.Add("abc", "abc")
         f.Add("abc", "")
@@ -158,6 +168,7 @@ Again, our fuzzer has uncovered some very interesting behavior of regular expres
 To make clearer what's going on here, let's add a test.
 
 ```diff
+@@ // fsm_test.go
                 // wildcard
                 {"wildcard regex matching", "ab.", "abc"},
                 {"wildcard regex not matching", "ab.", "ab"},
@@ -171,6 +182,8 @@ This can actually be disabled in most regex flavors with the `singleline` option
 The fix is simple.
 
 ```diff
+@@ // ast.go
+
 func (w WildcardLiteral) compile() (head *State, tail *State) {
         startingState := State{}
         endState := State{}

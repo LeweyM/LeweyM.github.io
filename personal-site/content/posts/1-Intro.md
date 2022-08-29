@@ -14,13 +14,6 @@ One of the cool things about FSMs is that they can be drawn as lovely little cir
 
 ![Pasted-image-20220119151322.png](/img/Pasted-image-20220119151322.png)
 
-```mermaid
-graph LR
-	0((0)) 
-
-	style 0 fill:#ff0000;
-```
-
 This is the simplest. It's just a single state. The red circle in the middle means that we're currently in that state, although that doesn't tell us much yet...
 
 For this to be useful, we need more than one state.
@@ -28,12 +21,6 @@ For this to be useful, we need more than one state.
 
 ![Pasted-image-20220119151437.png](/img/Pasted-image-20220119151437.png)
 
-```mermaid
-graph LR
-	0((0)) --c--> 1((1))
-
-	style 0 fill:#ff0000;
-```
 
 This a two state system. Starting from the state on the left - we'll call it `state[0]` - we travel to the state on the right - `state[1]` - only if we see the character `c`.
 
@@ -55,14 +42,6 @@ The finite state machine which represents this regular expression is as follows:
 
 ![Pasted-image-20220710201842.png](/img/Pasted-image-20220710201842.png)
 
-```mermaid
-graph LR
-	0((0)) --a--> 1((1))
-	1((1)) --b--> 2((2))
-	2((2)) --c--> 3((3))
-
-	style 0 fill:#ff0000;
-```
 
 let's break this down a bit. Really, each state is saying something.
 
@@ -79,39 +58,13 @@ At state 1, I know that the first character I saw as `'a'`
 
 ![Pasted-image-20220710202102.png](/img/Pasted-image-20220710202102.png)
 
-```mermaid
-graph LR
-	0((0)) --a--> 1((1))
-	1((1)) --b--> 2((2))
-	2((2)) --c--> 3((3))
-
-	style 1 fill:#ff0000;
-```
 
 At state 2 we're saying "you've just seen `'ab'`.
 
 ![Pasted-image-20220710202144.png](/img/Pasted-image-20220710202144.png)
 
-```mermaid
-graph LR
-	0((0)) --a--> 1((1))
-	1((1)) --b--> 2((2))
-	2((2)) --c--> 3((3))
-
-	style 2 fill:#ff0000;
-```
-
 And at state 3, we know we've seen `'abc'`, so we don't want to do anything from here!
 
 ![Pasted-image-20220710202159.png](/img/Pasted-image-20220710202159.png)
-
-```mermaid
-graph LR
-	0((0)) --a--> 1((1))
-	1((1)) --b--> 2((2))
-	2((2)) --c--> 3((3))
-
-	style 3 fill:#ff0000;
-```
 
 That's really all there is to it. The interesting thing is how we can combine arrows and circles to create FSM that can represent complex regular expressions.

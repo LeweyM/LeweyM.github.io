@@ -36,7 +36,6 @@ Once we have our `tokens`, we want to build something called an 'Abstract Syntax
 
 An example of the structure of regular expression `(cat)` might look like this;
 
-
 ```mermaid
 graph TD
 0(Group) --> 1[c]
@@ -87,6 +86,8 @@ For simplicity, we're not going to support escaped characters such as `\?`. Any 
 Let's define these special characters as `symbols`.
 
 ```go
+// lexer.go
+
 type symbol int
 
 const (
@@ -106,6 +107,8 @@ Notice we also include the symbol `character` which represents any character whi
 Using these `symbols`, we can create a `token` struct which contains information on the type of symbol, and the character itself, if necessary.
 
 ```go
+// lexer.go
+
 type token struct {  
    symbol symbol  
    letter rune  
@@ -115,6 +118,8 @@ type token struct {
 Now we simply need to loop through the regular expression string and map the characters to our tokens.
 
 ```go
+// lexer.go
+
 func lex(input string) []token {  
    var tokens []token  
    i := 0  
@@ -160,8 +165,6 @@ For our simple example of parsing the regular expression `abc`, we just need two
 
 Let's remind ourselves quickly of how these AST nodes relate to each other with our `AST` diagram.
 
-
-
 ```mermaid
 graph TD
 0(Group) --> 1[c]
@@ -173,6 +176,8 @@ A `group` **contains** three child nodes. The child nodes are `characterLiterals
 Let's create two structs to represent these nodes.
 
 ```go
+// ast.go
+
 type Group struct {  
    ChildNodes []Node  
 }  
@@ -185,6 +190,8 @@ type CharacterLiteral struct {
 We'll need a way to add child nodes to the `Group` struct, so let's add a simple method for that.
 
 ```go
+// ast.go
+
 func (g *Group) Append(node Node) {  
    g.ChildNodes = append(g.ChildNodes, node)  
 }
@@ -193,6 +200,8 @@ func (g *Group) Append(node Node) {
 And we want all nodes to be compilable, although we'll get to actually *how* to compile them a bit later. Let's use an interface to show that they share this functionality.
 
 ```go
+// ast.go
+
 type Node interface {  
    compile() (head *State, tail *State)  
 }
@@ -201,6 +210,8 @@ type Node interface {
 And we'll leave these methods unimplemented for now
 
 ```go
+// ast.go
+
 func (g *Group) compile() (head *State, tail *State) {  
    panic("implement me")
 }  
@@ -213,6 +224,8 @@ func (l CharacterLiteral) compile() (head *State, tail *State) {
 Finally, let's use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just `group`.
 
 ```go
+// ast.go
+
 type CompositeNode interface {  
    Node  
    Append(node Node)  
@@ -226,6 +239,8 @@ Ok, now we have our `AST` nodes defined, let's take a look at how to parse a str
 Building the parser is going to be one of the more complex pieces of this project, so it helps to have tests just for this. Let's start with a simple test to make it clear what we're trying to produce.
 
 ```go
+// parser_test.go
+
 func TestParser(t *testing.T) {  
    type test struct {  
       name, input    string  
@@ -260,6 +275,8 @@ func TestParser(t *testing.T) {
 So, in our `simple string` test, we're using as an input the string `aBc` and we hope to create the following `Group` struct:
 
 ```go
+// parser_test.go
+
 &Group{  
 	ChildNodes: []Node{  
 		CharacterLiteral{Character: 'a'},  
@@ -272,6 +289,8 @@ So, in our `simple string` test, we're using as an input the string `aBc` and we
 Parsing such a simple example is very easy - we would simply initialize a new `Group`, then loop over the characters and append them to the `Group`. As we have no other `compositeNodes`, this will be enough for now.
 
 ```go
+// parser.go
+
 type Parser struct { }  
   
 func NewParser() *Parser {  
@@ -320,6 +339,8 @@ That's really all there is to it. It's a two `State` system with a single transi
 Let's encode this behavior in the `Compile` method of the `CharacterLiteral` node object.
 
 ```go
+// ast.go
+
 func (l CharacterLiteral) compile() (head *State, tail *State) {
 	// create the first state
 	startingState := State{} 
@@ -363,8 +384,13 @@ Let's add this to the `Compile` method of the `Group` struct. This will be a bit
 
 First, let's build a starting `State` for this FSM.
 
-```
-startState := State{}  
+```go
+// ast.go
+
+func (g *Group) compile() (head *State, tail *State) {  
+   startState := State{}  
+   // [...]
+} 
 ```
 
 Next, we want to loop over the child nodes and do the following;
@@ -374,27 +400,11 @@ Next, we want to loop over the child nodes and do the following;
 
 The third step is important as it tells us which state we need to merge next in the iteration, and allows the FSM to grow to the right, as in the diagrams.
 
-In code, the loop looks like so;
-
-```go
-// 0. mark the tail of the startState as the current tail to prepare the iteration.
-currentTail := &startState  
-  
-for _, expression := range g.ChildNodes {  
-	// 1. compile the child node
-	nextStateHead, nextStateTail := expression.compile()  
-	
-	// 2. merge the tail of the first node with the head of the second node
-	currentTail.merge(nextStateHead)  
-	
-	// 3. mark the tail of the second node as the new tail
-	currentTail = nextStateTail  
-}
-```
-
 Putting this all together, we have the following `Compile` function;
 
 ```go 
+// ast.go
+
 func (g *Group) compile() (head *State, tail *State) {  
    startState := State{}  
    currentTail := &startState  
@@ -420,6 +430,8 @@ Having this separation of concerns will make life a lot easier for use when we i
 Before we get ahead of ourselves, let's modify our tests to use our new lexer, parser, and compile methods to generate our FSM, instead of using the hand-made FSM from our previous tests.
 
 ```diff
+@@ // parser_test.go
+
 - func TestHandmadeFSM(t *testing.T) {  
 + func TestCompiledFSM(t *testing.T) {  
 -  // handMade
