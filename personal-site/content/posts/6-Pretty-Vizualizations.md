@@ -1041,7 +1041,7 @@ function checkKey(e) {
 
 Again, I won't explain this because it's nasty Javascript and it's not too interesting. Let's just try it out and see what happens!
 
-![[abc-regex-demo.gif]]
+![abc-regex-demo.gif](/img/abc-regex-demo.gif)
 
 Nice! The underlined character shows which character we're going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.
 
@@ -1050,7 +1050,7 @@ So, we can look at the red state, ask ourselves "is there a transition which mat
 Let's try another example.
 
 
-![[i-love-cats-regex-demo-fast.gif]]
+![i-love-cats-regex-demo-fast.gif](/img/i-love-cats-regex-demo-fast.gif)
 
 We can see that most of the characters make our FSM fail immediately. We know that the `runner` has failed because there is no active state for one step. It's at this point that our algorithm resets the runner and starts the search again from the next substring. 
 
@@ -1058,7 +1058,7 @@ It's only until we reach the `cats` substring that we begin to start matching `S
 
 Let's take a look at one more example, this time with the regular expression `aab` with the input search string `"aaaab"`
 
-![[backtracking-regex-demo.gif]]
+![backtracking-regex-demo.gif](/img/backtracking-regex-demo.gif)
 
 Notice what happens when we get from `State 0` to `State 2` and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called 'backtracking'. It's the result of the recursion in our  `match()` function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.
 
