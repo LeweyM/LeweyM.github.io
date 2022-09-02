@@ -81,13 +81,7 @@ func TestState_Draw(t *testing.T) {
   
    for _, tt := range tests {  
       t.Run(tt.input, func(t *testing.T) {  
-         parser := NewParser()  
-  
-         tokens := lex(tt.input)  
-         ast := parser.Parse(tokens)  
-         fsm, _ := ast.compile()  
-  
-         drawing := fsm.Draw()  
+		 drawing := NewMyRegex(tt.input).DebugFSM()
   
          if drawing != tt.expected {  
             t.Fatalf("Expected drawing to be \n\"%s\", got\n\"%s\"", tt.expected, drawing)  
@@ -98,13 +92,15 @@ func TestState_Draw(t *testing.T) {
 
 This test is pretty straight forward, let's just zoom in on a couple of things.
 
+The `DebugFSM()` method is new, it's what we want to implement to get this test to pass.
+
 ```go
 // draw_test.go 
 
-drawing := fsm.Draw()  
+drawing := NewMyRegex(tt.input).DebugFSM()
 ```
 
-This is what we want to produce. It's a new method on the `State` struct, which will produce a `string` with the lines and numbers needed for our `mermaid` markdown.
+It will produce a `string` with the lines and numbers needed for our `mermaid` markdown.
 
 ```go
 // draw_test.go 
@@ -129,7 +125,20 @@ This is what we want to produce. It's a new method on the `State` struct, which 
 
 Here are our test cases. They're quite simple also, as they show simple cases of single character transition FSMs, and also a case for whitespaces.
 
-Now that we have some red tests, we can start implementing the `Draw` method.
+Now that we have some red tests, we can start implementing the `DebugFSM()` method.
+
+First, we don't want the logic of drawing an FSM to live on the `myRegex` object. This makes sense to be a method of the `State` object, so let's pass the responsibility over to that.
+
+```go
+// regex.go
+  
+func (m *myRegex) DebugFSM() string {  
+   graph := m.fsm.Draw()  
+   return graph  
+}
+```
+
+Now let's start work on the `Draw()` function.
 
 ## Traversal
 
@@ -153,60 +162,11 @@ The order of the recursions is important here. We want to first collect the outg
 
 I won't labor the point here, as it's tricky to visualize what's going on and distracts from what we're trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.
 
-We're going to build something to make this algorithm easier, a data structure to store the set of Transitions.
+In this algorithm, we have a common need - we need to maintain a set of `Transitions` and `States`, as well as maintain their insertion order. The insertion order will be necessary for printing the `Transitions` in the correct order, as well as numbering the `State` nodes correctly.
 
-## The TransitionSet
+Let's build a generic `OrderedSet` data structure to manage this for us.
 
-This object has two **invariants** (qualities which never change).
-1. All transitions in the set are unique.
-2. The insertion order is maintained.
-
-Let's code it.
-
-```go
-// TransitionSet maintains an ordered set of unique Transitions
-type TransitionSet struct {  
-   transitionSet  map[Transition]bool  
-   transitionList []Transition  
-}
-```
-
-We'll maintain two structures in parallel. The `map` will ensure that our `Transitions` are unique, and the `slice` will keep the insertion order.
-
-We'll write two simple methods for checking if an element is present in the set, and another returning the ordered list of `Transitions`. We'll call these methods `has` and `list`.
-
-```go 
-func (ts *TransitionSet) has(t Transition) bool {  
-   return ts.transitionSet[t]  
-}  
-  
-func (ts *TransitionSet) list() []Transition {  
-   return ts.transitionList[:]  
-}
-```
-
-So far so good, all pretty simple. 
-
-Adding to the set is just a case of adding the map and appending to the list. If the `Transition` is already in the set, we do nothing. This will be the `add` method.
-
-```go
-func (ts *TransitionSet) add(t Transition) {  
-   if ts.transitionSet == nil {  
-      ts.transitionSet = make(map[Transition]bool)  
-   }  
-     
-   if !ts.transitionSet[t] {  
-      ts.transitionSet[t] = true  
-      ts.transitionList = append(ts.transitionList, t)  
-   }  
-}
-```
-
-Fantastic. We also need a similar data structure for keeping track of already 'visited' nodes, making sure we don't get caught in any circular loops. We also want to keep track of the order of visited nodes so that we can use that order as the number labels of the nodes.
-
-What we actually want is a generic data structure which is a set which keeps the order of it's items. We'll call this an `OrderedSet`.
-
-## Generics
+## OrderedSet
 
 We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both 'visited' `*States` and `Transitions`.
 
@@ -214,7 +174,11 @@ We can use the new Generics features of Go 1.18 to write this generically and us
 Notice that we want a set of `State` pointers, and a set of concrete `Transitions`. This is because `Transitions` contain all of their identifying information, such as their `to` and `from` states, and the predicate, as fields in the struct. `States`, on the other hand, require a reference to be identified.
 {{% /notice %}} 
 
-Before we get into the generic implementation, we need to do some refactoring of `Transition` in order to make it `comparable` in Go (not a slice, map, or function type). This means that all of its fields must also be `comparable`, and currently the `predicate` field is a function type. Let's change that now.
+Before we get into the generic implementation, we need to do some refactoring of `Transition` in order to make it `comparable` in Go (not a slice, map, or function type). 
+
+### Modifying the Transition object
+
+In go, an object is `comparable` when all of its fields are also `comparable`, and currently the `predicate` field of a `Transition` is a function type. Let's change that now.
 
 ```diff
 - type Predicate func(input rune) bool
@@ -225,6 +189,8 @@ Instead, let's use a struct which can have either a string of allowed or disallo
 [^generics]: This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the `comparable` interface. So far, generics are still tricky to make work in Go, but it's still early days.
 
 ```go
+// transition.go
+
 type Predicate struct {  
    allowedChars    string  
    disallowedChars string  
@@ -248,6 +214,8 @@ func (p Predicate) test(input rune) bool {
 And let's make a few changes so that our problem compiles.
 
 ```diff
+@@ // state.go
+
  func (s *State) firstMatchingTransition(input rune) *State {
         for _, t := range s.transitions {
 +               if t.predicate.test(input) {
@@ -281,17 +249,19 @@ func (w WildcardLiteral) compile() (head *State, tail *State) {
 
 ```
 
-And now, let's change our `TransitionSet` to be a generic `OrderedSet` struct.
+And now, let's build our generic `OrderedSet` struct. Our struct will need the following interface, where `T` is the generic type:
+- `add(t T)`
+- `has(t T) bool`
+- `list() []T`
+- `getIndex(t T) int`
 
-```diff
-- type TransitionSet struct {  
--    transitionSet  map[Transition]bool  
--    transitionList []Transition  
-- }
-```
+Let's write that out.
+
 ```go
-// OrderedSet maintains an ordered set of unique items of type <T>
-type OrderedSet[T comparable] struct {  
+// orderedset.go
+
+// OrderedSet maintains an ordered set of unique items of type <T>type 
+OrderedSet[T comparable] struct {  
    set       map[T]int  
    nextIndex int  
 }  
@@ -321,17 +291,14 @@ func (o *OrderedSet[T]) list() []T {
    }  
   
    return list  
-}
-```
-
-We've changed the implementation here slightly by storing the index in the `set` field. This makes our `list` method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.
-
-```go
+}  
   
 func (o *OrderedSet[T]) getIndex(t T) int {  
    return o.set[t]  
 }
 ```
+
+We've changed the implementation here slightly by storing the index in the `set` field. This makes our `list` method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.
 
 Now we have all the pieces we need for our traversal algorithm.
 
@@ -569,7 +536,7 @@ Although nothing was strictly broken in our system, I hope that this demonstrate
 
 ## A quick command line tool
 
-Let's add one more thing before we finish with our vizualizer. We want to be able to use it, quickly and easily, so let's make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.
+Let's add one more thing before we finish with our visualizer. We want to be able to use it, quickly and easily, so let's make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.
 
 Let's set up a `main` function[^2].
 
@@ -594,7 +561,9 @@ package v5
 func Main(args []string) {  
    switch args[0] {  
    case "draw":  
-      Draw(args[1])  
+      if len(args) == 2 {  
+         RenderFSM(args[1])  
+      }
    default:  
       fmt.Println("command not recognized")  
    }  
@@ -617,34 +586,26 @@ We can run the program with `go run ./.. v5 draw {input}`.
 Draw called with abc
 ```
 
-Great, now let's make `Draw()` open a browser and display our `mermaid` code.
+Great, let's make `Draw()` open a browser and display our `mermaid` code. 
 
 ```go
-func Draw(input string) {  
-   tokens := lex(input)  
-   parser := NewParser()  
-   ast := parser.Parse(tokens)  
-   head, _ := ast.compile()  
-  
-   stateDrawing := head.Draw()  
-  
-   t, err := template.New("graph").Parse(`  
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>  
-<script>mermaid.initialize({startOnLoad:true});  
-</script>  
-<div class="mermaid">  
-    {{ . }}</div>  
-<div>  
-<span style="white-space: pre-wrap">{{ . }}</span>  
-</div>  
-`)  
+
+// main.go
+
+func RenderFSM(input string) {  
+   graph := NewMyRegex(input).DebugFSM()  
+   renderTemplateToBrowser(fsmTemplate, graph)  
+}
+
+func renderTemplateToBrowser(tmplt string, data any) {  
+   t, err := template.New("graph").Parse(tmplt)  
    if err != nil {  
       panic(err)  
    }  
    w := bytes.Buffer{}  
-   err = t.Execute(&w, stateDrawing)  
+   err = t.Execute(&w, data)  
    if err != nil {  
-      return  
+      panic(err)  
    }  
   
    reader := strings.NewReader(w.String())  
@@ -656,6 +617,8 @@ func Draw(input string) {
 }
 ```
 
+The template we're using here in the constant `fsmTemplate` is defined in the following [github link](https://github.com/LeweyM/search/blob/c31ebe6066a6cabd74ef2afadaee20a81a875d2a/src/v5/templates.go#L14-L24). This is some dirty and ugly HTML. It gets the job done, but it's not something I want to focus on here - if you're following along with this guide, I suggest you copy it directly from github.
+
 Let's try that again. It should now open a browser with a visualization of your compiled FSM!
 
 ```mermaid
@@ -665,5 +628,440 @@ graph LR
 2((2)) --"c"--> 3((3))
 ```
 That's better. This tool is going to come in very handy as our program grows in complexity.
+
+So, we can visualize what a compiled FSM looks like, but what would be great is if we could also see our *runner processing each of the characters*. This would give us a wonderful insight into the characteristics of our algorithm.
+
+Let's do that now.
+
+## Visualizing the Runner
+
+What I want is to be able to open up a browser with an animation that shows me;
+1. The compiled FSM (as we just showed)
+2. Which character of the input I'm currently processing.
+3. Which is the current active state in the FSM.
+
+We already implemented (1), so now we need a way of showing (2) where we are in the input string and (3) which state is currently active for each step of the algorithm. To be clear, when I write 'step', I refer to the processing of a character via the `Next(input rune)` method in our `runner`.
+
+In terms of displaying this information, we can do this by simply rendering every step of the algorithm in the browser, and then use JavaScript to reveal one of the steps and hide the others when the arrow keys are pressed. This will give the impression of stepping backwards and forwards through the algorithm[^js].
+
+[^js]: If for some reason you're interested in the hacky javascript involved in this, take a look at the `templates.go` file in [github](https://github.com/LeweyM/search/blob/master/src/v5/templates.go).
+
+We need a way of drawing the graph each step in the algorithm. In this case, the algorithm in question is the `match` algorithm, so let's create a `DebugMatch()` function on our `myRegex` struct to handle this.
+
+```go
+// regex.go
+
+func (m *myRegex) DebugMatch(input string) []debugStep {
+	// todo: implement me
+}
+```
+
+This returns a slice of `debugSteps`, which contains everything we need in order to render a single step in the algorithm. Namely, a drawing of the runner in the current moment, and the index of the character we're processing in the current moment.
+
+```go
+type debugStep struct {  
+   runnerDrawing         string  
+   currentCharacterIndex int  
+}
+```
+
+Let's start with a test;
+
+```go
+// draw_test.go
+
+func TestState_DebugMatch(t *testing.T) {  
+   type test struct {  
+      name, regex, input string  
+      expected           []debugStep  
+   }  
+  
+   tests := []test{  
+      {  
+         name:  "normal with match",  
+         regex: "abc",  
+         input: "abc",  
+         expected: []debugStep{  
+            {runnerDrawing: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 0 fill:#ff5555;`, currentCharacterIndex: 0},  
+            {runnerDrawing: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 1 fill:#ff5555;`, currentCharacterIndex: 1},  
+            {runnerDrawing: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 2 fill:#ff5555;`, currentCharacterIndex: 2},  
+            {runnerDrawing: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 3 fill:#00ab41;`, currentCharacterIndex: 3},  
+         },  
+      },  
+   }  
+  
+   for _, tt := range tests {  
+      t.Run(tt.name, func(t *testing.T) {  
+         regex := NewMyRegex(tt.regex)  
+         steps := regex.DebugMatch(tt.input)  
+  
+         if !reflect.DeepEqual(tt.expected, steps) {  
+            t.Fatalf("Expected drawing to be \n\"%v\"\ngot\n\"%v\"", tt.expected, steps)  
+         }  
+      })  
+   }  
+}
+```
+
+This should look familiar to our previous `TestState_DebugFSM` test, with the biggest difference being that now we are returning a slice of drawings, along with the `currentCharacterIndex`, for each frame (or step) of the algorithm. 
+
+Zoom in on the first step of the algorithm.
+
+```go
+`graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 0 fill:#ff5555;`
+```
+
+One thing that wasn't in the previous test is the last line.
+
+```markdown
+style 0 fill:#ff5555;
+```
+
+This gives a color `#ff5555` to the node with the label '`0`'. Let's see what this looks like with `mermaid`.
+
+```mermaid
+graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 0 fill:#ff5555;
+```
+The red node means that the current state is `State` '`0`'. Let's change the last line to `style 1 fill:#ff5555`
+
+```mermaid
+graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 1 fill:#ff5555
+```
+So, by changing which node we style, we can demonstrate the currently active state 'moving' across our FSM.
+
+Finally, some might notice that the last graph in our test has a different color. 
+
+```mermaid
+graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 3 fill:#00ab41;
+```
+
+The green node means that the runner has landed in an end state, and so the match was successful. 
+
+Now we know what we trying to build, let's start implementing. The first thing we're going to need to do is to modify the `match` method to allow us to gather information at various stages of the algorithm. In order to do this, we're going to make use of golang's `channels` to send data as the algorithm is running. 
+
+Go `channels` are used for concurrent programs, which is not really how we're using them here. However, by using channels we can 'enqueue' data during the processing of a function without the function returning. As long as something is 'listening' on the other side of the channel, the `send` operation to the channel will not block. If you're not familiar with Go `channels`, this will likely be a bit mysterious for now, hopefully it will be clearer once we have some working code.
+
+The upside of all this is that we don't need to modify the original algorithm too much. Let's start with the `match` function.
+
+### Changing our Match Function
+
+```diff
+@@ // regex.go
+
+-func match(runner *runner, input []rune) bool {
++func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
+        runner.Reset()
++       if debugChan != nil {
++               debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
++       }
+ 
+-       for _, character := range input {
++       for i, character := range input {
+                runner.Next(character)
++               if debugChan != nil {
++                       debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
++               }
+                status := runner.GetStatus()
+ 
+                if status == Fail {
+-                       return match(runner, input[1:])
++                       return match(runner, input[1:], debugChan, offset+1)
+                }
+ 
+				if status == Success {  
+				      return true  
+			    }  
+		}   
+  
+		return runner.GetStatus() == Success
+}
+
+```
+
+Let's break this down a bit;
+
+First, the signature has changed.
+
+```diff
+-func match(runner *runner, input []rune) bool {
++func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
+```
+
+We now pass a `chan debugStep`  channel to `match`. This is the channel to which we will output our graph drawing at each step of the algorithm. 
+
+We also pass an `offset` integer to the function. This is because of the recursive nature of the algorithm, which means that at each step we are operating on an ever shortening substring of `input`. For example, it will operate first on the string `"abcd"`, then `"bcd"`, then `"cd"`, then `"d"`, and then finally on the empty string `""`. As we need to know which index of the *complete* `input` string we're currently at, we need to know how many characters we've already discarded. Therefore, the `offset` is incremented in every recursion to account for this.
+
+```diff
+                if status == Fail {
+-                       return match(runner, input[1:])
++                       return match(runner, input[1:], debugChan, offset+1)
+                }
+```
+
+The other modifications are simple, we just pass the current state of the `runner` and the `currentCharacterIndex` to the channel at each step.
+
+```diff
+        runner.Reset()
++       if debugChan != nil {
++               debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
++       }
+ 
+-       for _, character := range input {
++       for i, character := range input {
+                runner.Next(character)
++               if debugChan != nil {
++                       debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
++               }
+```
+
+We do it before the loop in order to capture the state of the runner at the very beginning, before it has processed any characters, as well as whenever the algorithm recurs. This leads to some jumps in our animation, but it shows nicely the 'backtracking' characteristics of our algorithm.
+
+We also capture the runner state after the `runner.Next(character)` call during the loop in order to take a snapshot of every step after a character has been processed.
+
+And finally, we always check that `debugChan != nil` before we pass data to the `debugStep` channel so that we can ignore all of this when we're not debugging.
+
+The compiler should be moaning at us to fix what we've broken, so let's fix that.
+
+```diff
+@@ // regex.go
+
+ func (m *myRegex) MatchString(input string) bool {
+        testRunner := NewRunner(m.fsm)
+-       return match(testRunner, []rune(input))
++       return match(testRunner, []rune(input), nil, 0)
+ }
+```
+
+That should be enough. We now have some failing tests to fix, so let's implement the `DebugMatch()` method.
+
+```go
+// regex.go
+
+func (m *myRegex) DebugMatch(input string) []debugStep {  
+   testRunner := NewRunner(m.fsm)  
+   debugStepChan := make(chan debugStep)  
+   go func() {  
+      match(testRunner, []rune(input), debugStepChan, 0)  
+      close(debugStepChan)  
+   }()  
+   var debugSteps []debugStep  
+   for step := range debugStepChan {  
+      debugSteps = append(debugSteps, step)  
+   }  
+  
+   return debugSteps  
+}
+```
+
+Again, if you're not familiar with Go `channels` this might look odd, so let's step through it.
+
+First, we create a runner and a new `chan debugStep` 
+```go
+   testRunner := NewRunner(m.fsm)  
+   debugStepChan := make(chan debugStep)
+```
+
+Then, we start a new `Go routine` which will call `match` and use our previously created channel. Once `match` has finished, the `channel` will be closed.
+
+```go
+   go func() {  
+      match(testRunner, []rune(input), debugStepChan, 0)  
+      close(debugStepChan)  
+   }()  
+```
+
+Finally, we immediately start collecting the data sent to the channel and adding it to a slice. Once `match` has returned in the other `Go routine`, the `range` loop will terminate and we can return the slice.
+
+```go
+   var debugSteps []debugStep  
+   for step := range debugStepChan {  
+      debugSteps = append(debugSteps, step)  
+   }  
+  
+   return debugSteps 
+```
+
+That should be enough to get our tests passing!
+
+### A new command
+
+We now want to be able to use this by calling something from the command line, as we did before. Let's modify our `main.go` file.
+
+```diff
+@@ // main.go
+
+// Main just used for linking up the main functionsfunc Main(args []string) {  
+   switch args[0] {  
+   case "draw":  
+      if len(args) == 2 {  
+         RenderFSM(args[1])  
++     } else if len(args) == 3 {  
++        RenderRunner(args[1], args[2])  
++     }  
+   default:  
+      fmt.Println("command not recognized")  
+   }  
+}
+```
+
+This means that if we call our method with a single string, such as `go run ./... v5 cat`, we display the compiled FSM for the regular expression `"cat"`, but if we call with two strings, such as `go run ./... v5 cat "I love cats"`, we get a representation of our algorithm for the regular expression `"cat"` being applied to the input string `"I love cats"`.
+
+Let's implement `RenderRunner`.
+
+```go
+// main.go
+
+// RenderRunner will render every step of the runner until it fails or succeeds. The template will then take care// of hiding all but one of the steps to give the illusion of stepping through the input characters.  
+func RenderRunner(regex, input string) {  
+   newMyRegex := NewMyRegex(regex)  
+   debugSteps := newMyRegex.DebugMatch(input)  
+  
+   var steps []Step  
+   for _, step := range debugSteps {  
+      steps = append(steps, Step{  
+         Graph:      step.runnerDrawing,  
+         InputSplit: threeSplitString(input, step.currentCharacterIndex),  
+      })  
+   }  
+  
+   renderTemplateToBrowser(runnerTemplate, TemplateData{  
+      Steps: steps,  
+      Regex: regex,  
+   })  
+}
+
+  
+// threeSplitString divides a string into three pieces on a given indexfunc threeSplitString(s string, i int) []string {  
+   var left, middle, right string  
+  
+   left = s[:i]  
+   if i < len(s) {  
+      middle = string(s[i])  
+      right = s[i+1:]  
+   }  
+  
+   return []string{left, middle, right}  
+}
+```
+
+All we're doing here is parsing the `debugSteps` from `DebugMatch` into data structures which our templates know what to do with. This includes breaking the input string into three pieces so that we can render the characters before the current character, the current character, and remaining characters in different ways.
+
+To make this work, we just need a few template data structures, as well as the template itself.
+
+```go
+// templates.go
+  
+type TemplateData struct {  
+   Steps []Step  
+   Regex string  
+   Input string  
+}  
+  
+type Step struct {  
+   Graph      string  
+   InputSplit []string  
+}  
+  
+const runnerTemplate = `  
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>  
+<script>mermaid.initialize({startOnLoad:true});</script>  
+<body onload="prev()">  
+  
+<h1>Regex: ({{ .Regex }})</h1>  
+  
+<div class="nav-buttons">  
+   <button id="prev" onClick="prev()">      prev   </button>   <button id="next" onClick="next()">      next   </button>   <p>Or use the arrow keys to Step through the FSM</p></div>  
+  
+{{ range $i, $s := .Steps }}  
+<div class="graph" {{ if ne $i 0 }} style="visibility:hidden;" {{ else }} style="visibility:visible" {{ end }}>  
+   <p style='font-size:64px'>      <span style='color:red'>{{ index .InputSplit 0 }}</span><span style='text-decoration-color:red;text-decoration-line:underline;'>{{ index .InputSplit 1 }}</span><span>{{ index .InputSplit 2 }}</span>   </p>   <div class="mermaid">      {{ .Graph }}   </div></div>  
+{{ end }}  
+  
+<script type="text/javascript">  
+let i = 1  
+  
+function next() {  
+  const c = document.getElementsByClassName('graph')  if (i >= c.length - 1) return   
+   i++  
+   for (let j = 0; j < c.length; j++) {      if (i != j)    {        c[j].style.display = 'none'        c[j].style.visibility = 'hidden'   
+      } else {  
+        c[j].style.display = 'block'        c[j].style.visibility = 'visible'      }    
+   }  
+}  
+  
+function prev() {  
+   if (i <= 0) return   i--   const c = document.getElementsByClassName('graph')   for (let j = 0; j < c.length; j++) {  
+      if (i != j)    {        c[j].style.display = 'none'        c[j].style.visibility = 'hidden'   
+      } else {  
+        c[j].style.display = 'block'        c[j].style.visibility = 'visible'      }    
+   }  
+}  
+  
+function checkKey(e) {  
+   if (e.which === 37 || e.which === 40) {      prev()   } else if (e.which === 39 || e.which === 38) {      next()   }  }  
+  
+</script>  
+<script>document.onkeydown = checkKey;</script>  
+<div>  
+</div>  
+`
+```
+
+Again, I won't explain this because it's nasty Javascript and it's not too interesting. Let's just try it out and see what happens!
+
+![[abc-regex-demo.gif]]
+
+Nice! The underlined character shows which character we're going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.
+
+So, we can look at the red state, ask ourselves "is there a transition which matches the character that's about to be processed?", and then we can predict which state will be active next!
+
+Let's try another example.
+
+
+![[i-love-cats-regex-demo-fast.gif]]
+
+We can see that most of the characters make our FSM fail immediately. We know that the `runner` has failed because there is no active state for one step. It's at this point that our algorithm resets the runner and starts the search again from the next substring. 
+
+It's only until we reach the `cats` substring that we begin to start matching `States` and can finally progress to the final end state and declare the match a success.
+
+Let's take a look at one more example, this time with the regular expression `aab` with the input search string `"aaaab"`
+
+![[backtracking-regex-demo.gif]]
+
+Notice what happens when we get from `State 0` to `State 2` and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called 'backtracking'. It's the result of the recursion in our  `match()` function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.
+
+I invite you to play around with different combinations and see what you can find. I found that this was of vizualising the algorithms we're using was very helpful in internalizing the characteristics. This becomes especially useful when our FSMs become more complex.
 
 That's enough for visualizations for now, we can now move onto adding new features to our regex engine.
