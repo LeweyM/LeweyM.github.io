@@ -384,49 +384,58 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>Let&rsquo;s start with a test;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw_test.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>TestState_DebugMatch</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Test_DrawSnapshot</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>type</span> test <span style=color:#000;font-weight:700>struct</span> {  
-</span></span><span style=display:flex><span>      name, regex, input <span style=color:#458;font-weight:700>string</span>  
-</span></span><span style=display:flex><span>      expected           []debugStep  
+</span></span><span style=display:flex><span>      name, regex, input, expected <span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   tests <span style=color:#000;font-weight:700>:=</span> []test{  
 </span></span><span style=display:flex><span>      {  
-</span></span><span style=display:flex><span>         name:  <span style=color:#d14>&#34;normal with match&#34;</span>,  
+</span></span><span style=display:flex><span>         name:  <span style=color:#d14>&#34;initial snapshot&#34;</span>,  
 </span></span><span style=display:flex><span>         regex: <span style=color:#d14>&#34;abc&#34;</span>,  
-</span></span><span style=display:flex><span>         input: <span style=color:#d14>&#34;abc&#34;</span>,  
-</span></span><span style=display:flex><span>         expected: []debugStep{  
-</span></span><span style=display:flex><span>            {runnerDrawing: <span style=color:#d14>`graph LR  
+</span></span><span style=display:flex><span>         input: <span style=color:#d14>&#34;&#34;</span>,  
+</span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>style 0 fill:#ff5555;`</span>, currentCharacterIndex: <span style=color:#099>0</span>},  
-</span></span><span style=display:flex><span>            {runnerDrawing: <span style=color:#d14>`graph LR  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 0 fill:#ff5555;`</span>,  
+</span></span><span style=display:flex><span>      },  
+</span></span><span style=display:flex><span>      {  
+</span></span><span style=display:flex><span>         name:  <span style=color:#d14>&#34;after a single letter&#34;</span>,  
+</span></span><span style=display:flex><span>         regex: <span style=color:#d14>&#34;abc&#34;</span>,  
+</span></span><span style=display:flex><span>         input: <span style=color:#d14>&#34;a&#34;</span>,  
+</span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>style 1 fill:#ff5555;`</span>, currentCharacterIndex: <span style=color:#099>1</span>},  
-</span></span><span style=display:flex><span>            {runnerDrawing: <span style=color:#d14>`graph LR  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 1 fill:#ff5555;`</span>,  
+</span></span><span style=display:flex><span>      },  
+</span></span><span style=display:flex><span>      {  
+</span></span><span style=display:flex><span>         name:  <span style=color:#d14>&#34;last state highlighted&#34;</span>,  
+</span></span><span style=display:flex><span>         regex: <span style=color:#d14>&#34;aaa&#34;</span>,  
+</span></span><span style=display:flex><span>         input: <span style=color:#d14>&#34;aaa&#34;</span>,  
+</span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>style 2 fill:#ff5555;`</span>, currentCharacterIndex: <span style=color:#099>2</span>},  
-</span></span><span style=display:flex><span>            {runnerDrawing: <span style=color:#d14>`graph LR  
-</span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 fill:#00ab41;`</span>, currentCharacterIndex: <span style=color:#099>3</span>},  
-</span></span><span style=display:flex><span>         },  
+</span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;a&#34;--&gt; 2((2))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;a&#34;--&gt; 3((3))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 fill:#00ab41;`</span>,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, tt <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> tests {  
 </span></span><span style=display:flex><span>      t.<span style=color:#900;font-weight:700>Run</span>(tt.name, <span style=color:#000;font-weight:700>func</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
-</span></span><span style=display:flex><span>         regex <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewMyRegex</span>(tt.regex)  
-</span></span><span style=display:flex><span>         steps <span style=color:#000;font-weight:700>:=</span> regex.<span style=color:#900;font-weight:700>DebugMatch</span>(tt.input)  
+</span></span><span style=display:flex><span>         tokens <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>lex</span>(tt.regex)  
+</span></span><span style=display:flex><span>         parser <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewParser</span>()  
+</span></span><span style=display:flex><span>         ast <span style=color:#000;font-weight:700>:=</span> parser.<span style=color:#900;font-weight:700>Parse</span>(tokens)  
+</span></span><span style=display:flex><span>         state, _ <span style=color:#000;font-weight:700>:=</span> ast.<span style=color:#900;font-weight:700>compile</span>()  
+</span></span><span style=display:flex><span>         runner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewRunner</span>(state)  
+</span></span><span style=display:flex><span>         <span style=color:#000;font-weight:700>for</span> _, char <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> tt.input {  
+</span></span><span style=display:flex><span>            runner.<span style=color:#900;font-weight:700>Next</span>(char)  
+</span></span><span style=display:flex><span>         }  
+</span></span><span style=display:flex><span>         snapshot <span style=color:#000;font-weight:700>:=</span> runner.<span style=color:#900;font-weight:700>drawSnapshot</span>()  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>         <span style=color:#000;font-weight:700>if</span> !reflect.<span style=color:#900;font-weight:700>DeepEqual</span>(tt.expected, steps) {  
-</span></span><span style=display:flex><span>            t.<span style=color:#900;font-weight:700>Fatalf</span>(<span style=color:#d14>&#34;Expected drawing to be \n\&#34;%v\&#34;\ngot\n\&#34;%v\&#34;&#34;</span>, tt.expected, steps)  
+</span></span><span style=display:flex><span>         <span style=color:#000;font-weight:700>if</span> !reflect.<span style=color:#900;font-weight:700>DeepEqual</span>(tt.expected, snapshot) {  
+</span></span><span style=display:flex><span>            t.<span style=color:#900;font-weight:700>Fatalf</span>(<span style=color:#d14>&#34;Expected drawing to be \n\&#34;%v\&#34;\ngot\n\&#34;%v\&#34;&#34;</span>, tt.expected, snapshot)  
 </span></span><span style=display:flex><span>         }  
 </span></span><span style=display:flex><span>      })  
 </span></span><span style=display:flex><span>   }  
@@ -455,14 +464,14 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        runner.Reset()
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if debugChan != nil {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               debugChan &lt;- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               debugChan &lt;- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset}
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> 
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       for _, character := range input {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       for i, character := range input {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                runner.Next(character)
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               if debugChan != nil {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       debugChan &lt;- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       debugChan &lt;- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset + i + 1}
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               }
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                status := runner.GetStatus()
 </span></span><span style=display:flex><span> 
@@ -486,14 +495,14 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                }
 </span></span></code></pre></div><p>The other modifications are simple, we just pass the current state of the <code>runner</code> and the <code>currentCharacterIndex</code> to the channel at each step.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>        runner.Reset()
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       if debugChan != nil {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               debugChan &lt;- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               debugChan &lt;- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset}
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       }
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> 
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       for _, character := range input {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       for i, character := range input {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                runner.Next(character)
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               if debugChan != nil {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       debugChan &lt;- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       debugChan &lt;- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset + i + 1}
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               }
 </span></span></span></code></pre></div><p>We do it before the loop in order to capture the state of the runner at the very beginning, before it has processed any characters, as well as whenever the algorithm recurs. This leads to some jumps in our animation, but it shows nicely the &lsquo;backtracking&rsquo; characteristics of our algorithm.</p><p>We also capture the runner state after the <code>runner.Next(character)</code> call during the loop in order to take a snapshot of every step after a character has been processed.</p><p>And finally, we always check that <code>debugChan != nil</code> before we pass data to the <code>debugStep</code> channel so that we can ignore all of this when we&rsquo;re not debugging.</p><p>The compiler should be moaning at us to fix what we&rsquo;ve broken, so let&rsquo;s fix that.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // regex.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
