@@ -3,7 +3,8 @@ title: 7 Branches
 draft: false
 series: ["making regex from scratch in GO"]
 ---
-## The OR expression
+
+## The OR expression
 
 It's very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression `"png|jpge|gif"` on the file extension. This would tell you if the file was `png` OR `jpeg` OR `gif`. The options of the OR expression are determined by the separating them with a `pipe` symbol (`"|"`). 
 
@@ -449,7 +450,7 @@ Looks great! Our FSM looks exactly as we'd expect, and our algorithm (after quit
 
 There is one deep dark problem here though which we've been conveniently ignoring, and it goes right to the heart of finite state machines.
 
-## Deterministic vs Non-Deterministic State Machines
+## Deterministic vs Non-Deterministic
 
 Our examples up until now have all worked fine because they have one thing in common; every `State` has **only one transition for each character** in the alphabet. Because of this, we know exactly which state will be red after we process a character. What happens if we get rid of this invariant? How can our FSM behave?
 
@@ -518,3 +519,326 @@ Parallel States would mean going down all the possible branches simultaneously, 
 
 We're going to be exploring the second option in our program.
 
+## Parallel States
+
+We're introducing a large change into how our algorithm works. Instead of simply tracking a single `State`, we will now track a set of `States`. Processing a character will now mean looking at all active `States` and their valid `Transitions`, and using those as the next active `States`. We'll also need to modify our visualization code to color multiple active `States`.
+
+As tracking the active `State` is the responsibility of the `runner`, let's start there.
+
+```diff
+@@ // runner.go
+
+ type runner struct {
+-       head    *State
+-       current *State
++       head         *State
++       activeStates Set[*State]
+ }
+ 
+ func NewRunner(head *State) *runner {
+        r := &runner{
+-               head:    head,
+-               current: head,
++               head:         head,
++               activeStates: NewSet[*State](head),
+        }
+ 
+        return r
+ }
+
+ func (r *runner) Reset() {
+-       r.current = r.head
++       r.activeStates = NewSet[*State](r.head)
++}
+
+```
+
+We no longer want to track a single `*State`, but instead a set of `*State`. We've used a generic `Set` object here, let's define it.
+
+```go
+// set.go
+  
+type Set[t comparable] map[t]struct{}  
+  
+func NewSet[t comparable](items ...t) Set[t] {  
+   set := Set[t](make(map[t]struct{}))  
+   for _, item := range items {  
+      set.add(item)  
+   }  
+   return set  
+}  
+  
+func (s *Set[t]) add(item t) {  
+   (*s)[item] = struct{}{}  
+}  
+  
+func (s *Set[t]) remove(item t) {  
+   delete(*s, item)  
+}  
+  
+func (s *Set[t]) has(item t) bool {  
+   _, ok := (*s)[item]  
+   return ok  
+}  
+  
+func (s *Set[t]) list() []t {  
+   set := *s  
+   list := make([]t, len(set))  
+   i := 0  
+   for item := range set {  
+      list[i] = item  
+      i++  
+   }  
+   return list  
+}  
+  
+func (s *Set[t]) size() int {  
+   return len(*s)  
+}
+```
+
+The `Set`  type is more or less a wrapper around the `map[t]struct{}`, which should make things a bit easier.
+
+Lots of things in `runner` should now be broken - this is normal as we've completely ripped out the underlying data structure. Our algorithm is going to change significantly. First let's look at the `Next(input rune)` method. 
+
+As we mentioned before, we should now generate a new set of `States` by evaluating the `transitions` of the active `States`. If there are no active `States`, we should simply return.
+
+```diff
+@@ // runner.go
+
+ func (r *runner) Next(input rune) {
+-       if r.current == nil {
++       if r.activeStates.size() == 0 {
+                return
+        }
+ 
+-       // move to next matching transition
+-       r.current = r.current.firstMatchingTransition(input)
++       nextActiveStates := Set[*State]{}
++       for activeState := range r.activeStates {
++               for _, nextState := range activeState.matchingTransitions(input) {
++                       nextActiveStates.add(nextState)
++               }
++       }
++       r.activeStates = nextActiveStates
+ }
+
+```
+
+One thing to notice here is that we now use a different method on the `State` type; `matchingTransitions(input rune)` instead of `firstMatchingTransition(input rune)`. This should return a list of `States` instead of a single `State`. Let's define that next.
+
+```diff
+@@ // state.go
+
+-func (s *State) firstMatchingTransition(input rune) *State {
++func (s *State) matchingTransitions(input rune) []*State {
++       var res []*State
+        for _, t := range s.transitions {
+                if t.predicate.test(input) {
+-                       return t.to
++                       res = append(res, t.to)
+                }
+        }
+-
+-       return nil
++       return res
+ }
+```
+
+The difference her is subtle, but significant. All matching `States` are returned here, not just the first one we find.
+
+Going back to our `runner`, we also need a new way of determining if the `runner` status. Instead of checking for a single active `State`, we need to check all of the active `States` and return if any are success `States`.
+
+```diff
+@@ // runner.go
+
+ func (r *runner) GetStatus() Status {
+-       // if the current state is nil, return Fail
+-       if r.current == nil {
++       // if there are no actives states, return Fail
++       if r.activeStates.size() == 0 {
+                return Fail
+        }
+ 
+-       // if the current state has no transitions from it, return Success
+-       if r.current.isSuccessState() {
+-               return Success
++       // if any of the active states is a success state, return Success
++       for state := range r.activeStates {
++               if state.isSuccessState() {
++                       return Success
++               }
+        }
+ 
+        // else, return normal
+	    return Normal  
+}
+```
+
+That should be enough to solve our current problem and bring our tests back to green!
+
+It's useful at this point to go back and revisit our visualization tools. We no longer draw a single active state, so let's update our `drawSnapshot` function to draw each of the active `States`.
+
+```diff
+@@ // draw.go
+
+func (r runner) drawSnapshot() string {
+        graph, nodeSet := r.head.Draw()
+-       switch r.GetStatus() {
+-       case Normal:
+-               graph += fmt.Sprintf("\nstyle %d fill:#ff5555;", nodeSet.getIndex(r.current))
+-       case Success:
+-               graph += fmt.Sprintf("\nstyle %d fill:#00ab41;", nodeSet.getIndex(r.current))
++       activeStates := getSortedActiveStates(r.activeStates.list(), nodeSet)
++
++       for _, state := range activeStates {
++               nodeLabel := nodeSet.getIndex(state)
++               if state.isSuccessState() {
++                       graph += fmt.Sprintf("\nstyle %d fill:#00ab41;", nodeLabel)
++               } else {
++                       graph += fmt.Sprintf("\nstyle %d fill:#ff5555;", nodeLabel)
++               }
+        }
+ 
+        return graph
+ }
+
++func getSortedActiveStates(activeStates []*State, nodeSet OrderedSet[*State]) []*State {
++       byAscendingNodeLabel := func(i, j int) bool {
++               return nodeSet.getIndex(activeStates[i]) < nodeSet.getIndex(activeStates[j])
++       }
++       sort.Slice(activeStates, byAscendingNodeLabel)
++       return activeStates
++}
+
+```
+
+While not strictly necessary, it's useful to sort the `States` by their label to make it deterministic (iterating over a `map` in Go uses a random order).
+
+With those changes, let's take a look at our previous example in our visualizer.
+
+![dog-dot-multi-state-demo.gif](/img/dog-dot-multi-state-demo.gif)
+
+Look at that! We now 'split' our `State` processing and traverse all possible `States` at the same time. 
+
+We could leave it there, but this is a nice opportunity to make an optimization. Before we carry out that optimization, let's look at one more example.
+
+![branch-with-backtracking-demo-1.gif](/img/branch-with-backtracking-demo-1.gif)
+
+We end up in with the right answer here because we're backtracking across every substring of the search string `"aaaab"`. This was necessary when we were an DFA, and we could only track one `State` at a time. However, now we're a NFA there's no need to backtrack and reprocess the input once we hit a failure - we can instead do the same processing in parallel.
+
+In order to process each substring in parallel, we need to activate the starting `State` when we process each character.
+
+Let's make a method in the `runner` to activate the first state. We'll call this `Start()` for now.
+
+```go
+// runner.go
+
+func (r *runner) Start() {
+       r.activeStates.add(r.head)
+}
+```
+
+As we're going to change our algorithm, we expect that our visualizations will change also, so let's modify those tests to verify the behaviour. First, let's change our test to use the `Start` method after every character.
+
+```diff
+@@ // draw_test.go
+
+@@ func Test_DrawSnapshot(t *testing.T) {
+
+				for _, tt := range tests {  
+				    t.Run(tt.name, func(t *testing.T) {  
+					    tokens := lex(tt.regex)  
+					    parser := NewParser()  
+					    ast := parser.Parse(tokens)  
+					    state, _ := ast.compile()
+                        runner := NewRunner(state)
+                        for _, char := range tt.input {
+                                runner.Next(char)
++                               runner.Start()
+                        }
+                        snapshot := runner.drawSnapshot()
+
+```
+
+And then let's change our test expectations so that the previous `States` are also highlighted.
+
+```diff
+@@ // draw_test.go
+
+@@ func Test_DrawSnapshot(t *testing.T) {
+    tests := []test{  
+      {  
+         name:  "initial snapshot",  
+         regex: "abc",  
+         input: "",  
+         expected: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
+style 0 fill:#ff5555;`,  
+      },  
+      {  
+         name:  "after a single letter",  
+         regex: "abc",  
+         input: "a",  
+         expected: `graph LR
+ 0((0)) --"a"--> 1((1))
+ 1((1)) --"b"--> 2((2))
+ 2((2)) --"c"--> 3((3))
++style 0 fill:#ff5555;
+ style 1 fill:#ff5555;`,
+                },
+                {
+-        name:  "last state highlighted",
++        name:  "all states highlighted",
+         regex: "aaa",
+         input: "aaa",
+         expected: `graph LR
+ 0((0)) --"a"--> 1((1))
+ 1((1)) --"a"--> 2((2))
+ 2((2)) --"a"--> 3((3))
++style 0 fill:#ff5555;
++style 1 fill:#ff5555;
++style 2 fill:#ff5555;
+ style 3 fill:#00ab41;`,
+
+```
+
+All that's left to do is make changes to our `match` function of the `myRegex` type. The changes here are simple; we want to `Start` the runner again after every character is processed so that every substring is processed, and we no longer want to recursively call the function again on a substring in the case of failure.
+
+```diff
+@@ // regex.go
+
+func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
+        runner.Reset()
+        if debugChan != nil {
+               debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset}
+        }
+ 
+        for i, character := range input {
+                runner.Next(character)
++               runner.Start()
+                if debugChan != nil {
+                       debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset + i + 1}
+                }
+                status := runner.GetStatus()
+ 
+-               if status == Fail {
+-                       return match(runner, input[1:], debugChan, offset+1)
+-               }
+-
+                if status == Success {
+                        return true
+                }
+```
+
+With all that in place, let's try it again.
+
+![parallel-state-demo.gif](/img/parallel-state-demo.gif)
+
+Now all `States` are active most of the time because the initial state is being activated on every new character, meaning that each substring is being processed through the FSM. This means that no backtracking is necessary.
+
+{{% notice tip %}} 
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v6)
+{{% /notice %}} 
