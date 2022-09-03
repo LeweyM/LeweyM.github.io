@@ -1065,3 +1065,7 @@ Notice what happens when we get from `State 0` to `State 2` and then fail? We ha
 I invite you to play around with different combinations and see what you can find. I found that this was of vizualising the algorithms we're using was very helpful in internalizing the characteristics. This becomes especially useful when our FSMs become more complex.
 
 That's enough for visualizations for now, we can now move onto adding new features to our regex engine.
+
+{{% notice tip %}} 
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v5)
+{{% /notice %}} 
