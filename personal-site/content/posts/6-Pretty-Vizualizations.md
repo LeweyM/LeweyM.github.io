@@ -670,49 +670,58 @@ Let's start with a test;
 ```go
 // draw_test.go
 
-func TestState_DebugMatch(t *testing.T) {  
+func Test_DrawSnapshot(t *testing.T) {  
    type test struct {  
-      name, regex, input string  
-      expected           []debugStep  
+      name, regex, input, expected string  
    }  
   
    tests := []test{  
       {  
-         name:  "normal with match",  
+         name:  "initial snapshot",  
          regex: "abc",  
-         input: "abc",  
-         expected: []debugStep{  
-            {runnerDrawing: `graph LR  
+         input: "",  
+         expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
-style 0 fill:#ff5555;`, currentCharacterIndex: 0},  
-            {runnerDrawing: `graph LR  
+style 0 fill:#ff5555;`,  
+      },  
+      {  
+         name:  "after a single letter",  
+         regex: "abc",  
+         input: "a",  
+         expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
-style 1 fill:#ff5555;`, currentCharacterIndex: 1},  
-            {runnerDrawing: `graph LR  
+style 1 fill:#ff5555;`,  
+      },  
+      {  
+         name:  "last state highlighted",  
+         regex: "aaa",  
+         input: "aaa",  
+         expected: `graph LR  
 0((0)) --"a"--> 1((1))  
-1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))  
-style 2 fill:#ff5555;`, currentCharacterIndex: 2},  
-            {runnerDrawing: `graph LR  
-0((0)) --"a"--> 1((1))  
-1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))  
-style 3 fill:#00ab41;`, currentCharacterIndex: 3},  
-         },  
+1((1)) --"a"--> 2((2))  
+2((2)) --"a"--> 3((3))  
+style 3 fill:#00ab41;`,  
       },  
    }  
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-         regex := NewMyRegex(tt.regex)  
-         steps := regex.DebugMatch(tt.input)  
+         tokens := lex(tt.regex)  
+         parser := NewParser()  
+         ast := parser.Parse(tokens)  
+         state, _ := ast.compile()  
+         runner := NewRunner(state)  
+         for _, char := range tt.input {  
+            runner.Next(char)  
+         }  
+         snapshot := runner.drawSnapshot()  
   
-         if !reflect.DeepEqual(tt.expected, steps) {  
-            t.Fatalf("Expected drawing to be \n\"%v\"\ngot\n\"%v\"", tt.expected, steps)  
+         if !reflect.DeepEqual(tt.expected, snapshot) {  
+            t.Fatalf("Expected drawing to be \n\"%v\"\ngot\n\"%v\"", tt.expected, snapshot)  
          }  
       })  
    }  
@@ -784,14 +793,14 @@ The upside of all this is that we don't need to modify the original algorithm to
 +func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
         runner.Reset()
 +       if debugChan != nil {
-+               debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
++               debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset}
 +       }
  
 -       for _, character := range input {
 +       for i, character := range input {
                 runner.Next(character)
 +               if debugChan != nil {
-+                       debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
++                       debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset + i + 1}
 +               }
                 status := runner.GetStatus()
  
@@ -835,14 +844,14 @@ The other modifications are simple, we just pass the current state of the `runne
 ```diff
         runner.Reset()
 +       if debugChan != nil {
-+               debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset}
++               debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset}
 +       }
  
 -       for _, character := range input {
 +       for i, character := range input {
                 runner.Next(character)
 +               if debugChan != nil {
-+                       debugChan <- debugStep{runnerDrawing: runner.drawCurrentState(), currentCharacterIndex: offset + i + 1}
++                       debugChan <- debugStep{runnerDrawing: runner.drawSnapshot(), currentCharacterIndex: offset + i + 1}
 +               }
 ```
 
