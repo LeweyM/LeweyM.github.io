@@ -449,5 +449,72 @@ Looks great! Our FSM looks exactly as we'd expect, and our algorithm (after quit
 
 There is one deep dark problem here though which we've been conveniently ignoring, and it goes right to the heart of finite state machines.
 
-## Deterministic vs Non Deterministic State Machines
+## Deterministic vs Non-Deterministic State Machines
+
+Our examples up until now have all worked fine because they have one thing in common; every `State` has **only one transition for each character** in the alphabet. Because of this, we know exactly which state will be red after we process a character. What happens if we get rid of this invariant? How can our FSM behave?
+
+Consider the following FSM for the regular expression `dog|dot`:
+
+![Pasted-image-20220128175308.png](/img/Pasted-image-20220128175308.png)
+
+We can condense the problem into an even simpler FSM:
+
+```mermaid
+graph LR
+
+0((0)) --a--> 1((1))
+0((0)) --a--> 2((2))
+
+style 0 fill:#ff5555;
+```
+
+If we process the character `'a'`, what should happen? Should we go `State 1` or to `State 2`? Or should we go to both?
+
+The answer to this question is the difference between a **Deterministic Finite State Automata (DFA)** and a **Non-Deterministic Finite State Automata (NFA)**. 
+
+A DFA cannot have more than one transition with the same character from a single state. It requires that only a single state can be active at any time, and that once a state is processed with a character, we know deterministically in which state we will be in afterwards.
+
+In an NFA, there is no such restriction. If there are multiple possible transitions for a given character, both states can be examined. One can imagine this as either multiple states being active on an FSM, or multiple FSMs being traversed in parallel. The result is the same.
+
+Up until now, we have been using a DFA. Now we're going to change our model to an NFA in order to be able to process the type of FSM I've shown above.
+
+### Changing to a NFA model
+
+First, let's add a test which illustrates our issue.
+
+```diff
+@@ fsm_test.go
+
+@@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
+                {"wildcard regex matching", "ab.", "abc"},
+                {"wildcard regex not matching", "ab.", "ab"},
+                {"wildcards matching newlines", "..0", "0\n0"},
+
+                // branch
+                {"branch matching 1st branch", "ab|cd", "ab"},
+                {"branch matching 2nd branch", "ab|cd", "cd"},
+                {"branch not matching", "ab|cd", "ac"},
++               {"branch with shared characters", "dog|dot", "dog"}, // will work
++               {"branch with shared characters", "dog|dot", "dot"}, // will not work
+        }
+
+```
+
+So, from our tests we can see that we will find `dog`, but not `dot`. Let's take a look at our visualizer to understand why.
+
+![dog-branch-regex-demo-1.gif](/img/dog-branch-regex-demo-1.gif)
+
+So, when searching for `"dog"`, we travel through the upper branch and successfully find a match. Nothing surprising here. Let's look at `"dot"`.
+
+![dot-branch-regex-demo-2.gif](/img/dot-branch-regex-demo-2.gif)
+
+Ah... when matching the first `'d'` character, we go up the same branch as before. How can the program know which branch it should follow? As it can't see into the future, there are two possibilities.
+1. Backtracking
+2. Parallel States
+
+Backtracking would mean travelling backwards to the route of the branch in the case of failure, then trying the next `Transition` for the `'d'` character. We can think of this as a form of **Depth First Search** as we optimistically explore the first branch, then go back in the case of failure.
+
+Parallel States would mean going down all the possible branches simultaneously, exploring every state for which there is a valid `Transition`. You can think of this as a **Breadth First Search** of the FSM.
+
+We're going to be exploring the second option in our program.
 
