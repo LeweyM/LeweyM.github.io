@@ -443,7 +443,7 @@ Ok, we can see the problem here. This FSM does not respect the `'('` and `')'` c
 
 {{% notice note %}} 
 It's worth noting that we haven't run into any issues with parentheses until now because, until now, we've only been working with concatenations. Concatenation has the **associative property**, which means that we can group them together without it making a difference to the outcome. For example, `"a" + "b" + "c"` is the same as `"a" + ("b" + "c")`. 
-Integer addition is also associate, so `1 + 2 + 3 == 1 + (2 + 3)`. 
+Integer addition is also associative, so `1 + 2 + 3 == 1 + (2 + 3)`. 
 {{% /notice %}}
 
 Now's the time to add support for grouping by parentheses.
