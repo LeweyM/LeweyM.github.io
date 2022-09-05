@@ -57,21 +57,23 @@ As always, let's start with some tests to help define our objective.
 ```go
 // draw_test.go
 
-func TestState_Draw(t *testing.T) {  
+func Test_DrawFSM(t *testing.T) {  
    type test struct {  
-      input, expected string  
+      name, regex, expected string  
    }  
   
    tests := []test{  
       {  
-         input: "abc",  
+		 name:  "simple example" 
+         regex: "abc",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))`,  
       },  
       {  
-         input: "a b",  
+         name:  "example with whitespace",
+         regex: "a b",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --" "--> 2((2))  
@@ -80,8 +82,8 @@ func TestState_Draw(t *testing.T) {
    }  
   
    for _, tt := range tests {  
-      t.Run(tt.input, func(t *testing.T) {  
-		 drawing := NewMyRegex(tt.input).DebugFSM()
+      t.Run(tt.name, func(t *testing.T) {  
+		 drawing := NewMyRegex(tt.regex).DebugFSM()
   
          if drawing != tt.expected {  
             t.Fatalf("Expected drawing to be \n\"%s\", got\n\"%s\"", tt.expected, drawing)  
@@ -107,14 +109,16 @@ It will produce a `string` with the lines and numbers needed for our `mermaid` m
 
    tests := []test{  
       {  
-         input: "abc",  
+		 name:  "simple example" 
+         regex: "abc",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))`,  
       },  
       {  
-         input: "a b",  
+         name:  "example with whitespace",  
+		 regex: "a b",
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --" "--> 2((2))  
@@ -369,8 +373,8 @@ Once all the hard work of collecting the `Nodes` and `Transitions` is done, it's
 With all this in place, let's run our tests.
 
 ```zsh
-=== RUN   TestState_Draw
-=== RUN   TestState_Draw/abc
+=== RUN   Test_DrawFSM
+=== RUN   Test_DrawFSM/abc
     draw_test.go:38: Expected drawing to be 
         "graph LR
         0((0)) --"a"--> 1((1))
@@ -383,7 +387,7 @@ With all this in place, let's run our tests.
         4((4)) --"c"--> 3((3))
         5((5)) --"b"--> 2((2))
         6((6)) --"a"--> 1((1))"
-=== RUN   TestState_Draw/a_b
+=== RUN   Test_DrawFSM/a_b
     draw_test.go:38: Expected drawing to be 
         "graph LR
         0((0)) --"a"--> 1((1))
@@ -396,10 +400,10 @@ With all this in place, let's run our tests.
         4((4)) --"b"--> 3((3))
         5((5)) --" "--> 2((2))
         6((6)) --"a"--> 1((1))"
---- FAIL: TestState_Draw (0.00s)
-    --- FAIL: TestState_Draw/abc (0.00s)
+--- FAIL: Test_Draw (0.00s)
+    --- FAIL: Test_Draw/abc (0.00s)
 
-    --- FAIL: TestState_Draw/a_b (0.00s)
+    --- FAIL: Test_Draw/a_b (0.00s)
 ```
 
 Hmm, interesting. Not quite what we were expecting. To see what's going on, let's plug the output graph of our `abc` test into [mermaids live coding site](https://mermaid.live/) and see what we're looking at.
@@ -463,7 +467,7 @@ In this simple example, there is one merge operation, during which we copy all t
 
 ```mermaid
 graph LR
-0((0)) -."merge".->1((0))
+0((0)) -."merge".-1((0))
 1((1)) --"a"--> 2((2))
 ```
 
@@ -728,7 +732,7 @@ style 3 fill:#00ab41;`,
 }
 ```
 
-This should look familiar to our previous `TestState_DebugFSM` test, with the biggest difference being that now we are returning a slice of drawings, along with the `currentCharacterIndex`, for each frame (or step) of the algorithm. 
+This should look familiar to our previous `Test_DebugFSM` test, with the biggest difference being that now we are returning a slice of drawings, along with the `currentCharacterIndex`, for each frame (or step) of the algorithm. 
 
 Zoom in on the first step of the algorithm.
 

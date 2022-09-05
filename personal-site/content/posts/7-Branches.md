@@ -179,7 +179,6 @@ That's better, we can now immediately see what's going on.
 
 {{% notice note %}}
 It probably seems like we're spending a lot of time building things to help us visualize our system, rather than building the system itself. That's true, and this is a large investment. However, this should pay dividends when it comes to debugging issues that come up, and in simply understanding our system better. 
-
 It's hard to give hard numbers when it comes to deciding whether a tool is worth the time it takes to build it, but considering that the implementation is fairly straight forward, I think it's easily worth it in this case.
 {{% /notice %}}
 
@@ -837,7 +836,48 @@ With all that in place, let's try it again.
 
 ![parallel-state-demo.gif](/img/parallel-state-demo.gif)
 
-Now all `States` are active most of the time because the initial state is being activated on every new character, meaning that each substring is being processed through the FSM. This means that no backtracking is necessary.
+Now, all `States` are active most of the time because the initial state is being activated on every new character, meaning that each substring is being processed through the FSM. This means that no backtracking is necessary.
+
+It looks like we're pretty close to a full implementation of the`'|'` character in regular expressions. Let's fire up our fuzzer and see if it can find what we're missing.
+
+```diff
+@@ // fsm_test.go
+
+@@ func FuzzFSM(f *testing.F) {
+
+        f.Add("ca(t)(s)", "dog")
+ 
+        f.Fuzz(func(t *testing.T, regex, input string) {
+-               if strings.ContainsAny(regex, "[]{}$^|*+?\\") {
++               if strings.ContainsAny(regex, "[]{}$^*+?\\") {
+
+```
+
+Hmm, we do see an error. 
+
+```zsh
+--- FAIL: FuzzFSM (0.00s)
+	fsm_test.go:137: Mismatch - 
+		Regex: '|1' (as bytes: 7c31), 
+		Input: '0' (as bytes: 30) 
+		-> 
+		Go Regex Pkg: 'true', 
+		Our regex result: 'false'
+
+```
+
+It seems that we return `false` when a regex is empty on one side of the `Pipe` expression, when we should return `true`. Let's see if we can see what's going on from the FSM graph for `'|1'`
+
+Our compiled FSM looks as follows;
+
+```mermaid
+graph LR 
+0((0)) --"1"--> 1((1))
+```
+
+Well, that's clearly not correct. We actually need an FSM which instantly matches, because we're saying that it should match the regex `'1'` OR match the regex `''` (the empty string), which everything should match.
+
+We're going to do this with a useful trick for handling the empty string regular expression called **epsilons**.
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v6)
