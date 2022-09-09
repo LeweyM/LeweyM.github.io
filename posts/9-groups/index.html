@@ -80,46 +80,54 @@
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                }
 </span></span><span style=display:flex><span>        }
 </span></span></code></pre></div><p>Let&rsquo;s walk through these new cases.</p><p>When we encounter a <code>LParen</code> <code>(</code> opening parenthesis symbol, we want to start a new group. In this case, we simply push a new group onto the stack. This new group will then be picked up and used when other symbols or characters are processed.</p><p>When we encounter a <code>RParen )</code> closing parenthesis symbol, the case is slightly more complicated. We want to take the <code>Node</code> at the top of the stack, append it to the next <code>Node</code> down in the stack, and then put those combined <code>Nodes</code> at the top of the stack again. You can think of this as &lsquo;reducing&rsquo; the top two elements of the stack into a single <code>Node</code>.</p><p>Let&rsquo;s look at a visual example. We&rsquo;ll parse the expression <code>"a(b|c)"</code></p><div class=mermaid>graph TD
+subgraph " "
 subgraph "outer"
 1(outer-group)
+end
 end
 subgraph stack
 root --> *outer-group
 end</div><p>When we start the parser, a <code>Group</code> will be created which represents the whole expression. We&rsquo;ll call this <code>outer-group</code>. The stack will be initialized with a pointer to <code>outer-group</code>.</p><p>After processing <code>'a'</code>, the parser will look like this.</p><div class=mermaid>graph TD
+subgraph " "
 subgraph "outer"
 1(outer-group) --> 2[a]
+end
 end
 subgraph stack
 root --> *outer-group
 end</div><p>A <code>CharacterLiteral(a)</code> is simply appended to the group on top of the stack; <code>outer-group</code>.</p><p>When an opening parenthesis <code>'('</code> symbol is encountered, a new group <code>inner-group</code> will be created and a pointer will be pushed onto the stack.</p><div class=mermaid>graph TD
+subgraph " "
 subgraph "outer"
 1(outer-group) --> 2[a]
 end
 subgraph "inner"
 3(inner-group)
 end
+end
 subgraph stack
 root --> *outer-group
 *outer-group --> *inner-group
 end</div><p>Now, when <code>'b'</code> is processed, it will be appended to the new <code>inner-group</code> <code>Node</code> as it is the last <code>Node</code> on the stack.</p><div class=mermaid>graph TD
+subgraph " "
 subgraph "outer"
 1(outer-group) --> 2[a]
 end
 subgraph "inner"
 3(inner-group) --> 4[b]
+end
 end
 subgraph stack
 root --> *outer-group
 *outer-group --> *inner-group
 end</div><p>The branch symbol <code>|</code> will convert the top node on the stack into a branch, add the group as a child of the branch, add a new group, and push the branch pointer onto the stack:</p><div class=mermaid>graph TD
 subgraph " "
+subgraph "outer"
+1(outer-group) --> 2[a]
+end
 subgraph "inner"
 5(inner-branch) -->
 3(inner-group) --> 4[b]
 5(inner-branch) --> 6(inner-group-2)
-end
-subgraph "outer"
-1(outer-group) --> 2[a]
 end
 end
 subgraph stack
@@ -127,14 +135,14 @@ root --> *outer-group
 *outer-group --> *inner-branch
 end</div><p>And now the next character symbol <code>'c'</code> will be applied to top <code>Node</code> of the stack - <code>inner-branch</code>, which will apply it to its last child - <code>inner-group-2</code></p><div class=mermaid>graph TD
 subgraph " "
+subgraph "outer"
+1(outer-group) --> 2[a]
+end
 subgraph "inner"
 5(inner-branch) -->
 3(inner-group) --> 4[b]
 5(inner-branch) --> 6(inner-group-2)
 6 --> 7[c]
-end
-subgraph "outer"
-1(outer-group) --> 2[a]
 end
 end
 subgraph stack
@@ -171,6 +179,6 @@ end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the 
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span> 
 </span></span><span style=display:flex><span>                // group
 </span></span><span style=display:flex><span>                {&#34;word followed by group&#34;, &#34;1(|)&#34;, &#34;0&#34;},
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {&#34;group followed by word&#34;, &#34;(|)1&#34;, &#34;0&#34;},
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {&#34;empty group concatenation&#34;, &#34;(()0)0&#34;, &#34;0&#34;},
 </span></span></span></code></pre></div><p>This is simply the inverse of our previous test NOT SURE ABOUT THIS&mldr;</p><h2 id=compiling-groups>Compiling groups</h2><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v7>here</a></p></div></div><p>Previous: <a href=/posts/8-epsilons/>8 Epsilons</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
 <script>mermaid.initialize({startOnLoad:!0})</script></body></html>
