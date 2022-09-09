@@ -135,8 +135,10 @@ Let's look at a visual example. We'll parse the expression `"a(b|c)"`
 ```mermaid
 graph TD
 
+subgraph " "
 subgraph "outer"
 	1(outer-group)
+end
 end
 
 subgraph stack
@@ -151,11 +153,12 @@ After processing `'a'`, the parser will look like this.
 graph TD
 
   
-
+subgraph " "
 subgraph "outer"
 
 1(outer-group) --> 2[a]
 
+end
 end
 
   
@@ -175,7 +178,7 @@ When an opening parenthesis `'('` symbol is encountered, a new group `inner-grou
 graph TD
 
   
-
+subgraph " "
 subgraph "outer"
 
 1(outer-group) --> 2[a]
@@ -190,7 +193,7 @@ subgraph "inner"
 
 end
 
-  
+end
 
 subgraph stack
 
@@ -207,7 +210,7 @@ Now, when `'b'` is processed, it will be appended to the new `inner-group` `Node
 graph TD
 
   
-
+subgraph " "
 subgraph "outer"
 
 1(outer-group) --> 2[a]
@@ -220,6 +223,7 @@ subgraph "inner"
 
 3(inner-group) --> 4[b]
 
+end
 end
 
   
@@ -241,7 +245,11 @@ graph TD
   
 
 subgraph " "
+subgraph "outer"
 
+1(outer-group) --> 2[a]
+
+end
 subgraph "inner"
 
 5(inner-branch) -->
@@ -254,11 +262,7 @@ end
 
   
 
-subgraph "outer"
 
-1(outer-group) --> 2[a]
-
-end
 
 end
 
@@ -281,6 +285,11 @@ graph TD
 
 subgraph " "
 
+subgraph "outer"
+
+1(outer-group) --> 2[a]
+
+end
 subgraph "inner"
 
 5(inner-branch) -->
@@ -295,11 +304,6 @@ end
 
   
 
-subgraph "outer"
-
-1(outer-group) --> 2[a]
-
-end
 
 end
 
@@ -389,7 +393,7 @@ I think I can reduce this error into one a bit more manageable, while I'll add a
  
                 // group
                 {"word followed by group", "1(|)", "0"},
-+               {"group followed by word", "(|)1", "0"},
++               {"empty group concatenation", "(()0)0", "0"},
 
 ```
 
