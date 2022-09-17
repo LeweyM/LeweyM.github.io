@@ -79,7 +79,7 @@
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                     p.push(outer)
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                }
 </span></span><span style=display:flex><span>        }
-</span></span></code></pre></div><p>Let&rsquo;s walk through these new cases.</p><p>When we encounter a <code>LParen</code> <code>(</code> opening parenthesis symbol, we want to start a new group. In this case, we simply push a new group onto the stack. This new group will then be picked up and used when other symbols or characters are processed.</p><p>When we encounter a <code>RParen )</code> closing parenthesis symbol, the case is slightly more complicated. We want to take the <code>Node</code> at the top of the stack, append it to the next <code>Node</code> down in the stack, and then put those combined <code>Nodes</code> at the top of the stack again. You can think of this as &lsquo;reducing&rsquo; the top two elements of the stack into a single <code>Node</code>.</p><p>Let&rsquo;s look at a visual example. We&rsquo;ll parse the expression <code>"a(b|c)"</code></p><div class=mermaid>graph TD
+</span></span></code></pre></div><p>Let&rsquo;s walk through these new cases.</p><p>When we encounter a <code>LParen</code> <code>'('</code> opening parenthesis symbol, we want to start a new group. In this case, we simply push a new group onto the stack. This new group will then be picked up and used when other symbols or characters are processed.</p><p>When we encounter a <code>RParen ')'</code> closing parenthesis symbol, the case is slightly more complicated. We want to take the <code>Node</code> at the top of the stack, append it to the next <code>Node</code> in the stack, and then put those combined <code>Nodes</code> at the top of the stack again. You can think of this as <em>reducing</em> the top two elements of the stack into a single <code>Node</code>.</p><p>Let&rsquo;s look at a visual example. We&rsquo;ll parse the expression <code>"a(b|c)"</code></p><div class=mermaid>graph TD
 subgraph " "
 subgraph "outer"
 1(outer-group)
@@ -95,7 +95,7 @@ end
 end
 subgraph stack
 root --> *outer-group
-end</div><p>A <code>CharacterLiteral(a)</code> is simply appended to the group on top of the stack; <code>outer-group</code>.</p><p>When an opening parenthesis <code>'('</code> symbol is encountered, a new group <code>inner-group</code> will be created and a pointer will be pushed onto the stack.</p><div class=mermaid>graph TD
+end</div><p>A <code>CharacterLiteral(a)</code> is simply appended to the group on top of the stack; <code>outer-group</code>.</p><p>When an opening parenthesis <code>'('</code> symbol is encountered, a new group, which we&rsquo;ll call <code>inner-group</code>, will be created, and a pointer to it will be pushed onto the stack.</p><div class=mermaid>graph TD
 subgraph " "
 subgraph "outer"
 1(outer-group) --> 2[a]
@@ -148,7 +148,7 @@ end
 subgraph stack
 root --> *outer-group
 *outer-group --> *inner-branch
-end</div><p>Finally, we encounter the closing parenthesis symbol <code>)</code>. This will pop <code>inner-branch</code> and <code>outer-group</code> from the stack, append <code>inner-branch</code> to <code>outer-group</code>, and then push <code>outer-group</code> back onto the stack.</p><div class=mermaid>graph TD
+end</div><p>Finally, we encounter the closing parenthesis symbol <code>)</code>. This will pop <code>inner-branch</code> and <code>outer-group</code> from the stack, append <code>inner-branch</code> to <code>outer-group</code>, and then push the pointer to <code>outer-group</code> back onto the stack.</p><div class=mermaid>graph TD
 subgraph " "
 subgraph "outer"
 1(outer-group) --> 2[a]
@@ -161,7 +161,7 @@ end
 end
 subgraph stack
 root --> *outer-group
-end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the last element off the stack - <code>outer-group</code> and return it.</p><p>The power of using the <code>stack</code> data structures should be evident here. In our example, we only went two levels deep - the outer group and the inner group - but there&rsquo;s no reason that we couldn&rsquo;t go 3, 4, or any number of levels deep.</p><p>The stack takes care of &lsquo;remembering&rsquo; the previous levels, so we only need to care about processing the inmost level, then reduce the top two levels into one when we collapse a group. Because of this behaviour, stacks are particularly useful for parsing nested structures of arbitrary depth.</p><p>That should actually be enough to get our test to pass!</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   TestFSMAgainstGoRegexPkg/concatenated_word_with_grouped_branch
+end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the last element off the stack - <code>outer-group</code> and return it.</p><p>The power of using the <code>stack</code> data structures should be evident here. In our example, we only went two levels deep - the outer group and the inner group - but there&rsquo;s no reason that we couldn&rsquo;t go 3, 4, or any number of levels deep.</p><p>The stack takes care of &lsquo;remembering&rsquo; the previous levels, so we only need to care about processing the innermost level, then reduce the top two levels into one when we collapse a group. Because of this behaviour, stacks are particularly useful for parsing nested structures of arbitrary depth.</p><p>That should be enough to get our test to pass!</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   TestFSMAgainstGoRegexPkg/concatenated_word_with_grouped_branch
 </span></span><span style=display:flex><span>--- PASS: TestFSMAgainstGoRegexPkg <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
 </span></span></code></pre></div><p>Let&rsquo;s run our fuzzer again and see if we&rsquo;re missing something.</p><p>Our fuzzer finds an interesting error.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>fuzz: elapsed: 0s, gathering baseline coverage: 5/664 completed
 </span></span><span style=display:flex><span>--- FAIL: FuzzFSM <span style=color:#000;font-weight:700>(</span>0.07s<span style=color:#000;font-weight:700>)</span>
@@ -172,7 +172,7 @@ end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the 
 </span></span><span style=display:flex><span>            -&gt; 
 </span></span><span style=display:flex><span>            Go Regex Pkg: <span style=color:#d14>&#39;false&#39;</span>, 
 </span></span><span style=display:flex><span>            Our regex result: <span style=color:#d14>&#39;true&#39;</span>
-</span></span></code></pre></div><p>I think I can reduce this error into one a bit more manageable, while I&rsquo;ll add as a test case.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>
+</span></span></code></pre></div><p>I think I can reduce this error into one a bit more manageable, which I&rsquo;ll add as a test case.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ // fsm_test.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
@@ -180,5 +180,120 @@ end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the 
 </span></span><span style=display:flex><span>                // group
 </span></span><span style=display:flex><span>                {&#34;word followed by group&#34;, &#34;1(|)&#34;, &#34;0&#34;},
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {&#34;empty group concatenation&#34;, &#34;(()0)0&#34;, &#34;0&#34;},
-</span></span></span></code></pre></div><p>This is simply the inverse of our previous test NOT SURE ABOUT THIS&mldr;</p><h2 id=compiling-groups>Compiling groups</h2><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v7>here</a></p></div></div><p>Previous: <a href=/posts/8-epsilons/>8 Epsilons</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
+</span></span></span></code></pre></div><p>We can understand this error by looking at the <code>merge</code> function when compiling empty groups.</p><h2 id=compiling-groups>Compiling groups</h2><p>Let&rsquo;s take a look at our merge function code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// state.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// adds the transitions of other State (s2) to this State (s).//  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// warning: do not use if State s2 has any incoming transitions.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>merge</span>(s2 <span style=color:#000;font-weight:700>*</span>State) {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(s2.incoming) <span style=color:#000;font-weight:700>!=</span> <span style=color:#099>0</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;</span>, <span style=color:#000;font-weight:700>*</span>s2, s.incoming))  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s2.transitions {  
+</span></span><span style=display:flex><span>      <span style=color:#998;font-style:italic>// 1. copy s2 transitions to s  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>      s.<span style=color:#900;font-weight:700>addTransition</span>(t.to, t.predicate, t.debugSymbol)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 2. remove s2  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   s2.<span style=color:#0086b3>delete</span>()  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This works by taking the transitions of <code>s2</code> and copying them all over to <code>s</code>, then <em>deleting</em> <code>s2</code>.</p><p>Let&rsquo;s remind ourselves visually of how this works.</p><div class=mermaid>graph LR
+0((s)) -."merge".-1((s))
+1((s2)) --"a"--> 2((a))</div><p>Becomes&mldr;</p><div class=mermaid>graph LR
+10((s)) --"a"--> 20((a))
+30((s2)) --"a"--> 20((a))</div><p>And then <code>State s2</code> is deleted</p><div class=mermaid>graph LR
+10((s)) --"a"--> 20((a))</div><p>The problem is that we have a hidden assumption here - that <strong>s2 has one or more transitions</strong>. If <code>s2</code> doesn&rsquo;t have any transitions, then this type of merge doesn&rsquo;t work, as there are no transitions to copy. This is what&rsquo;s happening when we try to concatenate to an empty string in the regular expression <code>(()0)0</code>, the merge between <code>()</code> and <code>0</code> simply breaks down.</p><p>What we need is a way of saying &ldquo;being in state S is equivalent to being in state S2&rdquo;, and epsilons do just that.</p><p>We could modify our <code>merge</code> method to conditionally join the two states with an epsilon in the case that <code>s2</code> has no transitions. This would work for our current case, but it turns out there&rsquo;s a more general solution here. We can simply join all a <code>Groups</code> child components with epsilon transitions instead of by using the <code>merge</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // ast.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span>func (g *Group) compile() (head *State, tail *State) {
+</span></span><span style=display:flex><span>		startState := State{}  
+</span></span><span style=display:flex><span>		currentTail := &amp;startState
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span>        for _, expression := range g.ChildNodes {
+</span></span><span style=display:flex><span>                nextStateHead, nextStateTail := expression.compile()
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               currentTail.addEpsilon(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               currentTail.merge(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                currentTail = nextStateTail
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		return &amp;startState, currentTail
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This works because it says &ldquo;The end of <code>childNode</code> A is equivalent to the beginning of <code>childNode</code> B&rdquo;. Let&rsquo;s see what our visualizer shows us;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>go run ./... v8 draw <span style=color:#d14>&#34;abc&#34;</span> <span style=color:#d14>&#34;abc&#34;</span>  
+</span></span></code></pre></div><p><img src=/img/doubled-with-epsilon-demo.gif alt=doubled-with-epsilon-demo.gif></p><p>We can see the compiled <code>childNodes</code> in our simple example.</p><ul><li><code>State 0</code> → starting state</li><li><code>State 1 - State 2</code> → compiled <code>childNode('a')</code></li><li><code>State 3 - State 4</code> → compiled <code>childNode('b')</code></li><li><code>State 5 - State 6</code> → compiled <code>childNode('c')</code></li></ul><p>When these are chained together using epsilon transitions, the effect is the equivalent of merging the states pairs <code>(0,1)</code>, <code>(2,3)</code> and <code>(4,5)</code>.</p><p>This is an <strong>excellent tool for state machine composition</strong>, because <strong>it allows us to chain together any two state machines, regardless of how they work internally</strong>. We can have two arbitrarily complex state machines, and, as long as the last state of one is joined to the first state of the other with an epsilon transition, we can consider them as one concatenated state machine.</p><p>It does, however, mess up our visualizations for simple string concatenations such as <code>'abc'</code>, so I think it&rsquo;s worth making a small exception for chaining together strings of <code>CharacterLiteral</code> nodes.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // ast.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func (g *Group) compile() (head *State, tail *State) {
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span> 
+</span></span><span style=display:flex><span>        for _, expression := range g.ChildNodes {
+</span></span><span style=display:flex><span>                nextStateHead, nextStateTail := expression.compile()
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               _, isChar := expression.(CharacterLiteral)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               if isChar {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-                       currentTail.merge(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               } else {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-                       currentTail.addEpsilon(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               }
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               currentTail.merge(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                currentTail = nextStateTail
+</span></span><span style=display:flex><span>        }
+</span></span></code></pre></div><p>This gives us a clearer picture for simple string concatenation, but our tests still pass!</p><p><img src=/img/abc-regex-demo-2.gif alt=abc-regex-demo-2.gif></p><p>So our tests are now passing, let&rsquo;s go back to our fuzzer.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>--- FAIL: FuzzFSM <span style=color:#000;font-weight:700>(</span>0.14s<span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>    --- FAIL: FuzzFSM <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        fsm_test.go:145: Mismatch - 
+</span></span><span style=display:flex><span>            Regex: <span style=color:#d14>&#39;(|)1&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 287c2931<span style=color:#000;font-weight:700>)</span>, 
+</span></span><span style=display:flex><span>            Input: <span style=color:#d14>&#39;0&#39;</span> <span style=color:#000;font-weight:700>(</span>as bytes: 30<span style=color:#000;font-weight:700>)</span> 
+</span></span><span style=display:flex><span>            -&gt; 
+</span></span><span style=display:flex><span>            Go Regex Pkg: <span style=color:#d14>&#39;false&#39;</span>, 
+</span></span><span style=display:flex><span>            Our regex result: <span style=color:#d14>&#39;true&#39;</span>
+</span></span></code></pre></div><p>Interestingly, this looks very similar to our previously failing case of <code>1(|)</code>. Let&rsquo;s fix it.</p><h3 id=fixing-the-branch-compiler>Fixing the Branch compiler</h3><p>First, a test case.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // fsm_test.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>                {&#34;branch with shared characters&#34;, &#34;dog|dot&#34;, &#34;dot&#34;},
+</span></span><span style=display:flex><span>                {&#34;branch with right side empty&#34;, &#34;a|&#34;, &#34;&#34;},
+</span></span><span style=display:flex><span>                {&#34;branch with left side empty&#34;, &#34;|a&#34;, &#34;&#34;},
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span>                // group
+</span></span><span style=display:flex><span>                {&#34;word followed by group&#34;, &#34;1(|)&#34;, &#34;0&#34;},
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {&#34;group followed by word&#34;, &#34;(|)1&#34;, &#34;0&#34;},
+</span></span></span></code></pre></div><p>Let&rsquo;s use our visualizer to check the FSM.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>go run ./... v8 draw <span style=color:#d14>&#34;(|)1&#34;</span>
+</span></span></code></pre></div><div class=mermaid>graph LR
+0((0)) -."ε".-> 1((1))
+1((1)) -."ε".-> 2((2))
+1((1)) -."ε".-> 3((3))
+1((1)) --"1"--> 4((4))</div><p>Well, that&rsquo;s clearly not correct. It seems that the compiled <code>CharacterLiteral</code> node for <code>'1'</code> is being added as a third branch to the compiled <code>Branch</code> node <code>'(|)'</code>.</p><p>The reason for this is in the <code>Branch</code> struct <code>compile</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// ast.go 
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (b <span style=color:#000;font-weight:700>*</span>Branch) <span style=color:#900;font-weight:700>compile</span>() (head <span style=color:#000;font-weight:700>*</span>State, tail <span style=color:#000;font-weight:700>*</span>State) {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, expression <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> b.ChildNodes {  
+</span></span><span style=display:flex><span>      nextStateHead, _ <span style=color:#000;font-weight:700>:=</span> expression.<span style=color:#900;font-weight:700>compile</span>()  
+</span></span><span style=display:flex><span>      startState.<span style=color:#900;font-weight:700>addEpsilon</span>(nextStateHead)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> startState, startState  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>As we can see from the <code>return</code> statement, we are not passing back the last <code>State</code> of the compiled <code>Node</code>. In fact, there is no last <code>State</code>! To illustrate the problem, which is the last <code>State</code> in the following FSM?</p><div class=mermaid>graph LR
+0((0)) --"a"--> 1((1))
+0((0)) --"b"--> 2((2))
+0((0)) --"c"--> 3((3))</div><p>Both <code>States</code> 1, 2 and 3 could all be considered the last <code>State</code>, how can we decide? The answer, again, is epsilon transitions. Using epsilons, we can say that <code>State 1,2</code> and <code>3</code> are all equivalent to a new <code>State</code>, <code>State 4</code>, which is the last <code>State</code> of the FSM!</p><div class=mermaid>graph LR
+0((0)) --"a"--> 1((1))
+0((0)) --"b"--> 2((2))
+0((0)) --"c"--> 3((3))
+1((1)) -."ε".-> 4((4))
+2((2)) -."ε".-> 4((4))
+3((3)) -."ε".-> 4((4))</div><p>The behaviour is exactly the same, only the composition becomes easier.</p><p>Let&rsquo;s add this to the code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // ast.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span> func (b *Branch) compile() (head *State, tail *State) {
+</span></span><span style=display:flex><span>        startState := &amp;State{}
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       endState := &amp;State{}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        for _, expression := range b.ChildNodes {
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               nextStateHead, _ := expression.compile()
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               nextStateHead, tail := expression.compile()
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                startState.addEpsilon(nextStateHead)
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               tail.addEpsilon(endState)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        }
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       return startState, startState
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       return startState, endState
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> }
+</span></span></code></pre></div><p>And let&rsquo;s check our generated FSM again.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>go run ./... v8 draw <span style=color:#d14>&#34;(|)1&#34;</span>
+</span></span></code></pre></div><div class=mermaid>graph LR
+0((0)) -."ε".-> 1((1))
+1((1)) -."ε".-> 2((2))
+1((1)) -."ε".-> 5((5))
+2((2)) -."ε".-> 3((3))
+3((3)) --"1"--> 4((4))
+5((5)) -."ε".-> 3((3))</div><p>That&rsquo;s better, and our tests should now be green!</p><div class="notices note"><p>It should be quite clear that the above FSM does a lot of unnecessary work. In fact, all the epsilon transitions could be eliminated and the FSM would still be correct! There are ways to reduce this unnecessary bloat, and hopefully I&rsquo;ll get around to optimization. For now, correctness is enough for me.</p></div><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v7>here</a></p></div></div><p>Previous: <a href=/posts/8-epsilons/>8 Epsilons</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
 <script>mermaid.initialize({startOnLoad:!0})</script></body></html>
