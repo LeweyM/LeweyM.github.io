@@ -205,7 +205,7 @@ Semantically, the regular expression '' should always match, because every strin
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, epsilon <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> state.epsilons {  
 </span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> !r.activeStates.<span style=color:#900;font-weight:700>has</span>(epsilon) {  
 </span></span><span style=display:flex><span>         r.activeStates.<span style=color:#900;font-weight:700>add</span>(epsilon)  
-</span></span><span style=display:flex><span>         r.<span style=color:#900;font-weight:700>activateConnectedEpsilons</span>(state)  
+</span></span><span style=display:flex><span>         r.<span style=color:#900;font-weight:700>activateConnectedEpsilons</span>(epsilon)  
 </span></span><span style=display:flex><span>      }  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
