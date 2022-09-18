@@ -646,72 +646,7 @@ That's better, and our tests should now be green!
 It should be quite clear that the above FSM does a lot of unnecessary work. In fact, all the epsilon transitions could be eliminated and the FSM would still be correct! There are ways to reduce this unnecessary bloat, and hopefully I'll get around to optimization. For now, correctness is enough for me.
 {{% /notice %}}
 
-We're not done yet, let's see if our fuzzer has any more news for us. This is where things get tricky.
-
-### Debugging semi-random errors
-
-The first error my fuzzer throws up is the following:
-
-```zsh
---- FAIL: FuzzFSM (0.08s)
-    --- FAIL: FuzzFSM (0.00s)
-        fsm_test.go:146: Mismatch - 
-            Regex: '()()()()()(())()()()(())()()(())()(()())()()(())()(()())()()()()' (as bytes: 28292829282928292829282829292829282928292828292928292829282829292829282829282929282928292828292928292828292829292829282928292829), 
-            Input: '0' (as bytes: 30) 
-            -> 
-            Go Regex Pkg: 'true', 
-            Our regex result: 'false'
-```
-
-Hmmm, I don't see much of a pattern yet, but the interesting thing is that if I run it again, I get a different error.
-
-```zsh
---- FAIL: TestFSMAgainstGoRegexPkg (0.00s)
-    --- FAIL: TestFSMAgainstGoRegexPkg/branch_with_left_side_empty (0.00s)
-        fsm_test.go:108: Compiled state machine:
-            graph LR
-            0((0)) -."ε".-> 1((1))
-            0((0)) -."ε".-> 4((4))
-            1((1)) -."ε".-> 2((2))
-            3((3)) -."ε".-> 2((2))
-            4((4)) --"a"--> 3((3))
-        fsm_test.go:111: Mismatch - 
-            Regex: '|a' (as bytes: 7c61), 
-            Input: '' (as bytes: ) 
-            -> 
-            Go Regex Pkg: 'true', 
-            Our regex result: 'false'
-
-```
-
-The strange thing here is this is one of our previous tests! If I run this test on it's own, it passes the first time, but if I run it several times, eventually it fails!
-
-Tests which sometimes fail and pass other times are the result of **non-deterministic** behaviour. This could be caused from side effects in your code such as control flows which rely on the current time, race-conditions from concurrent processing, or from using components which have random behaviour. As we don't have any side effects in our code, and we don't use any concurrent structures, it's a good bet that somewhere we're using something that has random behaviour.
-
-In Go, the first culprit from random behaviour is map iteration. When using the `range` keyword on a `map` type in Go, the order in which the keys are returned is random. I know that we range over maps in our code, so let's check those areas first.
-
-Sure enough, there is one place where random order iteration can cause problems.
-
-```go "hl_lines 3"
-// runner.go
-
-func (r *runner) advanceEpsilons() {  
-   for state := range r.activeStates {  
-      r.activateConnectedEpsilons(state)  
-   }  
-}  
-  
-func (r *runner) activateConnectedEpsilons(state *State) {    
-      if !r.activeStates.has(epsilon) {  
-         r.activeStates.add(epsilon)  
-         r.activateConnectedEpsilons(state)  
-      }  
-   }  
-}
-```
-
-
-
+Running our fuzzer again confirms that all is well! We can now move on to other regular expression constructs, such as modifiers!
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v7)
