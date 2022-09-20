@@ -546,6 +546,7 @@ First, a test case.
  
                 // group
                 {"word followed by group", "1(|)", "0"},
+                {"empty group concatenation", "(()0)0", "0"},
 +               {"group followed by word", "(|)1", "0"},
 ```
 
@@ -646,8 +647,20 @@ That's better, and our tests should now be green!
 It should be quite clear that the above FSM does a lot of unnecessary work. In fact, all the epsilon transitions could be eliminated and the FSM would still be correct! There are ways to reduce this unnecessary bloat, and hopefully I'll get around to optimization. For now, correctness is enough for me.
 {{% /notice %}}
 
-Running our fuzzer again confirms that all is well! We can now move on to other regular expression constructs, such as modifiers!
+Running our fuzzer again confirms that all is well! I think it's worth taking some time now to play around a bit and try out some complex examples, just to see what kind of FSM we generate. For example, let's try the following command;
+
+```zsh
+go run ./... v8 draw "(a(b|c|d|e)((f)|g)" "acg"
+```
+
+We get the following visualization.
+
+![complex-branch-epsilon-demo.gif](/img/complex-branch-epsilon-demo.gif)
+
+Try out different inputs and see what the flow of state activation looks like for each one. Notice that the epsilon transitions simply pass activation from one state to another, effectively making two states equivalent.
+
+We can now move on to other regular expression constructs, such as modifiers!
 
 {{% notice tip %}} 
-Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v7)
+Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v8)
 {{% /notice %}} 

@@ -221,7 +221,7 @@ func (l CharacterLiteral) compile() (head *State, tail *State) {
 }
 ```
 
-Finally, let's use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just `group`.
+Finally, let's use another interface for composite nodes - those with the ability to contain child nodes. This will make things easier when we add other types of composite nodes other than just `Group`.
 
 ```go
 // ast.go
@@ -259,13 +259,12 @@ func TestParser(t *testing.T) {
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-         p := Parser{}  
-         tokens := lex(tt.input)  
+		  tokens := lex(tt.input)  
+		  p := NewParser(tokens)  
+		  result := p.Parse()
   
-         result := p.Parse(tokens)  
-  
-         if !reflect.DeepEqual(result, tt.expectedResult) {  
-            t.Fatalf("Expected [%+v], got [%+v]", tt.expectedResult, result)  
+		 if !reflect.DeepEqual(result, tt.expectedResult) {  
+			t.Fatalf("Expected:\n%+v\n\nGot:\n%+v\n", tt.expectedResult, result)
          }  
       })  
    }  
@@ -286,29 +285,30 @@ So, in our `simple string` test, we're using as an input the string `aBc` and we
 }
 ```
 
-Parsing such a simple example is very easy - we would simply initialize a new `Group`, then loop over the characters and append them to the `Group`. As we have no other `compositeNodes`, this will be enough for now.
+Parsing such a simple example is very easy - we would simply initialize a new `Group`, then loop over the characters and append them to the `Group`. This `Group` will be our root `Node`, and will a pointer to it can simply be returned after all the tokens have been processed.
 
 ```go
 // parser.go
 
-type Parser struct { }  
-  
-func NewParser() *Parser {  
-   return &Parser{}  
+type Parser struct{  
+   tokens   []token  
 }  
   
-func (p *Parser) Parse(tokens []token) Node {  
-   group := Group{}
+func NewParser(tokens []token) *Parser {  
+   return &Parser{tokens: tokens}  
+}  
   
-   for _, t := range tokens {  
+func (p *Parser) Parse() Node {  
+   root := Group{}  
+  
+   for _, t := range p.tokens {  
       switch t.symbol {  
-      case Character:    
-         group.Append(CharacterLiteral{Character: t.letter})  
+      case Character:  
+         root.Append(CharacterLiteral{Character: t.letter})  
       }  
    }  
   
-   return &group  
-}
+   return &root
 ```
 
 As our tests are now green, let's leave it there and move onto the next step - there'll be plenty of complexity to dive into later as we introduce nested structures.
@@ -455,10 +455,9 @@ Before we get ahead of ourselves, let's modify our tests to use our new lexer, p
 -          predicate: func(input rune) bool { return input == 'c' },
 -  })
 +  // compiled
-+  parser := NewParser()
-+
 +  tokens := lex("abc")
-+  ast := parser.Parse(tokens)
++  parser := NewParser(tokens)
++  ast := parser.Parse()
 +  startState, _ := ast.compile()
   
    type test struct {  

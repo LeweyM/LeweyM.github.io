@@ -50,10 +50,10 @@ Most of the testing logic is in the `matchRegex` function, so let's define that 
 ```Go
 // fsm_test.go
 
-func matchRegex(regex, input string) bool {  
-   parser := NewParser()  
+func matchRegex(regex, input string) bool {    
    tokens := lex(regex)  
-   ast := parser.Parse(tokens)  
+   parser := NewParser(tokens)
+   ast := parser.Parse()  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
@@ -258,9 +258,9 @@ Now let's modify our test function to reset our FSM if there is a failure. That 
 @@ // fsm_test.go
 
 func matchRegex(regex, input string) Status {  
-   parser := NewParser()  
    tokens := lex(regex)  
-   ast := parser.Parse(tokens)  
+   parser := NewParser(tokens)
+   ast := parser.Parse()  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
@@ -308,9 +308,9 @@ And now we can solve this by adding a check in our `matchRegex` function;
 @@ // fsm_test.go
 
 func matchRegex(regex, input string) bool {  
-   parser := NewParser()  
    tokens := lex(regex)  
-   ast := parser.Parse(tokens)  
+   parser := NewParser(tokens)
+   ast := parser.Parse()  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
@@ -497,9 +497,9 @@ Actually, there's a better way of looking at this problem. What we actually need
 @@ // fsm_test.go
 
 func matchRegex(regex, input string) bool {  
-   parser := NewParser()  
    tokens := lex(regex)  
-   ast := parser.Parse(tokens)  
+   parser := NewParser(tokens)
+   ast := parser.Parse()  
    startState, _ := ast.compile()  
    testRunner := NewRunner(startState)  
   
@@ -608,11 +608,11 @@ See the problem? We're recursing on a substring of *bytes*, not a substring of *
 @@ // fsm_test.go
 
 func matchRegex(regex, input string) bool {  
-   parser := NewParser()  
    tokens := lex(regex)  
-   ast := parser.Parse(tokens)  
+   parser := NewParser(tokens)
+   ast := parser.Parse()  
    startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)  
+   testRunner := NewRunner(startState)   
   
 -   return match(testRunner, input)  
 +   return match(testRunner, []rune(input))  
@@ -675,11 +675,11 @@ type myRegex struct {
 }  
   
 func NewMyRegex(re string) *myRegex {  
-   tokens := lex(re)  
-   parser := NewParser()  
-   ast := parser.Parse(tokens)  
-   state, _ := ast.compile()  
-   return &myRegex{fsm: state}  
+	tokens := lex(re)  
+	parser := NewParser(tokens)  
+	ast := parser.Parse()  
+	state, _ := ast.compile()
+	return &myRegex{fsm: state}  
 }  
   
 func (m *myRegex) MatchString(input string) bool {  

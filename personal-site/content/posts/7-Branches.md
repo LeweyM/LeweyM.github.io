@@ -34,7 +34,29 @@ Pretty simple stuff! Now that we know what we're looking for, let's start coding
 
 We'll start at the `Parser`.
 
-## Parsing pipes in branches
+First, let's add our data structures.
+
+### The Branch Data Structure
+
+```go
+// ast.go
+
+type Branch struct {  
+   ChildNodes []Node  
+}
+
+func (b *Branch) Append(node Node) {  
+   panic("implement me")  
+}
+
+func (b *Branch) compile() (head *State, tail *State) {  
+   panic("implement me")  
+}
+```
+
+The structure of the `Branch` struct will be very similar to the `Group` struct - they both implement the `CompositeNode` interface and have child `Nodes`. The difference will be in how they are parsed, and how they are compiled.
+
+## Parsing Branch AST Nodes
 
 We're going to want to be able to represent branches as `AST` nodes, so our parser needs to know how to take a regular expression such as `cat|dog` and turn it into a `Branch` AST node with two `Group` child nodes, each containing three `CharacterLiteral` nodes. Visually, the `cat|dog` example should look like this:
 
@@ -120,6 +142,10 @@ Now, the `CompositeNodes`, which for now is only `Group`, will also need to prin
 func (g *Group) string(indentation int) string {  
    return compositeToString("Group", g.ChildNodes, indentation)  
 }  
+
+func (b *Branch) string(indentation int) string {  
+   return compositeToString("Branch", b.ChildNodes, indentation)  
+}
   
 func compositeToString(title string, children []Node, indentation int) string {  
    padding := strings.Repeat("--", indentation)  
@@ -145,9 +171,14 @@ We'll also need to tell Go that every node can print using the `string(indentati
 And finally call these methods from the composite Nodes `String()` method so that our tests use it for output.
 
 ```go
+// ast.go
   
 func (g *Group) String() string {  
-   return "\n" + g.string(0)  
+   return "\n" + g.string(1)  
+}
+
+func (b *Branch) String() string {  
+   return "\n" + b.string(1)  
 }
 ```
 
@@ -155,24 +186,28 @@ Now, let's take a look at our error message again.
 
 ```zsh
 === RUN   TestParser/branches
-    parser_test.go:53: Expected [
-        Branch
+    parser_test.go:52: Expected:
+    
+        --Branch
+        ----Group
+        --------CharacterLiteral('a')
+        --------CharacterLiteral('b')
+        ----Group
+        --------CharacterLiteral('c')
+        --------CharacterLiteral('d')
+        ----Group
+        --------CharacterLiteral('e')
+        --------CharacterLiteral('f')
+        
+        Got:
+        
         --Group
-        ------CharacterLiteral('a')
-        ------CharacterLiteral('b')
-        --Group
-        ------CharacterLiteral('c')
-        ------CharacterLiteral('d')
-        --Group
-        ------CharacterLiteral('e')
-        ------CharacterLiteral('f')], got [
-        Group
-        --CharacterLiteral('a')
-        --CharacterLiteral('b')
-        --CharacterLiteral('c')
-        --CharacterLiteral('d')
-        --CharacterLiteral('e')
-        --CharacterLiteral('f')]
+        ----CharacterLiteral('a')
+        ----CharacterLiteral('b')
+        ----CharacterLiteral('c')
+        ----CharacterLiteral('d')
+        ----CharacterLiteral('e')
+        ----CharacterLiteral('f')
 ```
 
 That's better, we can now immediately see what's going on.
@@ -186,10 +221,10 @@ So let's fix our parser.
 
 ## Adding Pipes to our Parser
 
-During the parsing of a string of tokens, if we come across the `Pipe` ( `'|'`) token, we want to do one of two things, depending on whether the top `Node` in the stack is a `Branch` node or not.
+During the parsing of a string of tokens, if we come across the `Pipe` ( `'|'`) token, we want to do one of two things, depending on whether our root `Node` is a `Branch` node or not.
 
-1. If the top `Node` of the stack is **not** a `Branch` node, want to replace the top of the stack with a new `Branch` node, which will contain the top stack node as its first child, and a new `Group` as its second child.
-2. If the top `Node` of the stack is a `Branch` node, we want to 'split' the `Branch` node, which basically means adding a fresh `Group` node as another child of the `Branch` node.
+1. If the root `Node` is **not** a `Branch` node, want to replace the root with a new `Branch` node, which will contain the old root `Node` as its first child, and a new `Group` as its second child.
+2. If the root `Node` **is** a `Branch` node, we want to 'split' the `Branch`, which basically means adding a fresh `Group` node as a child of the `Branch` node.
 
 Let's walk through these in more detail.
 
@@ -197,7 +232,7 @@ Let's walk through these in more detail.
 
 let's parse the regex `"ab|cd"`.
 
-First, the letter `'a'`.
+First, the letter `'a'`. It simply gets appended to our root `Group` node.
 ```mermaid
 graph TD
 
@@ -205,7 +240,7 @@ graph TD
 0 --> a[a]
 ```
 
-Then `'b'`,
+Then the same for `'b'`,
 ```mermaid
 graph TD
 
@@ -213,7 +248,11 @@ graph TD
 0 --> a[a]
 0 --> b[b]
 ```
-Now we have our pipe character `'|'`. With this, we should create a new `Branch` node and place our `Group` node as it's first child. We should also create a new `Group` node and it should be a new child of the `Branch` node.
+Now we have our pipe character `'|'`. With this, we should create a new `Branch` node and place our `Group` node as it's first child. This `Branch` node will become the new root `Node`. 
+
+We should also create a new `Group` node, and it should be a new child of the `Branch` node.
+
+We should end up with the following;
 ```mermaid
 graph TD
 
@@ -223,7 +262,7 @@ graph TD
 1 --> a[a]
 1 --> b[b]
 ```
-Continuing, we have `'c'`. We should now be appending new expressions to the newly created group (the second child of the `Branch` node).
+Continuing, we have `'c'`. We should now be appending new expressions to the newly created group (the second child of the root `Branch` node).
 ```mermaid
 graph TD
 
@@ -234,7 +273,8 @@ graph TD
 1 --> b[b]
 2 --> c[c]
 ```
-And finally, `'d'`. The `AST` parsing is now complete.
+And finally, `'d'` is also added to the last child of the root `Branch` node. The `AST` parsing is now complete.
+
 ```mermaid
 graph TD
 
@@ -251,13 +291,13 @@ graph TD
 
 Let's try parsing the regex `a|b|c`.
 
-First, we parse the `'a'` character.
+First, we parse the `'a'` character. It gets added to the root `Group` node.
 ```mermaid
 graph TD
 
 0(Group) --> a[a]
 ```
-Now, our first `'|'` token. This uses the first option, where a new `Branch` is created.
+Now, our first `'|'` token. This uses the first option, where a new `Branch` is created and set as the root `Node`.
 ```mermaid
 graph TD
 
@@ -266,7 +306,7 @@ graph TD
 1 --> a[a]
 
 ```
-Next, an `'b'` character token. This will be appended to the latest child of `Branch`.
+Next, an `'b'` character token. This will be appended to the last child of `Branch`.
 ```mermaid
 graph TD
 
@@ -276,7 +316,7 @@ graph TD
 2 --> b[b]
 ```
 
-And now, our second `'|'` token. As the top of the stack will now be pointing to a `Branch` node, we will 'split' this branch and create a new child.
+And now, our second `'|'` token. As the root is now a `Branch` node, we will 'split' this branch and create a new child with a fresh `Group` node.
 ```mermaid
 graph TD
 
@@ -287,7 +327,7 @@ graph TD
 2 --> b[b]
 ```
 
-And finally, the `'c'` character will be appended to the newly created group.
+And finally, the `'c'` character will be appended to the newly created `Group` node.
 ```mermaid
 graph TD
 
@@ -347,28 +387,34 @@ And then, in our parser, we add a case for processing `Pipe` tokens.
 
 ```diff
 @@ // parser.go
-		 	for _, t := range tokens {  
-			    switch t.symbol {  
-			    case Character:  
-			 	   node := p.pop()  
-				   node.Append(CharacterLiteral{Character: t.letter})  
-				   p.push(node)  
-			    case AnyCharacter:  
-				   node := p.pop()  
-				   node.Append(WildcardLiteral{})  
-				   p.push(node)
-+               case Pipe:
-+                       node := p.pop()
-+                       switch b := node.(type) {
-+                       case *Branch:
-+                               b.Split()
-+                       default:
-+                               node = &Branch{ChildNodes: []Node{node, &Group{}}}
-+                       }
-+                       p.push(node)
-                }
+func (p *Parser) Parse() Node {
+-   root := Group{}  
++   var root CompositeNode  
++   root = &Group{}  
+  
+   for _, t := range p.tokens {  
+       switch t.symbol {  
+       case Character:  
+          root.Append(CharacterLiteral{Character: t.letter})  
+       case AnyCharacter:  
+          root.Append(WildcardLiteral{})  
++      case Pipe:  
++         switch b := root.(type) {  
++         case *Branch:  
++            b.Split()  
++         default:  
++            root = &Branch{ChildNodes: []Node{root, &Group{}}}  
++         }  
+      }  
+   }  
+  
+-   return &root  
++   return root  
+}
 
 ```
+
+Notice that our root `Node` now has to be of the interface type `CompositeNode`, as it can now be either a `Group` or a `Branch` type.
 
 This should be enough to get our `Parser` tests green again. Next, we need to compile this AST node into an FSM.
 
@@ -644,7 +690,7 @@ One thing to notice here is that we now use a different method on the `State` ty
  }
 ```
 
-The difference her is subtle, but significant. All matching `States` are returned here, not just the first one we find.
+The difference here is subtle, but significant. All matching `States` are returned here, not just the first one we find.
 
 Going back to our `runner`, we also need a new way of determining if the `runner` status. Instead of checking for a single active `State`, we need to check all of the active `States` and return if any are success `States`.
 
@@ -745,18 +791,20 @@ As we're going to change our algorithm, we expect that our visualizations will c
 
 @@ func Test_DrawSnapshot(t *testing.T) {
 
-				for _, tt := range tests {  
-				    t.Run(tt.name, func(t *testing.T) {  
-					    tokens := lex(tt.regex)  
-					    parser := NewParser()  
-					    ast := parser.Parse(tokens)  
-					    state, _ := ast.compile()
-                        runner := NewRunner(state)
-                        for _, char := range tt.input {
-                                runner.Next(char)
-+                               runner.Start()
-                        }
-                        snapshot := runner.drawSnapshot()
+		for _, tt := range tests {  
+		   t.Run(tt.name, func(t *testing.T) {  
+		      runner := NewRunner(tt.fsmBuilder())  
+		      for _, char := range tt.input {  
+		         runner.Next(char)  
++		         runner.Start()  
+		      }  
+		      snapshot := runner.drawSnapshot()  
+		  
+		      if !reflect.DeepEqual(tt.expected, snapshot) {  
+		         t.Fatalf("Expected drawing to be \n\"%v\"\ngot\n\"%v\"", tt.expected, snapshot)  
+		      }  
+		   })  
+		}
 
 ```
 
@@ -768,9 +816,9 @@ And then let's change our test expectations so that the previous `States` are al
 @@ func Test_DrawSnapshot(t *testing.T) {
     tests := []test{  
       {  
-         name:  "initial snapshot",  
-         regex: "abc",  
-         input: "",  
+         name:       "initial snapshot",  
+         fsmBuilder: abcBuilder,  
+         input:      "",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
@@ -778,30 +826,31 @@ And then let's change our test expectations so that the previous `States` are al
 style 0 fill:#ff5555;`,  
       },  
       {  
-         name:  "after a single letter",  
-         regex: "abc",  
-         input: "a",  
-         expected: `graph LR
- 0((0)) --"a"--> 1((1))
- 1((1)) --"b"--> 2((2))
- 2((2)) --"c"--> 3((3))
-+style 0 fill:#ff5555;
- style 1 fill:#ff5555;`,
-                },
-                {
+         name:       "after a single letter",  
+         fsmBuilder: abcBuilder,  
+         input:      "a",  
+         expected: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))  
++style 0 fill:#ff5555;  
+style 1 fill:#ff5555;`,  
+      },  
+      {  
 -        name:  "last state highlighted",
 +        name:  "all states highlighted",
-         regex: "aaa",
-         input: "aaa",
-         expected: `graph LR
- 0((0)) --"a"--> 1((1))
- 1((1)) --"a"--> 2((2))
- 2((2)) --"a"--> 3((3))
-+style 0 fill:#ff5555;
-+style 1 fill:#ff5555;
-+style 2 fill:#ff5555;
- style 3 fill:#00ab41;`,
-
+         fsmBuilder: aaaBuilder,  
+         input:      "aaa",  
+         expected: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"a"--> 2((2))  
+2((2)) --"a"--> 3((3))  
++style 0 fill:#ff5555;  
++style 1 fill:#ff5555;  
++style 2 fill:#ff5555;  
+style 3 fill:#00ab41;`,  
+      },  
+   }
 ```
 
 All that's left to do is make changes to our `match` function of the `myRegex` type. The changes here are simple; we want to `Start` the runner again after every character is processed so that every substring is processed, and we no longer want to recursively call the function again on a substring in the case of failure.

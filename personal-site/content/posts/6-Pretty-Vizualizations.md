@@ -57,92 +57,51 @@ As always, let's start with some tests to help define our objective.
 ```go
 // draw_test.go
 
+func abcBuilder() *State {  
+   state1, state2, state3, state4 := &State{}, &State{}, &State{}, &State{}  
+  
+   state1.addTransition(state2, Predicate{allowedChars: "a"}, "a")  
+   state2.addTransition(state3, Predicate{allowedChars: "b"}, "b")  
+   state3.addTransition(state4, Predicate{allowedChars: "c"}, "c")  
+   return state1  
+} 
+  
 func Test_DrawFSM(t *testing.T) {  
    type test struct {  
-      name, regex, expected string  
+      name, expected string  
+      fsmBuilder     func() *State  
    }  
   
    tests := []test{  
       {  
-		 name:  "simple example" 
-         regex: "abc",  
+         name:       "simple example",  
+         fsmBuilder: abcBuilder,  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))`,  
-      },  
-      {  
-         name:  "example with whitespace",
-         regex: "a b",  
-         expected: `graph LR  
-0((0)) --"a"--> 1((1))  
-1((1)) --" "--> 2((2))  
-2((2)) --"b"--> 3((3))`,  
       },  
    }  
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-		 drawing := NewMyRegex(tt.regex).DebugFSM()
+         drawing := tt.fsmBuilder().Draw()  
   
          if drawing != tt.expected {  
             t.Fatalf("Expected drawing to be \n\"%s\", got\n\"%s\"", tt.expected, drawing)  
          }  
       })  
-   }
+   }  
+}
 ```
 
 This test is pretty straight forward, let's just zoom in on a couple of things.
 
-The `DebugFSM()` method is new, it's what we want to implement to get this test to pass.
+The first thing to note here is that we're building our FSMs by hand here in the helper function `abcBuilder()`. This is because we don't want changes in our compiler or parser to break these tests - they should only be concerned with how FSMs are drawn.
 
-```go
-// draw_test.go 
+The next thing to note is the new `.Draw()` method on the `State` struct. This is what we need to implement to get these tests to pass. Once we have a `State` constructed, we simply call `.Draw()` and check that the `mermaid` graph is as we expect.
 
-drawing := NewMyRegex(tt.input).DebugFSM()
-```
-
-It will produce a `string` with the lines and numbers needed for our `mermaid` markdown.
-
-```go
-// draw_test.go 
-
-   tests := []test{  
-      {  
-		 name:  "simple example" 
-         regex: "abc",  
-         expected: `graph LR  
-0((0)) --"a"--> 1((1))  
-1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))`,  
-      },  
-      {  
-         name:  "example with whitespace",  
-		 regex: "a b",
-         expected: `graph LR  
-0((0)) --"a"--> 1((1))  
-1((1)) --" "--> 2((2))  
-2((2)) --"b"--> 3((3))`,  
-      },  
-   }  
-```
-
-Here are our test cases. They're quite simple also, as they show simple cases of single character transition FSMs, and also a case for whitespaces.
-
-Now that we have some red tests, we can start implementing the `DebugFSM()` method.
-
-First, we don't want the logic of drawing an FSM to live on the `myRegex` object. This makes sense to be a method of the `State` object, so let's pass the responsibility over to that.
-
-```go
-// regex.go
-  
-func (m *myRegex) DebugFSM() string {  
-   graph := m.fsm.Draw()  
-   return graph  
-}
-```
-
-Now let's start work on the `Draw()` function.
+Now that we have some red tests, we can start implementing the `Draw()` method.
 
 ## Traversal
 
@@ -387,23 +346,8 @@ With all this in place, let's run our tests.
         4((4)) --"c"--> 3((3))
         5((5)) --"b"--> 2((2))
         6((6)) --"a"--> 1((1))"
-=== RUN   Test_DrawFSM/a_b
-    draw_test.go:38: Expected drawing to be 
-        "graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --" "--> 2((2))
-        2((2)) --"b"--> 3((3))", got
-        "graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --" "--> 2((2))
-        2((2)) --"b"--> 3((3))
-        4((4)) --"b"--> 3((3))
-        5((5)) --" "--> 2((2))
-        6((6)) --"a"--> 1((1))"
 --- FAIL: Test_Draw (0.00s)
     --- FAIL: Test_Draw/abc (0.00s)
-
-    --- FAIL: Test_Draw/a_b (0.00s)
 ```
 
 Hmm, interesting. Not quite what we were expecting. To see what's going on, let's plug the output graph of our `abc` test into [mermaids live coding site](https://mermaid.live/) and see what we're looking at.
@@ -537,6 +481,17 @@ graph LR
 2((2)) --"c"--> 3((3))
 ```
 Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.
+
+One more thing, let's add a quick method on the `myRegex` struct to call the root `State.Draw()` method.
+
+```go
+// regex.go
+  
+func (m *myRegex) DebugFSM() string {  
+   graph := m.fsm.Draw()  
+   return graph  
+}
+```
 
 ## A quick command line tool
 
@@ -674,16 +629,26 @@ Let's start with a test;
 ```go
 // draw_test.go
 
+func aaaBuilder() *State {  
+   state1, state2, state3, state4 := &State{}, &State{}, &State{}, &State{}  
+  
+   state1.addTransition(state2, Predicate{allowedChars: "a"}, "a")  
+   state2.addTransition(state3, Predicate{allowedChars: "a"}, "a")  
+   state3.addTransition(state4, Predicate{allowedChars: "a"}, "a")  
+   return state1  
+}
+
 func Test_DrawSnapshot(t *testing.T) {  
    type test struct {  
-      name, regex, input, expected string  
+      name, input, expected string  
+      fsmBuilder            func() *State  
    }  
   
    tests := []test{  
       {  
-         name:  "initial snapshot",  
-         regex: "abc",  
-         input: "",  
+         name:       "initial snapshot",  
+         fsmBuilder: abcBuilder,  
+         input:      "",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
@@ -691,9 +656,9 @@ func Test_DrawSnapshot(t *testing.T) {
 style 0 fill:#ff5555;`,  
       },  
       {  
-         name:  "after a single letter",  
-         regex: "abc",  
-         input: "a",  
+         name:       "after a single letter",  
+         fsmBuilder: abcBuilder,  
+         input:      "a",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
@@ -701,9 +666,9 @@ style 0 fill:#ff5555;`,
 style 1 fill:#ff5555;`,  
       },  
       {  
-         name:  "last state highlighted",  
-         regex: "aaa",  
-         input: "aaa",  
+         name:       "last state highlighted",  
+         fsmBuilder: aaaBuilder,  
+         input:      "aaa",  
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"a"--> 2((2))  
@@ -714,11 +679,7 @@ style 3 fill:#00ab41;`,
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-         tokens := lex(tt.regex)  
-         parser := NewParser()  
-         ast := parser.Parse(tokens)  
-         state, _ := ast.compile()  
-         runner := NewRunner(state)  
+         runner := NewRunner(tt.fsmBuilder())  
          for _, char := range tt.input {  
             runner.Next(char)  
          }  
@@ -732,9 +693,9 @@ style 3 fill:#00ab41;`,
 }
 ```
 
-This should look familiar to our previous `Test_DebugFSM` test, with the biggest difference being that now we are returning a slice of drawings, along with the `currentCharacterIndex`, for each frame (or step) of the algorithm. 
+This should look familiar to our previous `Test_DebugFSM` test, with the biggest difference being that we are now returning a 'snapshot' of the runner after having processed some input. This includes the highlighting of the currently active states.
 
-Zoom in on the first step of the algorithm.
+Zoom in on the first test, which is after having processed the string `"a"` for the regular expression `"abc"`.
 
 ```go
 `graph LR  
@@ -782,13 +743,99 @@ style 3 fill:#00ab41;
 
 The green node means that the runner has landed in an end state, and so the match was successful. 
 
-Now we know what we trying to build, let's start implementing. The first thing we're going to need to do is to modify the `match` method to allow us to gather information at various stages of the algorithm. In order to do this, we're going to make use of golang's `channels` to send data as the algorithm is running. 
+Now we know what we're trying to build, let's start implementing the `runner.drawSnapshot` function. 
+
+### Draw Snapshot
+
+Drawing a snapshot of the runner is actually quite simple.
+
+First, we're going to need to modify the `Draw` function to return the `nodeSet` object. This is because we'll need to know the labels of the nodes in order to highlight them.
+
+```diff
+@@ // draw.go
+
+- func (s *State) Draw() string {  
++ func (s *State) Draw() (graph string, nodeSet OrderedSet[*State]) {  
+   // initialize sets  
+   transitionSet := OrderedSet[Transition]{}  
+   nodeSet = OrderedSet[*State]{}  
+  
+   // collect transitions  
+   visitNodes(s, &transitionSet, &nodeSet)  
+  
+   output := []string{  
+      "graph LR",  
+   }  
+  
+   // draw transitions  
+   for _, t := range transitionSet.list() {  
+      fromId := nodeSet.getIndex(t.from)  
+      toId := nodeSet.getIndex(t.to)  
+      output = append(output, fmt.Sprintf("%d((%d)) --\"%s\"--> %d((%d))", fromId, fromId, t.debugSymbol, toId, toId))  
+   }  
+-   return strings.Join(output, "\n")  
++   return strings.Join(output, "\n"), nodeSet
+}
+```
+
+The compiler should be complaining, so let's quickly fix those issues.
+
+```diff
+@@ // regex.go
+
+func (m *myRegex) DebugFSM() string {  
+-   graph := m.fsm.Draw()  
++   graph, _ := m.fsm.Draw()  
+   return graph  
+}
+```
+
+```diff
+@@ // draw_test.go
+
+@@ func Test_DrawFSM(t *testing.T) {
+
+	for _, tt := range tests {  
+	   t.Run(tt.name, func(t *testing.T) 
+-         drawing := tt.fsmBuilder().Draw()  
++         drawing, _ := tt.fsmBuilder().Draw()  
+	  
+	      if drawing != tt.expected {  
+	         t.Fatalf("Expected drawing to be \n\"%s\", got\n\"%s\"", tt.expected, drawing)  
+	      }  
+	   })
+```
+
+Now, we need to implement the `drawSnapshot` function. All this should do is print the `mermaid` graph of the FSM, then append the code to highlight all active states, using the `nodeSet` to get the appropriate label.
+
+```go
+// draw.go
+
+// drawSnapshot will draw a mermaid graph from the FSM, as well as color the current node.
+func (r runner) drawSnapshot() string {  
+   graph, nodeSet := r.head.Draw()  
+   switch r.GetStatus() {  
+   case Normal:  
+      graph += fmt.Sprintf("\nstyle %d fill:#ff5555;", nodeSet.getIndex(r.current))  
+   case Success:  
+      graph += fmt.Sprintf("\nstyle %d fill:#00ab41;", nodeSet.getIndex(r.current))  
+   }  
+  
+   return graph  
+}
+```
+
+With that in place, our tests are passing, but it's not much use unless we can modify our algorithm to print a snapshot during the different steps of the algorithm. In order to do that, we'll need to modify our `match` function.
+
+### Changing our Match Function
+
+In order to do this, we're going to make use of golang's `channels` to send data as the algorithm is running. 
 
 Go `channels` are used for concurrent programs, which is not really how we're using them here. However, by using channels we can 'enqueue' data during the processing of a function without the function returning. As long as something is 'listening' on the other side of the channel, the `send` operation to the channel will not block. If you're not familiar with Go `channels`, this will likely be a bit mysterious for now, hopefully it will be clearer once we have some working code.
 
-The upside of all this is that we don't need to modify the original algorithm too much. Let's start with the `match` function.
+The upside of all this is that we don't need to modify the original algorithm too much. 
 
-### Changing our Match Function
+Let's start by modifying the `match` function. At each step of the search, we'll check if a `channel` is present. If it is, we'll take a snapshot of the runner and send it to the `channel`, as well as some additional data.
 
 ```diff
 @@ // regex.go

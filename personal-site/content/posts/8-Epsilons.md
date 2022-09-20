@@ -200,17 +200,34 @@ Let's start with adding a new test case to our `Test_drawFSM` test function whic
 ```diff
 @@ // draw_test.go
 
-@@ func Test_DrawFSM(t *testing.T) {
++func aεbBuilder() *State {  
++   state1, state2, state3, state4 := &State{}, &State{}, &State{}, &State{}  
++  
++   state1.addTransition(state2, Predicate{allowedChars: "a"}, "a")  
++   state2.addEpsilon(state3)  
++   state3.addTransition(state4, Predicate{allowedChars: "b"}, "b")  
++   return state1  
++}
 
-+               {
-+                       name:  "branch with epsilon",
-+                       regex: "a|b",
-+                       expected: `graph LR
-+0((0)) -."ε".-> 1((1))
-+0((0)) -."ε".-> 3((3))
-+1((1)) --"a"--> 2((2))
-+3((3)) --"b"--> 4((4))`,
-+               },
+@@ func Test_DrawFSM(t *testing.T) {
+    tests := []test{  
+ 	   {  
+ 	  	  name:       "simple example",  
+		  fsmBuilder: abcBuilder,  
+		  expected: `graph LR  
+0((0)) --"a"--> 1((1))  
+1((1)) --"b"--> 2((2))  
+2((2)) --"c"--> 3((3))`,  
+	   },  
++      {  
++         name:       "graph with epsilon",  
++         fsmBuilder: aεbBuilder,  
++         expected: `graph LR  
++0((0)) --"a"--> 1((1))  
++1((1)) -."ε".-> 2((2))  
++2((2)) --"b"--> 3((3))`,  
++      },  
++   }
 
 ```
 
@@ -231,7 +248,7 @@ Ok, let's change our `draw` code to reflect these changes and get our tests to g
 ```diff
 @@ // draw.go
 
-@@ -37,7 +41,16 @@ func visitNodes(
+@@ func visitNodes(
                 return
         }
  
@@ -248,7 +265,7 @@ Ok, let's change our `draw` code to reflect these changes and get our tests to g
         for _, transition := range node.transitions {
                 transitions.add(transition)
         }
-@@ -45,6 +58,10 @@ func visitNodes(
+@@ func visitNodes(
         // 3. Mark the current node as visited.
         visited.add(node)
  
@@ -324,7 +341,7 @@ Epsilons need to be processed before any characters have been processed. Let's a
         nextActiveStates := Set[*State]{}
         for activeState := range r.activeStates {
                 for _, nextState := range activeState.matchingTransitions(input) {
-@@ -26,6 +28,8 @@ func (r *runner) Next(input rune) {
+@@ func (r *runner) Next(input rune) {
                 }
         }
         r.activeStates = nextActiveStates
@@ -353,7 +370,7 @@ This should cover most of our cases, but there's one more thing we've not though
         nextActiveStates := Set[*State]{}
         for activeState := range r.activeStates {
                 for _, nextState := range activeState.matchingTransitions(input) {
-@@ -26,6 +28,8 @@ func (r *runner) Next(input rune) {
+@@ func (r *runner) Next(input rune) {
                 }
         }
         r.activeStates = nextActiveStates

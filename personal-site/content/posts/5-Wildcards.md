@@ -83,30 +83,26 @@ The implementation should be quite similar to the `CharacterLiteral` parser impl
 ```diff
 @@ // parser.go
 
- func (p *Parser) Parse(tokens []token) Node {
-        p.pushNewGroup()
- 
-        for _, t := range tokens {
-                switch t.symbol {
-                case Character:
-                        node := p.pop()
-                        node.Append(CharacterLiteral{Character: t.letter})
-                        p.push(node)
-+               case AnyCharacter:
-+                       node := p.pop()
-+                       node.Append(WildcardLiteral{})
-+                       p.push(node)
-                }
-        }
- 
-        return p.pop()
- }
+func (p *Parser) Parse() Node {  
+   root := Group{}  
+  
+   for _, t := range p.tokens {  
+       switch t.symbol {  
+       case Character:  
+          root.Append(CharacterLiteral{Character: t.letter})  
++      case AnyCharacter:  
++         root.Append(WildcardLiteral{})  
++      }  
+   }  
+  
+   return &root  
+}
 ```
 
 With our parser tests green again, we can implement the `compile` method. This will also be quite similar to the `CharacterLiteral`. The only difference is that the `WildcardLiteral` predicate will return `true` for every rune.
 
 ```diff
-@@ // parser.go
+@@ // ast.go
  
  func (l CharacterLiteral) compile() (head *State, tail *State) {
         startingState := State{}
@@ -195,8 +191,6 @@ func (w WildcardLiteral) compile() (head *State, tail *State) {
 ```
 
 Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we've learned a bit more about regular expressions. Not bad!
-
-Next up, modifiers!
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v4)
