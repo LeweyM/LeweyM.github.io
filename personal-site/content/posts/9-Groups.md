@@ -162,6 +162,7 @@ func (p *Parser) Parse() Node {
 -                               root = &Branch{ChildNodes: []Node{root, &Group{}}}
 +                               node = &Branch{ChildNodes: []Node{node, &Group{}}}
                         }
++                       p.push(node)
                 }
         }
  
