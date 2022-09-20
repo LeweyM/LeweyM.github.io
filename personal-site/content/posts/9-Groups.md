@@ -68,27 +68,125 @@ This should be failing. We can see from our nicely parsed output that what is be
 === RUN   TestParser/groups
     parser_test.go:64: Expected:
         
-        Group
-        --CharacterLiteral('a')
-        --Branch
-        ------Group
-        ----------CharacterLiteral('b')
-        ------Group
-        ----------CharacterLiteral('c')
+        --Group
+        ----CharacterLiteral('a')
+        ----Branch
+        --------Group
+        ------------CharacterLiteral('b')
+        --------Group
+        ------------CharacterLiteral('c')
         
         Got:
         
-        Branch
-        --Group
-        ------CharacterLiteral('a')
-        ------CharacterLiteral('b')
-        --Group
-        ------CharacterLiteral('c')
+        --Branch
+        ----Group
+        --------CharacterLiteral('a')
+        --------CharacterLiteral('b')
+        ----Group
+        --------CharacterLiteral('c')
 ```
 
 We can see that we're still creating a single branch with `'ab'` on the left and `'c'` on the right. What we want is a group with `'a'` concatenated onto a branch with `'b'` on the left and `'c'` on the right.
 
-Fixing the parser should be fairly straightforward, and it will finally make use of the stack data structure.
+Fixing the parser will require some changes. Instead of using a single root `Node`, we now need to maintain multiple root `Nodes` depending on how deep we are in the nested parenthesis. In order to keep track of this, we're going to use a Stack.
+
+## The Stack Parser
+
+First, let's add a basic stack data structure to our Parser.
+
+```diff
+@@ // parser.go
+
+ type Parser struct {
+-       tokens []token
++       fsmStack []CompositeNode
++       tokens   []token
+ }
+ 
+ func NewParser(tokens []token) *Parser {
+-       return &Parser{tokens: tokens}
++       return &Parser{fsmStack: []CompositeNode{}, tokens: tokens}
+ }
+```
+
+The stack is simply a Go slice of `CompositeNodes`. Stacks work by allowing us to `push` and `pop` items off of the top of the stack, you can imagine this as a like a stack of papers - you can add to the pile, or take one off the top.
+
+Let's add some convenience methods to `pushing` and `popping` to our stack.
+
+```go
+// parser.go
+
+func (p *Parser) pop() CompositeNode {  
+   pop := p.fsmStack[len(p.fsmStack)-1]  
+   p.fsmStack = p.fsmStack[:len(p.fsmStack)-1]  
+  
+   return pop  
+}  
+  
+func (p *Parser) push(g CompositeNode) {  
+   p.fsmStack = append(p.fsmStack, g)  
+}
+```
+
+Now that we have a stack, let's refactor our original code to use this instead of the single root `Node` we had before. 
+
+In order to keep the same behaviour as before, we simply need to `pop` a node off the stack, make some change, then `push` the node back on.
+
+```diff
+@@ // parser.go
+
+func (p *Parser) Parse() Node {
+-       var root CompositeNode
+-       root = &Group{}
++       p.pushNewGroup()
+ 
+        for _, t := range p.tokens {
+                switch t.symbol {
+                case Character:
+-                       root.Append(CharacterLiteral{Character: t.letter})
++                       node := p.pop()
++                       node.Append(CharacterLiteral{Character: t.letter})
++                       p.push(node)
+                case AnyCharacter:
+-                       root.Append(WildcardLiteral{})
++                       node := p.pop()
++                       node.Append(WildcardLiteral{})
++                       p.push(node)
+                case Pipe:
+-                       switch b := root.(type) {
++                       node := p.pop()
++                       switch b := node.(type) {
+                        case *Branch:
+                                b.Split()
+                        default:
+-                               root = &Branch{ChildNodes: []Node{root, &Group{}}}
++                               node = &Branch{ChildNodes: []Node{node, &Group{}}}
+                        }
+                }
+        }
+ 
+-       return root
++       return p.pop()
++}
+```
+
+This includes a small convenience method for `pushing` a new `Group` node to the stack.
+
+```go
+// parser.go
+
+func (p *Parser) pushNewGroup() {  
+   p.push(&Group{})  
+}
+```
+
+We should now have reached feature parity with our old implementation.[^preref] You can test this out by running the tests, they should fail in the same way.
+
+[^preref]: This is known as a "prepartory refactor", in which we refactor our code in order to prepare for the additional of some feature. Tests are very useful here for validating that our refactoring didn't cause any changes to the logic.
+
+## Parsing Nested Structures
+
+Now that we have a stack data structure, let's take advantage of it to parse nested groups.
 
 ```diff
 @@ // parser.go
@@ -126,11 +224,13 @@ Fixing the parser should be fairly straightforward, and it will finally make use
 
 Let's walk through these new cases.
 
-When we encounter a `LParen` `'('` opening parenthesis symbol, we want to start a new group. In this case, we simply push a new group onto the stack. This new group will then be picked up and used when other symbols or characters are processed.
+When we encounter a `LParen` `'('` opening parenthesis symbol, we want to start a new group. In this case, we simply push a new group onto the stack. This new group will then be picked up and used when other symbols or characters are processed. You can think of this as it becoming the new root `Node`, at least temporarily.
 
-When we encounter a `RParen ')'` closing parenthesis symbol, the case is slightly more complicated. We want to take the `Node` at the top of the stack, append it to the next `Node` in the stack, and then put those combined `Nodes` at the top of the stack again. You can think of this as *reducing* the top two elements of the stack into a single `Node`.
+When we encounter a `RParen ')'` closing parenthesis symbol, the case is slightly more complicated. We want to take the `Node` at the top of the stack, append it to the next `Node` in the stack, and then `push` those combined `Nodes` at back onto the stack. You can think of this as *reducing* the top two elements of the stack into a single `Node`, which will become the new root `Node`.
 
-Let's look at a visual example. We'll parse the expression `"a(b|c)"`
+Let's look at a visual example. 
+
+We'll parse the expression `"a(b|c)"`
 
 ```mermaid
 graph TD
