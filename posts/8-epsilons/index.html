@@ -80,24 +80,41 @@ Semantically, the regular expression '' should always match, because every strin
 </span></span><span style=display:flex><span> }
 </span></span></code></pre></div><p>That&rsquo;s really all there is to the compilation step.</p><p>It&rsquo;s a shame that we can&rsquo;t verify it yet, so let&rsquo;s now fix our <code>draw</code> functions so that we can visualize our new epsilon transitions.</p><h3 id=3-drawing-epsilon-transitions>3. Drawing epsilon transitions</h3><p>Let&rsquo;s start with adding a new test case to our <code>Test_drawFSM</code> test function which uses a branch regex. This will let us define what we want our <code>mermaid</code> graph to look like for FSMs with epsilon transitions.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // draw_test.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+func aεbBuilder() *State {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   state1, state2, state3, state4 := &amp;State{}, &amp;State{}, &amp;State{}, &amp;State{}  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   state1.addTransition(state2, Predicate{allowedChars: &#34;a&#34;}, &#34;a&#34;)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   state2.addEpsilon(state3)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   state3.addTransition(state4, Predicate{allowedChars: &#34;b&#34;}, &#34;b&#34;)  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   return state1  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+}
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func Test_DrawFSM(t *testing.T) {
-</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       name:  &#34;branch with epsilon&#34;,
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       regex: &#34;a|b&#34;,
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       expected: `graph LR
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+0((0)) -.&#34;ε&#34;.-&gt; 1((1))
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+0((0)) -.&#34;ε&#34;.-&gt; 3((3))
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+1((1)) --&#34;a&#34;--&gt; 2((2))
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+3((3)) --&#34;b&#34;--&gt; 4((4))`,
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               },
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>    tests := []test{  
+</span></span><span style=display:flex><span> 	   {  
+</span></span><span style=display:flex><span> 	  	  name:       &#34;simple example&#34;,  
+</span></span><span style=display:flex><span>		  fsmBuilder: abcBuilder,  
+</span></span><span style=display:flex><span>		  expected: `graph LR  
+</span></span><span style=display:flex><span>0((0)) --&#34;a&#34;--&gt; 1((1))  
+</span></span><span style=display:flex><span>1((1)) --&#34;b&#34;--&gt; 2((2))  
+</span></span><span style=display:flex><span>2((2)) --&#34;c&#34;--&gt; 3((3))`,  
+</span></span><span style=display:flex><span>	   },  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         name:       &#34;graph with epsilon&#34;,  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         fsmBuilder: aεbBuilder,  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         expected: `graph LR  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+0((0)) --&#34;a&#34;--&gt; 1((1))  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+1((1)) -.&#34;ε&#34;.-&gt; 2((2))  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+2((2)) --&#34;b&#34;--&gt; 3((3))`,  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      },  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   }
 </span></span></span></code></pre></div><p>This would render the following <code>mermaid</code> graph.</p><div class=mermaid>graph LR
 0((0)) -."ε".-> 1((1))
 0((0)) -."ε".-> 3((3))
 1((1)) --"a"--> 2((2))
 3((3)) --"b"--> 4((4))</div><p>This looks great, the epsilon transitions are denoted with dotted lines and a <code>'ε'</code> symbol. It&rsquo;s also notable that the epsilon lines are drawn before the transition lines. This is not relevant now, but might have an effect later on when we have arrows going in different directions.</p><p>Ok, let&rsquo;s change our <code>draw</code> code to reflect these changes and get our tests to green again. First, we&rsquo;ll need to adapt our <code>visitNodes</code> function to add epsilon transitions to our <code>OrderedSet[Transition]</code> <em>before</em> we add regular transitions, and we&rsquo;ll also want to recur on epsilon transitions as well as regular transitions to make sure that every connected node is visited.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // draw.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
-</span></span><span style=display:flex><span><span style=color:#aaa>@@ -37,7 +41,16 @@ func visitNodes(
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func visitNodes(
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>                return
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span> 
@@ -114,7 +131,7 @@ Semantically, the regular expression '' should always match, because every strin
 </span></span><span style=display:flex><span>        for _, transition := range node.transitions {
 </span></span><span style=display:flex><span>                transitions.add(transition)
 </span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span><span style=color:#aaa>@@ -45,6 +58,10 @@ func visitNodes(
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func visitNodes(
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>        // 3. Mark the current node as visited.
 </span></span><span style=display:flex><span>        visited.add(node)
 </span></span><span style=display:flex><span> 
@@ -158,7 +175,7 @@ Semantically, the regular expression '' should always match, because every strin
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        nextActiveStates := Set[*State]{}
 </span></span><span style=display:flex><span>        for activeState := range r.activeStates {
 </span></span><span style=display:flex><span>                for _, nextState := range activeState.matchingTransitions(input) {
-</span></span><span style=display:flex><span><span style=color:#aaa>@@ -26,6 +28,8 @@ func (r *runner) Next(input rune) {
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func (r *runner) Next(input rune) {
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>                }
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>        r.activeStates = nextActiveStates
@@ -182,7 +199,7 @@ Semantically, the regular expression '' should always match, because every strin
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        nextActiveStates := Set[*State]{}
 </span></span><span style=display:flex><span>        for activeState := range r.activeStates {
 </span></span><span style=display:flex><span>                for _, nextState := range activeState.matchingTransitions(input) {
-</span></span><span style=display:flex><span><span style=color:#aaa>@@ -26,6 +28,8 @@ func (r *runner) Next(input rune) {
+</span></span><span style=display:flex><span><span style=color:#aaa>@@ func (r *runner) Next(input rune) {
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>                }
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>        r.activeStates = nextActiveStates

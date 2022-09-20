@@ -50,25 +50,21 @@ abc -> success ab -> normal So, let&rsquo;s add these as test cases in our code.
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        }
 </span></span></code></pre></div><p>The implementation should be quite similar to the <code>CharacterLiteral</code> parser implementation.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // parser.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
-</span></span><span style=display:flex><span> func (p *Parser) Parse(tokens []token) Node {
-</span></span><span style=display:flex><span>        p.pushNewGroup()
-</span></span><span style=display:flex><span> 
-</span></span><span style=display:flex><span>        for _, t := range tokens {
-</span></span><span style=display:flex><span>                switch t.symbol {
-</span></span><span style=display:flex><span>                case Character:
-</span></span><span style=display:flex><span>                        node := p.pop()
-</span></span><span style=display:flex><span>                        node.Append(CharacterLiteral{Character: t.letter})
-</span></span><span style=display:flex><span>                        p.push(node)
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               case AnyCharacter:
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       node := p.pop()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       node.Append(WildcardLiteral{})
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       p.push(node)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                }
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span> 
-</span></span><span style=display:flex><span>        return p.pop()
-</span></span><span style=display:flex><span> }
-</span></span></code></pre></div><p>With our parser tests green again, we can implement the <code>compile</code> method. This will also be quite similar to the <code>CharacterLiteral</code>. The only difference is that the <code>WildcardLiteral</code> predicate will return <code>true</code> for every rune.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // parser.go
+</span></span><span style=display:flex><span>func (p *Parser) Parse() Node {  
+</span></span><span style=display:flex><span>   root := Group{}  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   for _, t := range p.tokens {  
+</span></span><span style=display:flex><span>       switch t.symbol {  
+</span></span><span style=display:flex><span>       case Character:  
+</span></span><span style=display:flex><span>          root.Append(CharacterLiteral{Character: t.letter})  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      case AnyCharacter:  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         root.Append(WildcardLiteral{})  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   return &amp;root  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>With our parser tests green again, we can implement the <code>compile</code> method. This will also be quite similar to the <code>CharacterLiteral</code>. The only difference is that the <code>WildcardLiteral</code> predicate will return <code>true</code> for every rune.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // ast.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span> 
 </span></span><span style=display:flex><span> func (l CharacterLiteral) compile() (head *State, tail *State) {
 </span></span><span style=display:flex><span>        startingState := State{}
@@ -121,4 +117,4 @@ abc -> success ab -> normal So, let&rsquo;s add these as test cases in our code.
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#39;\n&#39; })
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        return &amp;startingState, &amp;endState
 </span></span><span style=display:flex><span> }
-</span></span></code></pre></div><p>Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we&rsquo;ve learned a bit more about regular expressions. Not bad!</p><p>Next up, modifiers!</p><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v4>here</a></p></div></div><p>Previous: <a href=/posts/4-testing-fuzzing-and-fixing-things/>4 Testing, Fuzzing, and fixing things</a><span class=meta></span></p><p>Next: <a href=/posts/6-pretty-vizualizations/>6 Pretty Vizualizations</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div></body></html>
+</span></span></code></pre></div><p>Tests are green again, our fuzzer whizzes along for a few minutes without any complaints, and we&rsquo;ve learned a bit more about regular expressions. Not bad!</p><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v4>here</a></p></div></div><p>Previous: <a href=/posts/4-testing-fuzzing-and-fixing-things/>4 Testing, Fuzzing, and fixing things</a><span class=meta></span></p><p>Next: <a href=/posts/6-pretty-vizualizations/>6 Pretty Vizualizations</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div></body></html>

@@ -1,4 +1,17 @@
-<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>7 Branches - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="7 Branches"><meta property="og:description" content="The OR expression It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression &#34;png|jpge|gif&#34; on the file extension. This would tell you if the file was png OR jpeg OR gif. The options of the OR expression are determined by the separating them with a pipe symbol (&#34;|&#34;)."><meta property="og:type" content="article"><meta property="og:url" content="https://leweym.github.io/posts/7-branches/"><meta property="article:section" content="posts"><meta property="og:see_also" content="https://leweym.github.io/posts/1-intro/"><meta property="og:see_also" content="https://leweym.github.io/posts/2-getting-into-some-code/"><meta property="og:see_also" content="https://leweym.github.io/posts/3-starting-the-compiler/"><meta property="og:see_also" content="https://leweym.github.io/posts/4-testing-fuzzing-and-fixing-things/"><meta property="og:see_also" content="https://leweym.github.io/posts/5-wildcards/"><meta property="og:see_also" content="https://leweym.github.io/posts/6-pretty-vizualizations/"><meta name=twitter:card content="summary"><meta name=twitter:title content="7 Branches"><meta name=twitter:description content="The OR expression It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression &#34;png|jpge|gif&#34; on the file extension. This would tell you if the file was png OR jpeg OR gif. The options of the OR expression are determined by the separating them with a pipe symbol (&#34;|&#34;)."><link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet><link href=/css/fontawesome-all.min.css rel=stylesheet><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/notice.css><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/normalize.css><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/main.css><script src=https://leweym.github.io/js/main.js></script></head><body><div class="container wrapper post"><div class=header><h1 class=site-title><a href=https://leweym.github.io/>Lewis Metcalf</a></h1><div class=site-description><nav class="nav social"><ul class=flat></ul></nav></div><nav class=nav><ul class=flat></ul></nav></div><div class=post-header><h1 class=title>Making regex from scratch in go</h1></div><div class=section><div class=posts><div class=post><a href=/posts/1-intro/>1 Intro</a> <span class=meta></span></div><div class=post><a href=/posts/2-getting-into-some-code/>2 Getting into some code</a> <span class=meta></span></div><div class=post><a href=/posts/3-starting-the-compiler/>3 Starting the compiler</a> <span class=meta></span></div><div class=post><a href=/posts/4-testing-fuzzing-and-fixing-things/>4 Testing, Fuzzing, and fixing things</a> <span class=meta></span></div><div class=post><a href=/posts/5-wildcards/>5 Wildcards</a> <span class=meta></span></div><div class=post><a href=/posts/6-pretty-vizualizations/>6 Pretty Vizualizations</a> <span class=meta></span></div><div class=post><span>7 Branches</span></div><div class=post><a href=/posts/8-epsilons/>8 Epsilons</a> <span class=meta></span></div><div class=post><a href=/posts/9-groups/>9 Groups</a> <span class=meta></span></div></div></div><br><div class=post-header><h1 class=title>7 Branches</h1><div class=meta></div></div><aside><nav id=TableOfContents><ul><li><a href=#the-or-expression>The OR expression</a></li><li><a href=#parsing-pipes-in-branches>Parsing pipes in branches</a></li><li><a href=#debug-printing-ast-nodes>Debug printing AST Nodes</a></li><li><a href=#adding-pipes-to-our-parser>Adding Pipes to our Parser</a></li><li><a href=#coding-the-pipe-parser>Coding the Pipe Parser</a></li><li><a href=#compiling-a-branch-node>Compiling a Branch node</a></li><li><a href=#deterministic-vs-non-deterministic>Deterministic vs Non-Deterministic</a></li><li><a href=#parallel-states>Parallel States</a></li></ul></nav></aside><div class=markdown><h2 id=the-or-expression>The OR expression</h2><p>It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression <code>"png|jpge|gif"</code> on the file extension. This would tell you if the file was <code>png</code> OR <code>jpeg</code> OR <code>gif</code>. The options of the OR expression are determined by the separating them with a <code>pipe</code> symbol (<code>"|"</code>).</p><p>Let&rsquo;s have a look at what an FSM would look like with OR expressions. Take the regular expression <code>"dog|cat"</code> as an example.</p><p><img src=/img/Pasted-image-20220128175219.png alt=Pasted-image-20220128175219.png></p><p>As we can see, it looks similar to our previous examples, with the notable difference that our starting state has multiple outward <code>Transitions</code>. In this case, it can transition on both the <code>'d'</code> and the <code>'c'</code> characters.</p><p>Let&rsquo;s step through this using the string <code>"cat"</code> as our input search string.</p><p><img src=/img/Pasted-image-20220903165828.png alt=Pasted-image-20220903165828.png></p><p>First, we process the character <code>'c'</code>, which matches the bottom transition.</p><p><img src=/img/Pasted-image-20220903165908.png alt=Pasted-image-20220903165908.png></p><p>Then, we process <code>'a'</code></p><p><img src=/img/Pasted-image-20220903165927.png alt=Pasted-image-20220903165927.png></p><p>And finally <code>'t'</code>, which leaves us in an end state.</p><p><img src=/img/Pasted-image-20220903165948.png alt=Pasted-image-20220903165948.png></p><p>Pretty simple stuff! Now that we know what we&rsquo;re looking for, let&rsquo;s start coding.</p><p>We&rsquo;ll start at the <code>Parser</code>.</p><h2 id=parsing-pipes-in-branches>Parsing pipes in branches</h2><p>We&rsquo;re going to want to be able to represent branches as <code>AST</code> nodes, so our parser needs to know how to take a regular expression such as <code>cat|dog</code> and turn it into a <code>Branch</code> AST node with two <code>Group</code> child nodes, each containing three <code>CharacterLiteral</code> nodes. Visually, the <code>cat|dog</code> example should look like this:</p><div class=mermaid>graph TD
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>7 Branches - Lewis Metcalf</title><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:title" content="7 Branches"><meta property="og:description" content="The OR expression It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression &#34;png|jpge|gif&#34; on the file extension. This would tell you if the file was png OR jpeg OR gif. The options of the OR expression are determined by the separating them with a pipe symbol (&#34;|&#34;)."><meta property="og:type" content="article"><meta property="og:url" content="https://leweym.github.io/posts/7-branches/"><meta property="article:section" content="posts"><meta property="og:see_also" content="https://leweym.github.io/posts/1-intro/"><meta property="og:see_also" content="https://leweym.github.io/posts/2-getting-into-some-code/"><meta property="og:see_also" content="https://leweym.github.io/posts/3-starting-the-compiler/"><meta property="og:see_also" content="https://leweym.github.io/posts/4-testing-fuzzing-and-fixing-things/"><meta property="og:see_also" content="https://leweym.github.io/posts/5-wildcards/"><meta property="og:see_also" content="https://leweym.github.io/posts/6-pretty-vizualizations/"><meta name=twitter:card content="summary"><meta name=twitter:title content="7 Branches"><meta name=twitter:description content="The OR expression It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression &#34;png|jpge|gif&#34; on the file extension. This would tell you if the file was png OR jpeg OR gif. The options of the OR expression are determined by the separating them with a pipe symbol (&#34;|&#34;)."><link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,300italic,400italic|Raleway:200,300" rel=stylesheet><link href=/css/fontawesome-all.min.css rel=stylesheet><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/notice.css><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/normalize.css><link rel=stylesheet type=text/css media=screen href=https://leweym.github.io/css/main.css><script src=https://leweym.github.io/js/main.js></script></head><body><div class="container wrapper post"><div class=header><h1 class=site-title><a href=https://leweym.github.io/>Lewis Metcalf</a></h1><div class=site-description><nav class="nav social"><ul class=flat></ul></nav></div><nav class=nav><ul class=flat></ul></nav></div><div class=post-header><h1 class=title>Making regex from scratch in go</h1></div><div class=section><div class=posts><div class=post><a href=/posts/1-intro/>1 Intro</a> <span class=meta></span></div><div class=post><a href=/posts/2-getting-into-some-code/>2 Getting into some code</a> <span class=meta></span></div><div class=post><a href=/posts/3-starting-the-compiler/>3 Starting the compiler</a> <span class=meta></span></div><div class=post><a href=/posts/4-testing-fuzzing-and-fixing-things/>4 Testing, Fuzzing, and fixing things</a> <span class=meta></span></div><div class=post><a href=/posts/5-wildcards/>5 Wildcards</a> <span class=meta></span></div><div class=post><a href=/posts/6-pretty-vizualizations/>6 Pretty Vizualizations</a> <span class=meta></span></div><div class=post><span>7 Branches</span></div><div class=post><a href=/posts/8-epsilons/>8 Epsilons</a> <span class=meta></span></div><div class=post><a href=/posts/9-groups/>9 Groups</a> <span class=meta></span></div></div></div><br><div class=post-header><h1 class=title>7 Branches</h1><div class=meta></div></div><aside><nav id=TableOfContents><ul><li><a href=#the-or-expression>The OR expression</a></li><li><a href=#parsing-branch-ast-nodes>Parsing Branch AST Nodes</a></li><li><a href=#debug-printing-ast-nodes>Debug printing AST Nodes</a></li><li><a href=#adding-pipes-to-our-parser>Adding Pipes to our Parser</a></li><li><a href=#coding-the-pipe-parser>Coding the Pipe Parser</a></li><li><a href=#compiling-a-branch-node>Compiling a Branch node</a></li><li><a href=#deterministic-vs-non-deterministic>Deterministic vs Non-Deterministic</a></li><li><a href=#parallel-states>Parallel States</a></li></ul></nav></aside><div class=markdown><h2 id=the-or-expression>The OR expression</h2><p>It&rsquo;s very useful to use a regular expression to match against multiple different possible substrings. For example, to check that a file is an image type, you might use the regular expression <code>"png|jpge|gif"</code> on the file extension. This would tell you if the file was <code>png</code> OR <code>jpeg</code> OR <code>gif</code>. The options of the OR expression are determined by the separating them with a <code>pipe</code> symbol (<code>"|"</code>).</p><p>Let&rsquo;s have a look at what an FSM would look like with OR expressions. Take the regular expression <code>"dog|cat"</code> as an example.</p><p><img src=/img/Pasted-image-20220128175219.png alt=Pasted-image-20220128175219.png></p><p>As we can see, it looks similar to our previous examples, with the notable difference that our starting state has multiple outward <code>Transitions</code>. In this case, it can transition on both the <code>'d'</code> and the <code>'c'</code> characters.</p><p>Let&rsquo;s step through this using the string <code>"cat"</code> as our input search string.</p><p><img src=/img/Pasted-image-20220903165828.png alt=Pasted-image-20220903165828.png></p><p>First, we process the character <code>'c'</code>, which matches the bottom transition.</p><p><img src=/img/Pasted-image-20220903165908.png alt=Pasted-image-20220903165908.png></p><p>Then, we process <code>'a'</code></p><p><img src=/img/Pasted-image-20220903165927.png alt=Pasted-image-20220903165927.png></p><p>And finally <code>'t'</code>, which leaves us in an end state.</p><p><img src=/img/Pasted-image-20220903165948.png alt=Pasted-image-20220903165948.png></p><p>Pretty simple stuff! Now that we know what we&rsquo;re looking for, let&rsquo;s start coding.</p><p>We&rsquo;ll start at the <code>Parser</code>.</p><p>First, let&rsquo;s add our data structures.</p><h3 id=the-branch-data-structure>The Branch Data Structure</h3><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// ast.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> Branch <span style=color:#000;font-weight:700>struct</span> {  
+</span></span><span style=display:flex><span>   ChildNodes []Node  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (b <span style=color:#000;font-weight:700>*</span>Branch) <span style=color:#900;font-weight:700>Append</span>(node Node) {  
+</span></span><span style=display:flex><span>   <span style=color:#0086b3>panic</span>(<span style=color:#d14>&#34;implement me&#34;</span>)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (b <span style=color:#000;font-weight:700>*</span>Branch) <span style=color:#900;font-weight:700>compile</span>() (head <span style=color:#000;font-weight:700>*</span>State, tail <span style=color:#000;font-weight:700>*</span>State) {  
+</span></span><span style=display:flex><span>   <span style=color:#0086b3>panic</span>(<span style=color:#d14>&#34;implement me&#34;</span>)  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The structure of the <code>Branch</code> struct will be very similar to the <code>Group</code> struct - they both implement the <code>CompositeNode</code> interface and have child <code>Nodes</code>. The difference will be in how they are parsed, and how they are compiled.</p><h2 id=parsing-branch-ast-nodes>Parsing Branch AST Nodes</h2><p>We&rsquo;re going to want to be able to represent branches as <code>AST</code> nodes, so our parser needs to know how to take a regular expression such as <code>cat|dog</code> and turn it into a <code>Branch</code> AST node with two <code>Group</code> child nodes, each containing three <code>CharacterLiteral</code> nodes. Visually, the <code>cat|dog</code> example should look like this:</p><div class=mermaid>graph TD
 0(Branch) --> 1(Group)
 0 --> 2(Group)
 1 --> c[c]
@@ -47,6 +60,10 @@
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (g <span style=color:#000;font-weight:700>*</span>Group) <span style=color:#0086b3>string</span>(indentation <span style=color:#458;font-weight:700>int</span>) <span style=color:#458;font-weight:700>string</span> {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>compositeToString</span>(<span style=color:#d14>&#34;Group&#34;</span>, g.ChildNodes, indentation)  
 </span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (b <span style=color:#000;font-weight:700>*</span>Branch) <span style=color:#0086b3>string</span>(indentation <span style=color:#458;font-weight:700>int</span>) <span style=color:#458;font-weight:700>string</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>compositeToString</span>(<span style=color:#d14>&#34;Branch&#34;</span>, b.ChildNodes, indentation)  
+</span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>compositeToString</span>(title <span style=color:#458;font-weight:700>string</span>, children []Node, indentation <span style=color:#458;font-weight:700>int</span>) <span style=color:#458;font-weight:700>string</span> {  
 </span></span><span style=display:flex><span>   padding <span style=color:#000;font-weight:700>:=</span> strings.<span style=color:#900;font-weight:700>Repeat</span>(<span style=color:#d14>&#34;--&#34;</span>, indentation)  
@@ -62,67 +79,76 @@
 </span></span><span style=display:flex><span>        compile() (head *State, tail *State)
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       string(indentation int) string
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> }
-</span></span></code></pre></div><p>And finally call these methods from the composite Nodes <code>String()</code> method so that our tests use it for output.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>  
+</span></span></code></pre></div><p>And finally call these methods from the composite Nodes <code>String()</code> method so that our tests use it for output.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// ast.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (g <span style=color:#000;font-weight:700>*</span>Group) <span style=color:#900;font-weight:700>String</span>() <span style=color:#458;font-weight:700>string</span> {  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#d14>&#34;\n&#34;</span> <span style=color:#000;font-weight:700>+</span> g.<span style=color:#0086b3>string</span>(<span style=color:#099>0</span>)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#d14>&#34;\n&#34;</span> <span style=color:#000;font-weight:700>+</span> g.<span style=color:#0086b3>string</span>(<span style=color:#099>1</span>)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (b <span style=color:#000;font-weight:700>*</span>Branch) <span style=color:#900;font-weight:700>String</span>() <span style=color:#458;font-weight:700>string</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#d14>&#34;\n&#34;</span> <span style=color:#000;font-weight:700>+</span> b.<span style=color:#0086b3>string</span>(<span style=color:#099>1</span>)  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>Now, let&rsquo;s take a look at our error message again.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   TestParser/branches
-</span></span><span style=display:flex><span>    parser_test.go:53: Expected <span style=color:#000;font-weight:700>[</span>
-</span></span><span style=display:flex><span>        Branch
+</span></span><span style=display:flex><span>    parser_test.go:52: Expected:
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>        --Branch
+</span></span><span style=display:flex><span>        ----Group
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;a&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;b&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----Group
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;c&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;d&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----Group
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;e&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        --------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;f&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        
+</span></span><span style=display:flex><span>        Got:
+</span></span><span style=display:flex><span>        
 </span></span><span style=display:flex><span>        --Group
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;a&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;b&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --Group
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;c&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;d&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --Group
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;e&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        ------CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;f&#39;</span><span style=color:#000;font-weight:700>)]</span>, got <span style=color:#000;font-weight:700>[</span>
-</span></span><span style=display:flex><span>        Group
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;a&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;b&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;c&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;d&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;e&#39;</span><span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>        --CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;f&#39;</span><span style=color:#000;font-weight:700>)]</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;a&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;b&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;c&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;d&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;e&#39;</span><span style=color:#000;font-weight:700>)</span>
+</span></span><span style=display:flex><span>        ----CharacterLiteral<span style=color:#000;font-weight:700>(</span><span style=color:#d14>&#39;f&#39;</span><span style=color:#000;font-weight:700>)</span>
 </span></span></code></pre></div><p>That&rsquo;s better, we can now immediately see what&rsquo;s going on.</p><div class="notices note"><p>It probably seems like we&rsquo;re spending a lot of time building things to help us visualize our system, rather than building the system itself. That&rsquo;s true, and this is a large investment. However, this should pay dividends when it comes to debugging issues that come up, and in simply understanding our system better.
-It&rsquo;s hard to give hard numbers when it comes to deciding whether a tool is worth the time it takes to build it, but considering that the implementation is fairly straight forward, I think it&rsquo;s easily worth it in this case.</p></div><p>So let&rsquo;s fix our parser.</p><h2 id=adding-pipes-to-our-parser>Adding Pipes to our Parser</h2><p>During the parsing of a string of tokens, if we come across the <code>Pipe</code> ( <code>'|'</code>) token, we want to do one of two things, depending on whether the top <code>Node</code> in the stack is a <code>Branch</code> node or not.</p><ol><li>If the top <code>Node</code> of the stack is <strong>not</strong> a <code>Branch</code> node, want to replace the top of the stack with a new <code>Branch</code> node, which will contain the top stack node as its first child, and a new <code>Group</code> as its second child.</li><li>If the top <code>Node</code> of the stack is a <code>Branch</code> node, we want to &lsquo;split&rsquo; the <code>Branch</code> node, which basically means adding a fresh <code>Group</code> node as another child of the <code>Branch</code> node.</li></ol><p>Let&rsquo;s walk through these in more detail.</p><h3 id=1-creating-a-new-branch-node>1. Creating a new Branch node</h3><p>let&rsquo;s parse the regex <code>"ab|cd"</code>.</p><p>First, the letter <code>'a'</code>.</p><div class=mermaid>graph TD
+It&rsquo;s hard to give hard numbers when it comes to deciding whether a tool is worth the time it takes to build it, but considering that the implementation is fairly straight forward, I think it&rsquo;s easily worth it in this case.</p></div><p>So let&rsquo;s fix our parser.</p><h2 id=adding-pipes-to-our-parser>Adding Pipes to our Parser</h2><p>During the parsing of a string of tokens, if we come across the <code>Pipe</code> ( <code>'|'</code>) token, we want to do one of two things, depending on whether our root <code>Node</code> is a <code>Branch</code> node or not.</p><ol><li>If the root <code>Node</code> is <strong>not</strong> a <code>Branch</code> node, want to replace the root with a new <code>Branch</code> node, which will contain the old root <code>Node</code> as its first child, and a new <code>Group</code> as its second child.</li><li>If the root <code>Node</code> <strong>is</strong> a <code>Branch</code> node, we want to &lsquo;split&rsquo; the <code>Branch</code>, which basically means adding a fresh <code>Group</code> node as a child of the <code>Branch</code> node.</li></ol><p>Let&rsquo;s walk through these in more detail.</p><h3 id=1-creating-a-new-branch-node>1. Creating a new Branch node</h3><p>let&rsquo;s parse the regex <code>"ab|cd"</code>.</p><p>First, the letter <code>'a'</code>. It simply gets appended to our root <code>Group</code> node.</p><div class=mermaid>graph TD
 0(Group)
-0 --> a[a]</div><p>Then <code>'b'</code>,</p><div class=mermaid>graph TD
+0 --> a[a]</div><p>Then the same for <code>'b'</code>,</p><div class=mermaid>graph TD
 0(Group)
 0 --> a[a]
-0 --> b[b]</div><p>Now we have our pipe character <code>'|'</code>. With this, we should create a new <code>Branch</code> node and place our <code>Group</code> node as it&rsquo;s first child. We should also create a new <code>Group</code> node and it should be a new child of the <code>Branch</code> node.</p><div class=mermaid>graph TD
+0 --> b[b]</div><p>Now we have our pipe character <code>'|'</code>. With this, we should create a new <code>Branch</code> node and place our <code>Group</code> node as it&rsquo;s first child. This <code>Branch</code> node will become the new root <code>Node</code>.</p><p>We should also create a new <code>Group</code> node, and it should be a new child of the <code>Branch</code> node.</p><p>We should end up with the following;</p><div class=mermaid>graph TD
 0(Branch)
 0 --> 1(Group)
 0 --> 2(Group)
 1 --> a[a]
-1 --> b[b]</div><p>Continuing, we have <code>'c'</code>. We should now be appending new expressions to the newly created group (the second child of the <code>Branch</code> node).</p><div class=mermaid>graph TD
+1 --> b[b]</div><p>Continuing, we have <code>'c'</code>. We should now be appending new expressions to the newly created group (the second child of the root <code>Branch</code> node).</p><div class=mermaid>graph TD
 0(Branch)
 0 --> 1(Group)
 0 --> 2(Group)
 1 --> a[a]
 1 --> b[b]
-2 --> c[c]</div><p>And finally, <code>'d'</code>. The <code>AST</code> parsing is now complete.</p><div class=mermaid>graph TD
+2 --> c[c]</div><p>And finally, <code>'d'</code> is also added to the last child of the root <code>Branch</code> node. The <code>AST</code> parsing is now complete.</p><div class=mermaid>graph TD
 0(Branch)
 0 --> 1(Group)
 0 --> 2(Group)
 1 --> a[a]
 1 --> b[b]
 2 --> c[c]
-2 --> d[d]</div><h3 id=2-splitting-a-branch>2. Splitting a branch</h3><p>Let&rsquo;s try parsing the regex <code>a|b|c</code>.</p><p>First, we parse the <code>'a'</code> character.</p><div class=mermaid>graph TD
-0(Group) --> a[a]</div><p>Now, our first <code>'|'</code> token. This uses the first option, where a new <code>Branch</code> is created.</p><div class=mermaid>graph TD
+2 --> d[d]</div><h3 id=2-splitting-a-branch>2. Splitting a branch</h3><p>Let&rsquo;s try parsing the regex <code>a|b|c</code>.</p><p>First, we parse the <code>'a'</code> character. It gets added to the root <code>Group</code> node.</p><div class=mermaid>graph TD
+0(Group) --> a[a]</div><p>Now, our first <code>'|'</code> token. This uses the first option, where a new <code>Branch</code> is created and set as the root <code>Node</code>.</p><div class=mermaid>graph TD
 0(Branch) --> 1(Group)
 0 --> 2(Group)
-1 --> a[a]</div><p>Next, an <code>'b'</code> character token. This will be appended to the latest child of <code>Branch</code>.</p><div class=mermaid>graph TD
+1 --> a[a]</div><p>Next, an <code>'b'</code> character token. This will be appended to the last child of <code>Branch</code>.</p><div class=mermaid>graph TD
 0(Branch) --> 1(Group)
 0 --> 2(Group)
 1 --> a[a]
-2 --> b[b]</div><p>And now, our second <code>'|'</code> token. As the top of the stack will now be pointing to a <code>Branch</code> node, we will &lsquo;split&rsquo; this branch and create a new child.</p><div class=mermaid>graph TD
+2 --> b[b]</div><p>And now, our second <code>'|'</code> token. As the root is now a <code>Branch</code> node, we will &lsquo;split&rsquo; this branch and create a new child with a fresh <code>Group</code> node.</p><div class=mermaid>graph TD
 0(Branch) --> 1(Group)
 0 --> 2(Group)
 0 --> 3(Group)
 1 --> a[a]
-2 --> b[b]</div><p>And finally, the <code>'c'</code> character will be appended to the newly created group.</p><div class=mermaid>graph TD
+2 --> b[b]</div><p>And finally, the <code>'c'</code> character will be appended to the newly created <code>Group</code> node.</p><div class=mermaid>graph TD
 0(Branch) --> 1(Group)
 0 --> 2(Group)
 0 --> 3(Group)
@@ -155,27 +181,31 @@ It&rsquo;s hard to give hard numbers when it comes to deciding whether a tool is
 </span></span><span style=display:flex><span>   b.ChildNodes = <span style=color:#0086b3>append</span>(b.ChildNodes, <span style=color:#000;font-weight:700>&amp;</span>Group{})  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>And then, in our parser, we add a case for processing <code>Pipe</code> tokens.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // parser.go
-</span></span></span><span style=display:flex><span><span style=color:#aaa></span>		 	for _, t := range tokens {  
-</span></span><span style=display:flex><span>			    switch t.symbol {  
-</span></span><span style=display:flex><span>			    case Character:  
-</span></span><span style=display:flex><span>			 	   node := p.pop()  
-</span></span><span style=display:flex><span>				   node.Append(CharacterLiteral{Character: t.letter})  
-</span></span><span style=display:flex><span>				   p.push(node)  
-</span></span><span style=display:flex><span>			    case AnyCharacter:  
-</span></span><span style=display:flex><span>				   node := p.pop()  
-</span></span><span style=display:flex><span>				   node.Append(WildcardLiteral{})  
-</span></span><span style=display:flex><span>				   p.push(node)
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               case Pipe:
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       node := p.pop()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       switch b := node.(type) {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       case *Branch:
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                               b.Split()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       default:
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                               node = &amp;Branch{ChildNodes: []Node{node, &amp;Group{}}}
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       }
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       p.push(node)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                }
-</span></span></code></pre></div><p>This should be enough to get our <code>Parser</code> tests green again. Next, we need to compile this AST node into an FSM.</p><h2 id=compiling-a-branch-node>Compiling a Branch node</h2><p>We want to take our AST and create a valid FSM from it. This will be enough to make our implementation work, so let&rsquo;s start with a test before we implement anything.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // fsm_test.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>func (p *Parser) Parse() Node {
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-   root := Group{}  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   var root CompositeNode  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   root = &amp;Group{}  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>  
+</span></span><span style=display:flex><span>   for _, t := range p.tokens {  
+</span></span><span style=display:flex><span>       switch t.symbol {  
+</span></span><span style=display:flex><span>       case Character:  
+</span></span><span style=display:flex><span>          root.Append(CharacterLiteral{Character: t.letter})  
+</span></span><span style=display:flex><span>       case AnyCharacter:  
+</span></span><span style=display:flex><span>          root.Append(WildcardLiteral{})  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      case Pipe:  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         switch b := root.(type) {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         case *Branch:  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+            b.Split()  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         default:  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+            root = &amp;Branch{ChildNodes: []Node{root, &amp;Group{}}}  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>      }  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-   return &amp;root  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   return root  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>}
+</span></span></code></pre></div><p>Notice that our root <code>Node</code> now has to be of the interface type <code>CompositeNode</code>, as it can now be either a <code>Group</code> or a <code>Branch</code> type.</p><p>This should be enough to get our <code>Parser</code> tests green again. Next, we need to compile this AST node into an FSM.</p><h2 id=compiling-a-branch-node>Compiling a Branch node</h2><p>We want to take our AST and create a valid FSM from it. This will be enough to make our implementation work, so let&rsquo;s start with a test before we implement anything.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // fsm_test.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>                {&#34;wildcard regex matching&#34;, &#34;ab.&#34;, &#34;abc&#34;},
@@ -321,7 +351,7 @@ style 0 fill:#ff5555;</div><p>If we process the character <code>'a'</code>, what
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       return nil
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       return res
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> }
-</span></span></code></pre></div><p>The difference her is subtle, but significant. All matching <code>States</code> are returned here, not just the first one we find.</p><p>Going back to our <code>runner</code>, we also need a new way of determining if the <code>runner</code> status. Instead of checking for a single active <code>State</code>, we need to check all of the active <code>States</code> and return if any are success <code>States</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // runner.go
+</span></span></code></pre></div><p>The difference here is subtle, but significant. All matching <code>States</code> are returned here, not just the first one we find.</p><p>Going back to our <code>runner</code>, we also need a new way of determining if the <code>runner</code> status. Instead of checking for a single active <code>State</code>, we need to check all of the active <code>States</code> and return if any are success <code>States</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // runner.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span> func (r *runner) GetStatus() Status {
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       // if the current state is nil, return Fail
@@ -383,26 +413,28 @@ style 0 fill:#ff5555;</div><p>If we process the character <code>'a'</code>, what
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func Test_DrawSnapshot(t *testing.T) {
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
-</span></span><span style=display:flex><span>				for _, tt := range tests {  
-</span></span><span style=display:flex><span>				    t.Run(tt.name, func(t *testing.T) {  
-</span></span><span style=display:flex><span>					    tokens := lex(tt.regex)  
-</span></span><span style=display:flex><span>					    parser := NewParser()  
-</span></span><span style=display:flex><span>					    ast := parser.Parse(tokens)  
-</span></span><span style=display:flex><span>					    state, _ := ast.compile()
-</span></span><span style=display:flex><span>                        runner := NewRunner(state)
-</span></span><span style=display:flex><span>                        for _, char := range tt.input {
-</span></span><span style=display:flex><span>                                runner.Next(char)
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                               runner.Start()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                        }
-</span></span><span style=display:flex><span>                        snapshot := runner.drawSnapshot()
+</span></span><span style=display:flex><span>		for _, tt := range tests {  
+</span></span><span style=display:flex><span>		   t.Run(tt.name, func(t *testing.T) {  
+</span></span><span style=display:flex><span>		      runner := NewRunner(tt.fsmBuilder())  
+</span></span><span style=display:flex><span>		      for _, char := range tt.input {  
+</span></span><span style=display:flex><span>		         runner.Next(char)  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+		         runner.Start()  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>		      }  
+</span></span><span style=display:flex><span>		      snapshot := runner.drawSnapshot()  
+</span></span><span style=display:flex><span>		  
+</span></span><span style=display:flex><span>		      if !reflect.DeepEqual(tt.expected, snapshot) {  
+</span></span><span style=display:flex><span>		         t.Fatalf(&#34;Expected drawing to be \n\&#34;%v\&#34;\ngot\n\&#34;%v\&#34;&#34;, tt.expected, snapshot)  
+</span></span><span style=display:flex><span>		      }  
+</span></span><span style=display:flex><span>		   })  
+</span></span><span style=display:flex><span>		}
 </span></span></code></pre></div><p>And then let&rsquo;s change our test expectations so that the previous <code>States</code> are also highlighted.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // draw_test.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func Test_DrawSnapshot(t *testing.T) {
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>    tests := []test{  
 </span></span><span style=display:flex><span>      {  
-</span></span><span style=display:flex><span>         name:  &#34;initial snapshot&#34;,  
-</span></span><span style=display:flex><span>         regex: &#34;abc&#34;,  
-</span></span><span style=display:flex><span>         input: &#34;&#34;,  
+</span></span><span style=display:flex><span>         name:       &#34;initial snapshot&#34;,  
+</span></span><span style=display:flex><span>         fsmBuilder: abcBuilder,  
+</span></span><span style=display:flex><span>         input:      &#34;&#34;,  
 </span></span><span style=display:flex><span>         expected: `graph LR  
 </span></span><span style=display:flex><span>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span><span style=display:flex><span>1((1)) --&#34;b&#34;--&gt; 2((2))  
@@ -410,29 +442,31 @@ style 0 fill:#ff5555;</div><p>If we process the character <code>'a'</code>, what
 </span></span><span style=display:flex><span>style 0 fill:#ff5555;`,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>      {  
-</span></span><span style=display:flex><span>         name:  &#34;after a single letter&#34;,  
-</span></span><span style=display:flex><span>         regex: &#34;abc&#34;,  
-</span></span><span style=display:flex><span>         input: &#34;a&#34;,  
-</span></span><span style=display:flex><span>         expected: `graph LR
-</span></span><span style=display:flex><span> 0((0)) --&#34;a&#34;--&gt; 1((1))
-</span></span><span style=display:flex><span> 1((1)) --&#34;b&#34;--&gt; 2((2))
-</span></span><span style=display:flex><span> 2((2)) --&#34;c&#34;--&gt; 3((3))
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 0 fill:#ff5555;
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> style 1 fill:#ff5555;`,
-</span></span><span style=display:flex><span>                },
-</span></span><span style=display:flex><span>                {
+</span></span><span style=display:flex><span>         name:       &#34;after a single letter&#34;,  
+</span></span><span style=display:flex><span>         fsmBuilder: abcBuilder,  
+</span></span><span style=display:flex><span>         input:      &#34;a&#34;,  
+</span></span><span style=display:flex><span>         expected: `graph LR  
+</span></span><span style=display:flex><span>0((0)) --&#34;a&#34;--&gt; 1((1))  
+</span></span><span style=display:flex><span>1((1)) --&#34;b&#34;--&gt; 2((2))  
+</span></span><span style=display:flex><span>2((2)) --&#34;c&#34;--&gt; 3((3))  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 0 fill:#ff5555;  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>style 1 fill:#ff5555;`,  
+</span></span><span style=display:flex><span>      },  
+</span></span><span style=display:flex><span>      {  
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-        name:  &#34;last state highlighted&#34;,
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+        name:  &#34;all states highlighted&#34;,
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>         regex: &#34;aaa&#34;,
-</span></span><span style=display:flex><span>         input: &#34;aaa&#34;,
-</span></span><span style=display:flex><span>         expected: `graph LR
-</span></span><span style=display:flex><span> 0((0)) --&#34;a&#34;--&gt; 1((1))
-</span></span><span style=display:flex><span> 1((1)) --&#34;a&#34;--&gt; 2((2))
-</span></span><span style=display:flex><span> 2((2)) --&#34;a&#34;--&gt; 3((3))
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 0 fill:#ff5555;
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 1 fill:#ff5555;
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 2 fill:#ff5555;
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span> style 3 fill:#00ab41;`,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>         fsmBuilder: aaaBuilder,  
+</span></span><span style=display:flex><span>         input:      &#34;aaa&#34;,  
+</span></span><span style=display:flex><span>         expected: `graph LR  
+</span></span><span style=display:flex><span>0((0)) --&#34;a&#34;--&gt; 1((1))  
+</span></span><span style=display:flex><span>1((1)) --&#34;a&#34;--&gt; 2((2))  
+</span></span><span style=display:flex><span>2((2)) --&#34;a&#34;--&gt; 3((3))  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 0 fill:#ff5555;  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 1 fill:#ff5555;  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+style 2 fill:#ff5555;  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>style 3 fill:#00ab41;`,  
+</span></span><span style=display:flex><span>      },  
+</span></span><span style=display:flex><span>   }
 </span></span></code></pre></div><p>All that&rsquo;s left to do is make changes to our <code>match</code> function of the <code>myRegex</code> type. The changes here are simple; we want to <code>Start</code> the runner again after every character is processed so that every substring is processed, and we no longer want to recursively call the function again on a substring in the case of failure.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // regex.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span>func match(runner *runner, input []rune, debugChan chan debugStep, offset int) bool {
