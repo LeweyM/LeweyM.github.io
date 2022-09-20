@@ -601,13 +601,13 @@ It does, however, mess up our visualizations for simple string concatenations su
  
         for _, expression := range g.ChildNodes {
                 nextStateHead, nextStateTail := expression.compile()
--               _, isChar := expression.(CharacterLiteral)
--               if isChar {
--                       currentTail.merge(nextStateHead)
--               } else {
--                       currentTail.addEpsilon(nextStateHead)
--               }
-+               currentTail.merge(nextStateHead)
++               _, isChar := expression.(CharacterLiteral)
++               if isChar {
++                       currentTail.merge(nextStateHead)
++               } else {
++                       currentTail.addEpsilon(nextStateHead)
++               }
+-               currentTail.merge(nextStateHead)
                 currentTail = nextStateTail
         }
 
