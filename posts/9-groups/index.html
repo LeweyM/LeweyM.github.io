@@ -275,9 +275,9 @@ end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the 
 </span></span><span style=display:flex><span> 
 </span></span><span style=display:flex><span>        for _, expression := range g.ChildNodes {
 </span></span><span style=display:flex><span>                nextStateHead, nextStateTail := expression.compile()
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               currentTail.addEpsilon(nextStateHead)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               currentTail.merge(nextStateHead)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                currentTail = nextStateTail
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               currentTail.addEpsilon(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span><span style=color:#000;background-color:#fdd>-               currentTail.merge(nextStateHead)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span>                currentTail = nextStateTail
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>		return &amp;startState, currentTail
