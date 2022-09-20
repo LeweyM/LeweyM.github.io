@@ -564,8 +564,8 @@ func (g *Group) compile() (head *State, tail *State) {
  
         for _, expression := range g.ChildNodes {
                 nextStateHead, nextStateTail := expression.compile()
--               currentTail.addEpsilon(nextStateHead)
-+               currentTail.merge(nextStateHead)
++               currentTail.addEpsilon(nextStateHead)
+-               currentTail.merge(nextStateHead)
                 currentTail = nextStateTail
         }
 
