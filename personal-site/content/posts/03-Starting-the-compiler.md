@@ -1,5 +1,5 @@
 ---
-title: 3 Starting the compiler
+title: 03 Starting the compiler
 draft: false
 series: ["making regex from scratch in GO"]
 ---

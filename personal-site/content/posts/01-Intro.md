@@ -1,5 +1,5 @@
 ---
-title: 1 Intro
+title: 01 Intro
 draft: false
 series: ["making regex from scratch in GO"]
 ---

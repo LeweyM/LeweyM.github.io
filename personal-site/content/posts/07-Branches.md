@@ -1,5 +1,5 @@
 ---
-title: 7 Branches
+title: 07 Branches
 draft: false
 series: ["making regex from scratch in GO"]
 ---

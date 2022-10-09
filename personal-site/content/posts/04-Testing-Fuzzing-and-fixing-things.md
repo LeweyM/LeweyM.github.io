@@ -1,5 +1,5 @@
 ---
-title: 4 Testing, Fuzzing, and fixing things
+title: 04 Testing, Fuzzing, and fixing things
 draft: false
 series: ["making regex from scratch in GO"]
 ---

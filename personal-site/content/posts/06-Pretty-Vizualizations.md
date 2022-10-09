@@ -1,5 +1,5 @@
 ---
-title: 6 Pretty Vizualizations
+title: 06 Pretty Vizualizations
 draft: false
 series: ["making regex from scratch in GO"]
 ---

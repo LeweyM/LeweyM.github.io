@@ -1,5 +1,5 @@
 ---
-title: 8 Epsilons
+title: 08 Epsilons
 draft: false
 series: ["making regex from scratch in GO"]
 ---

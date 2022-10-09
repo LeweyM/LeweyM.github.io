@@ -1,5 +1,5 @@
 ---
-title: 2 Getting into some code
+title: 02 Getting into some code
 draft: false
 series: ["making regex from scratch in GO"]
 ---
