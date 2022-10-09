@@ -481,6 +481,8 @@ Here we need the 'one', 'more' and 'zero' cases.
 
 With those changes, our tests should be passing! Let's try out a few examples with our command line.
 
+## A few examples
+
 Let's first try with the regular expression `ca(rro)?t` using the Zero or One modifier.
 
 ![carrot-carrot.gif](/img/carrot-carrot.gif)
@@ -490,6 +492,66 @@ We can see in this example that when matching the `(rro)` sub expression, the ma
 ![carrot-cat.gif](/img/carrot-cat.gif)
 
 When not matching the sub expression, the matcher uses the epsilons to go straight past the sub expression.
+
+Let's try something similar with the 'One or More' modifier.
+
+![i-love-cats.gif](/img/i-love-cats.gif)
+
+In this example, the regex `I( love)+ cats` is a good demonstration of the 'More' case looping over every match of the `( love)` sub expression.
+
+And for one more example, let's combine the wildcard `'.'` symbol with the Zero or More `*` symbol to create a generic matcher for any substring.
+
+![its-a-_-cat.gif](/img/its-a-_-cat.gif)
+
+Now that we can combine and compose modifiers and branches, we can create some really sophisticated regular expression matchers. Let's look at an example where we combine all of the components we've created so far.
+
+![complex.gif](/img/complex.gif)
+
+There are a lot of moving parts here, but our composable design is keeping things in check.
+
+Let's make sure that everything is working as expected by running our fuzzer. First, remove `*+?` from our special character filter.
+
+```diff
+@@ // fsm_test.go
+
+@@ func FuzzFSM(f *testing.F) {
+        f.Fuzz(func(t *testing.T, regex, input string) {
+-               if strings.ContainsAny(regex, "[]{}$^*+?\\") {
++               if strings.ContainsAny(regex, "[]{}$^\\") {
++                       t.Skip()
++               }
+
+```
+
+Then, we'll also need to check for regular expressions where `?` is used on its own, as this is used for group constructions which we're not implementing in this project.
+
+```diff
+@@ // fsm_test.go
+
+@@ func FuzzFSM(f *testing.F) {
+                if strings.ContainsAny(regex, "[]{}$^\\") {
+                        t.Skip()
+                }
++               if strings.Contains(regex, "(?") {
++                       // '?' on its own is used for special group constructs, which we're not implementing.
+                        t.Skip()
+                }
+
+```
+
+The fuzzer should now be able to fun without finding any errors!
+
+## What's next?
+
+There are many more features of modern regex engines which we could implement. For example, we could allow regular expressions with `{3}` which would match exactly 3 sub expressions. Or we could allow character ranges such as `[a-zA-Z]`. We could match on expressions which start or end with an expression using `^` and `$`. 
+
+We could also extend our matcher by returning the substring indices of the match, or by accounting for match groups. 
+
+There's also a myriad of performance improvements we could make - our implementation is currently many, many orders of magnitude slower than the Golang implementation...
+
+However, what I'm more interested in is converting our epsilon-based NFA to a DFA, in which every `State` has only one valid `Transition` per input.
+
+After that, I'll probably call it a day with this project (unless something else perks my curiosity - I'm open to suggestions!).
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v9)
