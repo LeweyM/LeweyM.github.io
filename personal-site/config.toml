@@ -6,10 +6,12 @@ theme = "ezhil"
 # Your Google analytics code.
     GoogleAnalytics = "G-Q6FPTHJ5QN"
 #  subtitle = "my subtitle"
+    mainSections = ['series', 'posts']
 [taxonomies]
 tag = "tags"
 category = "categories"
 series = "series"
+series-desciptions = "seriesdesc"
 
 
 #pygmentsstyle = "solarized-dark"
