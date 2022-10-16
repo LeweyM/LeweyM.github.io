@@ -6,7 +6,7 @@ series: ["making regex from scratch in GO"]
 
 ## Modifiers
 
-{{< iframe src="html/a0638db1c14190ad961f1935937a2bd2" >}}
+{{< iframe src="/html/a0638db1c14190ad961f1935937a2bd2.html" >}}
 
 Regular Expression modifiers are special characters which change how sub-expressions of the regex are interpreted. The three modifiers we'll be implementing will be the  `'?'`, `'+'`, and `'*'` modifiers.
 
