@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d9df6d3d-753e-4b58-abfd-87d088bbd231" name="Default Changelist" comment="add trailing slash to base url">
-      <change afterPath="$PROJECT_DIR$/personal-site/themes/ezhil/layouts/partials/analytics-gtag.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="d9df6d3d-753e-4b58-abfd-87d088bbd231" name="Default Changelist" comment="change iframe height">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/personal-site/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/config.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/personal-site/content/posts/2-Getting-into-some-code.md" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/content/posts/2-Getting-into-some-code.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/personal-site/static/html/5d7adae6daf493c1f276c381f5e9517e.html" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/static/html/5d7adae6daf493c1f276c381f5e9517e.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/personal-site/themes/ezhil" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/themes/ezhil" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/personal-site/themes/ezhil/layouts/partials/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/themes/ezhil/layouts/partials/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/personal-site/themes/ezhil/layouts/shortcodes/iframe.html" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/themes/ezhil/layouts/shortcodes/iframe.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/personal-site/themes/ezhil/static/css/bootstrap.css" beforeDir="false" afterPath="$PROJECT_DIR$/personal-site/themes/ezhil/static/css/bootstrap.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +36,15 @@
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="true" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/css/bootstrap.css" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/config.toml" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/themes/ezhil/layouts/partials/footer.html" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/themes/ezhil/layouts/shortcodes/iframe.html" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/themes/ezhil/layouts/shortcodes/notice.html" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/themes/ezhil/static/css/bootstrap.css" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/personal-site/themes/ezhil/static/css/main.css" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -48,17 +57,18 @@
     <option name="autoscrollFromSource" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "RunOnceActivity.go.format.on.save.advertiser.fired": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "go.import.settings.migrated": "true",
-    "nodejs_package_manager_path": "npm"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.go.format.on.save.advertiser.fired&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;TF_FMT&quot;: &quot;false&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -83,7 +93,23 @@
       <workItem from="1590056031852" duration="14377000" />
       <workItem from="1661598276950" duration="19000" />
       <workItem from="1665581890975" duration="1249000" />
+      <workItem from="1665995139321" duration="752000" />
     </task>
+    <task id="LOCAL-00001" summary="change iframe height">
+      <created>1665937243953</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1665937243953</updated>
+    </task>
+    <task id="LOCAL-00002" summary="change iframe height">
+      <created>1665937247332</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1665937247332</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -99,6 +125,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="change iframe height" />
+    <option name="LAST_COMMIT_MESSAGE" value="change iframe height" />
   </component>
   <component name="VgoProject">
     <integration-enabled>false</integration-enabled>
