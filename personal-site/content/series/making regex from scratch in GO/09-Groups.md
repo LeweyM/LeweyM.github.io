@@ -758,8 +758,6 @@ We get the following visualization.
 
 {{< iframe src="/html/dc935b0c1f121d4bab232ff5c6abd749.html" >}}
 
-![complex-branch-epsilon-demo.gif](/img/complex-branch-epsilon-demo.gif)
-
 Try out different inputs and see what the flow of state activation looks like for each one. Notice that the epsilon transitions simply pass activation from one state to another, effectively making two states equivalent.
 
 We can now move on to other regular expression constructs, such as modifiers!
