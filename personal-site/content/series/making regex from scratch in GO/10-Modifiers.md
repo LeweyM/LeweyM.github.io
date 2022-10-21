@@ -485,27 +485,27 @@ With those changes, our tests should be passing! Let's try out a few examples wi
 
 Let's first try with the regular expression `ca(rro)?t` using the Zero or One modifier.
 
-{{< iframe src="/html/1505ff515b63c25365d26b929f029330.html" >}}
+{{< iframe src="/html/1505ff515b63c25365d26b929f029330.html" caption="v9 draw \"ca(rro)?t\" \"carrot\"">}}
 
 We can see in this example that when matching the `(rro)` sub expression, the matcher travels along the bottom row of `States`.
 
-{{< iframe src="/html/91e39546f72eb55c8eeeb8340abd4695.html" >}}
+{{< iframe src="/html/91e39546f72eb55c8eeeb8340abd4695.html" caption="v9 draw \"ca(rro)?t\" \"cat\"">}}
 
 When not matching the sub expression, the matcher uses the epsilons to go straight past the sub expression.
 
 Let's try something similar with the 'One or More' modifier.
 
-{{< iframe src="/html/5d7adae6daf493c1f276c381f5e9517e.html" >}}
+{{< iframe src="/html/5d7adae6daf493c1f276c381f5e9517e.html" caption="v9 draw \"I( love)+ cats\" \"I love love love cats\"">}}
 
 In this example, the regex `I( love)+ cats` is a good demonstration of the 'More' case looping over every match of the `( love)` sub expression.
 
 And for one more example, let's combine the wildcard `'.'` symbol with the Zero or More `*` symbol to create a generic matcher for any substring.
 
-{{< iframe src="/html/b886d43cb4587e7b79a2e45dcaaa0387.html" >}}
+{{< iframe src="/html/b886d43cb4587e7b79a2e45dcaaa0387.html" caption="v9 draw \"It's a .* cat\" \"It's a big cat\"">}}
 
 Now that we can combine and compose modifiers and branches, we can create some really sophisticated regular expression matchers. Let's look at an example where we combine all of the components we've created so far.
 
-{{< iframe src="/html/015caac5ff5a4913cb861ca990715876.html" >}}
+{{< iframe src="/html/015caac5ff5a4913cb861ca990715876.html" caption="v9 draw \"ab?(c+d|e+f)*x.\" \"abeefccdxz\"">}}
 
 There are a lot of moving parts here, but our composable design is keeping things in check.
 
