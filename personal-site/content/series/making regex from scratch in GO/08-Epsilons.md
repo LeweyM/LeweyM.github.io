@@ -415,22 +415,27 @@ That should be enough to get our tests working again. Let's check out a few exam
 
 Let's try our `cat|dog` example. First we'll try the input string `"cat"`
 
+{{< iframe src="/html/572c8e5ece7b1cff32f55a218c5d065c.html" >}}
+
 ![cat-good-demo.gif](/img/cat-good-demo.gif)
 
 Great, we now start in `State 1` and `State 5` because of our epsilon transitions. Now with the input string `"dog"`.
 
+{{< iframe src="/html/e88efd183d698952dc528bbda9248daf.html" >}}
 ![dog-good-demo.gif](/img/dog-good-demo.gif)
 
 Great, everything's still working perfectly. 
 
 What about one of the failing example we had before? Previously, branches which shared substrings were having difficulty because the FSM didn't determine which branch it should go down. We fixed this before with multiple active states, let's make sure that it's still working.
 
+{{< iframe src="/html/ca08cc7f9a00491117ca07394ded4e23.html" >}}
 ![mutli-branch-good-demo.gif](/img/mutli-branch-good-demo.gif)
 
 Great, still as expected.
 
 What about our tricky `'1|'` regular expression? Let's try that now.
 
+{{< iframe src="/html/a158041a79ff85d40793c0aa01213995.html" >}}
 ![empty-regex-branch-demo.gif](/img/empty-regex-branch-demo.gif)
 
 As we can see, our FSM is always in a `success` state; `State 3`. Great, it looks like we've covered all the cases for branches. Let's run our fuzzer and see if we're right.

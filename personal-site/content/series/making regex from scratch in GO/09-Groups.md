@@ -615,6 +615,7 @@ It does, however, mess up our visualizations for simple string concatenations su
 
 This gives us a clearer picture for simple string concatenation, but our tests still pass!
 
+{{< iframe src="/html/a8e13f1cd1ad18d57ac936ddda197d41.html" >}}
 ![abc-regex-demo-2.gif](/img/abc-regex-demo-2.gif)
 
 So our tests are now passing, let's go back to our fuzzer.
