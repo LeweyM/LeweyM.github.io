@@ -1,0 +1,116 @@
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+<body onload="prev()" style="text-align:center;margin:3vw;overflow:hidden">
+
+<h1>Regex: (abc)</h1>
+
+<div class="nav-buttons">
+	<button id="prev" onClick="prev()">
+		prev
+	</button>
+	<button id="next" onClick="next()">
+		next
+	</button>
+	<p>Or use the arrow keys to Step through the FSM</p>
+</div>
+
+
+<div class="graph"  style="visibility:visible" >
+	<p style='font-size:64px'>
+		<span style='color:red'></span><span style='text-decoration-color:red;text-decoration-line:underline;'>a</span><span>bc</span>
+	</p>
+	<div class="mermaid">
+		graph LR
+0((0)) --&#34;a&#34;--&gt; 1((1))
+1((1)) --&#34;b&#34;--&gt; 2((2))
+2((2)) --&#34;c&#34;--&gt; 3((3))
+style 0 fill:#ff5555;
+	</div>
+</div>
+
+<div class="graph"  style="visibility:hidden;" >
+	<p style='font-size:64px'>
+		<span style='color:red'>a</span><span style='text-decoration-color:red;text-decoration-line:underline;'>b</span><span>c</span>
+	</p>
+	<div class="mermaid">
+		graph LR
+0((0)) --&#34;a&#34;--&gt; 1((1))
+1((1)) --&#34;b&#34;--&gt; 2((2))
+2((2)) --&#34;c&#34;--&gt; 3((3))
+style 1 fill:#ff5555;
+	</div>
+</div>
+
+<div class="graph"  style="visibility:hidden;" >
+	<p style='font-size:64px'>
+		<span style='color:red'>ab</span><span style='text-decoration-color:red;text-decoration-line:underline;'>c</span><span></span>
+	</p>
+	<div class="mermaid">
+		graph LR
+0((0)) --&#34;a&#34;--&gt; 1((1))
+1((1)) --&#34;b&#34;--&gt; 2((2))
+2((2)) --&#34;c&#34;--&gt; 3((3))
+style 2 fill:#ff5555;
+	</div>
+</div>
+
+<div class="graph"  style="visibility:hidden;" >
+	<p style='font-size:64px'>
+		<span style='color:red'>abc</span><span style='text-decoration-color:red;text-decoration-line:underline;'></span><span></span>
+	</p>
+	<div class="mermaid">
+		graph LR
+0((0)) --&#34;a&#34;--&gt; 1((1))
+1((1)) --&#34;b&#34;--&gt; 2((2))
+2((2)) --&#34;c&#34;--&gt; 3((3))
+style 3 fill:#00ab41;
+	</div>
+</div>
+
+
+<script type="text/javascript">
+let i = 1
+
+function next() {
+  const c = document.getElementsByClassName('graph') 
+  if (i >= c.length - 1) return 
+	i++
+	for (let j = 0; j < c.length; j++) {
+		if (i != j)	{
+		  c[j].style.display = 'none' 
+		  c[j].style.visibility = 'hidden' 
+		} else {
+		  c[j].style.display = 'block'
+		  c[j].style.visibility = 'visible' 
+		}	
+	}
+}
+
+function prev() {
+	if (i <= 0) return
+	i--
+	const c = document.getElementsByClassName('graph') 
+	for (let j = 0; j < c.length; j++) {
+		if (i != j)	{
+		  c[j].style.display = 'none' 
+		  c[j].style.visibility = 'hidden' 
+		} else {
+		  c[j].style.display = 'block'
+		  c[j].style.visibility = 'visible' 
+		}	
+	}
+}
+
+function checkKey(e) {
+  	if (e.which === 37 || e.which === 40) {
+		prev()
+	} else if (e.which === 39 || e.which === 38) {
+		next()
+	}	
+}
+
+</script>
+<script>document.onkeydown = checkKey;</script>
+<div>
+</div>
