@@ -1035,6 +1035,8 @@ Again, I won't explain this because it's nasty Javascript and it's not too inter
 
 {{< iframe src="/html/e7f3dc672824a71d4b9995391b558f01.html" caption="v5 draw \"abc\" \"abc\"">}}
 
+![abc-regex-demo.gif](/img/abc-regex-demo.gif)
+
 Nice! The underlined character shows which character we're going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.
 
 So, we can look at the red state, ask ourselves "is there a transition which matches the character that's about to be processed?", and then we can predict which state will be active next!
@@ -1042,6 +1044,9 @@ So, we can look at the red state, ask ourselves "is there a transition which mat
 Let's try another example.
 
 {{< iframe src="/html/d9eae559dbbe94884d6f6314cb66ce74.html" caption="v5 draw \"cat\" \"I love cats\"">}}
+
+
+![i-love-cats-regex-demo-fast.gif](/img/i-love-cats-regex-demo-fast.gif)
 
 We can see that most of the characters make our FSM fail immediately. We know that the `runner` has failed because there is no active state for one step. It's at this point that our algorithm resets the runner and starts the search again from the next substring. 
 
