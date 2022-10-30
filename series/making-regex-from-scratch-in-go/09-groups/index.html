@@ -249,13 +249,8 @@ end</div><p>As we&rsquo;ve reached the end of the expression, we simply pop the 
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               {&#34;empty group concatenation&#34;, &#34;(()0)0&#34;, &#34;0&#34;},
 </span></span></span></code></pre></div><p>We can understand this error by looking at the <code>merge</code> function when compiling empty groups.</p><h2 id=compiling-groups>Compiling groups</h2><p>Let&rsquo;s take a look at our merge function code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// state.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
-</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// adds the transitions of other State (s2) to this State (s).//  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// warning: do not use if State s2 has any incoming transitions.  
+</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// adds the transitions of other State (s2) to this State (s).  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>merge</span>(s2 <span style=color:#000;font-weight:700>*</span>State) {  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(s2.incoming) <span style=color:#000;font-weight:700>!=</span> <span style=color:#099>0</span> {  
-</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;</span>, <span style=color:#000;font-weight:700>*</span>s2, s.incoming))  
-</span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s2.transitions {  
 </span></span><span style=display:flex><span>      <span style=color:#998;font-style:italic>// 1. copy s2 transitions to s  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>      s.<span style=color:#900;font-weight:700>addTransition</span>(t.to, t.predicate, t.debugSymbol)  

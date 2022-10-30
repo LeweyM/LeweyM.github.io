@@ -37,7 +37,8 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))`</span>,  
+</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 stroke:green,stroke-width:4px;`</span>,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
@@ -51,14 +52,15 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>      })  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>This test is pretty straight forward, let&rsquo;s just zoom in on a couple of things.</p><p>The first thing to note here is that we&rsquo;re building our FSMs by hand here in the helper function <code>abcBuilder()</code>. This is because we don&rsquo;t want changes in our compiler or parser to break these tests - they should only be concerned with how FSMs are drawn.</p><p>The next thing to note is the new <code>.Draw()</code> method on the <code>State</code> struct. This is what we need to implement to get these tests to pass. Once we have a <code>State</code> constructed, we simply call <code>.Draw()</code> and check that the <code>mermaid</code> graph is as we expect.</p><p>Now that we have some red tests, we can start implementing the <code>Draw()</code> method.</p><h2 id=traversal>Traversal</h2><p>We need a line for every <code>Transition</code> in our FSM. Generically speaking, this means we need to look at every &lsquo;vertex&rsquo; in our &lsquo;directed graph&rsquo; (digraph). So, what we have here is a <strong>graph traversal problem</strong>.</p><p>There are two generic ways to traverse a graph; Breadth-First Search (BFS) and Depth-First Search (DFS). How we visit every vertex will determine the order of the lines in our <code>mermaid</code> markdown. It doesn&rsquo;t make a huge difference, but DFS should lead to longer chains of connected nodes being drawn first. Another advantage of DFS is that our traversal algorithm can be defined recursively.</p><p>Our algorithm for collecting all the <code>Transitions</code> of the FSM should look something like this;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// from the root node
+</span></span></code></pre></div><p>This test is pretty straight forward, let&rsquo;s just zoom in on a couple of things.</p><p>We&rsquo;re expecting to build a simple <code>mermaid</code> graph with numbered nodes and arrow transitions labeled with letters, such as <code>0((0)) --"a"--> 1((1))</code>. We also want our success node (in this case it&rsquo;s node 3) to look different, so we&rsquo;re giving it a thicker green outline with <code>style 3 stroke:green,stroke-width:4px</code>.</p><p>The first thing to note here is that we&rsquo;re building our FSMs by hand here in the helper function <code>abcBuilder()</code>. This is because we don&rsquo;t want changes in our compiler or parser to break these tests - they should only be concerned with how FSMs are drawn.</p><p>The next thing to note is the new <code>.Draw()</code> method on the <code>State</code> struct. This is what we need to implement to get these tests to pass. Once we have a <code>State</code> constructed, we simply call <code>.Draw()</code> and check that the <code>mermaid</code> graph is as we expect.</p><p>Now that we have some red tests, we can start implementing the <code>Draw()</code> method.</p><h2 id=traversal>Traversal</h2><p>We need a line for every <code>Transition</code> in our FSM. Generically speaking, this means we need to look at every &lsquo;vertex&rsquo; in our &lsquo;directed graph&rsquo; (digraph). So, what we have here is a <strong>graph traversal problem</strong>.</p><p>There are two generic ways to traverse a graph; Breadth-First Search (BFS) and Depth-First Search (DFS). How we visit every vertex will determine the order of the lines in our <code>mermaid</code> markdown. It doesn&rsquo;t make a huge difference, but DFS should lead to longer chains of connected nodes being drawn first. Another advantage of DFS is that our traversal algorithm can be defined recursively.</p><p>Our algorithm for collecting all the <code>Transitions</code> of the FSM should look something like this;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// from the root node
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#099>1.</span> If the current node has already been visited, stop.
 </span></span><span style=display:flex><span><span style=color:#099>2.</span> Add the transitions from this node to a set of transitions.
 </span></span><span style=display:flex><span><span style=color:#099>3.</span> Mark the current node as visited.
 </span></span><span style=display:flex><span><span style=color:#099>4.</span> Recur on the destination node of every outgoing transition.
-</span></span><span style=display:flex><span><span style=color:#099>5.</span> Recur on the source node of every incoming transition.
-</span></span></code></pre></div><p>The order of the recursions is important here. We want to first collect the outgoing transitions of all the nodes, and then, starting from the last node and going backwards, collect the transitions of any unvisited nodes connected by incoming transitions.</p><p>I won&rsquo;t labor the point here, as it&rsquo;s tricky to visualize what&rsquo;s going on and distracts from what we&rsquo;re trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.</p><p>In this algorithm, we have a common need - we need to maintain a set of <code>Transitions</code> and <code>States</code>, as well as maintain their insertion order. The insertion order will be necessary for printing the <code>Transitions</code> in the correct order, as well as numbering the <code>State</code> nodes correctly.</p><p>Let&rsquo;s build a generic <code>OrderedSet</code> data structure to manage this for us.</p><h2 id=orderedset>OrderedSet</h2><p>We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both &lsquo;visited&rsquo; <code>*States</code> and <code>Transitions</code>.</p><div class="notices info"><p>Notice that we want a set of <code>State</code> pointers, and a set of concrete <code>Transitions</code>. This is because <code>Transitions</code> contain all of their identifying information, such as their <code>to</code> and <code>from</code> states, and the predicate, as fields in the struct. <code>States</code>, on the other hand, require a reference to be identified.</p></div><p>Before we get into the generic implementation, we need to do some refactoring of <code>Transition</code> in order to make it <code>comparable</code> in Go (not a slice, map, or function type).</p><h3 id=modifying-the-transition-object>Modifying the Transition object</h3><p>In go, an object is <code>comparable</code> when all of its fields are also <code>comparable</code>, and currently the <code>predicate</code> field of a <code>Transition</code> is a function type. Let&rsquo;s change that now.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#000;background-color:#fdd>- type Predicate func(input rune) bool
+</span></span></code></pre></div><p>In this algorithm, we have a common need - we need to maintain a set of <code>Transitions</code> and <code>States</code>, as well as maintain their insertion order. The insertion order will be necessary for printing the <code>Transitions</code> in the correct order, as well as numbering the <code>State</code> nodes correctly.</p><p>I won&rsquo;t labor the point here, as it&rsquo;s tricky to visualize what&rsquo;s going on and distracts from what we&rsquo;re trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.</p><p>Let&rsquo;s build a generic <code>OrderedSet</code> data structure to manage this for us.</p><h2 id=orderedset>OrderedSet</h2><p>We can use the new Generics features of Go 1.18 to write this generically and use the same structure for both &lsquo;visited&rsquo; <code>*States</code> and <code>Transitions</code>.</p><div class="notices info"><p>Notice that we want a set of <code>State</code> pointers, and a set of concrete <code>Transitions</code>. This is because <code>Transitions</code> contain all of their identifying information, such as their <code>to</code> and <code>from</code> states, and the predicate, as fields in the struct. <code>States</code>, on the other hand, require a reference to be identified.</p></div><p>Before we get into the generic implementation, we need to do some refactoring of <code>Transition</code> in order to make it <code>comparable</code> in Go (not a slice, map, or function type).</p><h3 id=modifying-the-transition-object>Modifying the Transition object</h3><p>In go, an object is <code>comparable</code> when all of its fields are also <code>comparable</code>, and currently the <code>predicate</code> field of a <code>Transition</code> is a function type. Let&rsquo;s change that now.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // transition.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>- type Predicate func(input rune) bool
 </span></span></span></code></pre></div><p>Instead, let&rsquo;s use a struct which can have either a string of allowed or disallowed chars<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// transition.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> Predicate <span style=color:#000;font-weight:700>struct</span> {  
@@ -79,6 +81,60 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#000;font-weight:700>false</span>  
 </span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Also, let&rsquo;s add a handy symbol for drawing our transitions.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // transition.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span>type Transition struct {  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   debugSymbol string  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   // to: a pointer to the next state   
+</span></span><span style=display:flex><span>   to        *State  
+</span></span><span style=display:flex><span>   from      *State  
+</span></span><span style=display:flex><span>   predicate Predicate  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // state.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-func (s *State) addTransition(destination *State, predicate Predicate) {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+func (s *State) addTransition(destination *State, predicate Predicate, debugSymbol string) {
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        t := Transition{
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               to:        destination,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               predicate: predicate,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               debugSymbol: debugSymbol,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               to:          destination,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               from:        s,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               predicate:   predicate,
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        }
+</span></span><span style=display:flex><span>        s.transitions = append(s.transitions, t)
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>func (s *State) merge(s2 *State) {
+</span></span><span style=display:flex><span>        for _, t := range s2.transitions {
+</span></span><span style=display:flex><span>                // 1. copy s2 transitions to s
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               s.addTransition(t.to, t.predicate)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               s.addTransition(t.to, t.predicate, t.debugSymbol)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        }
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span>        // 2. remove s2
+</span></span><span style=display:flex><span>		s2.delete()
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // ast.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span>func (l CharacterLiteral) compile() (head *State, tail *State) {
+</span></span><span style=display:flex><span>        startingState := State{}
+</span></span><span style=display:flex><span>        endState := State{}
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       startingState.addTransition(&amp;endState, func(input rune) bool { return input == l.Character })
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, Predicate{allowedChars: string(l.Character)}, string(l.Character))
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        return &amp;startingState, &amp;endState
+</span></span><span style=display:flex><span> }
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span>func (w WildcardLiteral) compile() (head *State, tail *State) {
+</span></span><span style=display:flex><span>        startingState := State{}
+</span></span><span style=display:flex><span>        endState := State{}
+</span></span><span style=display:flex><span> 
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-       startingState.addTransition(&amp;endState, func(input rune) bool { return input != &#39;\n&#39; })
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+       startingState.addTransition(&amp;endState, Predicate{disallowedChars: &#34;\n&#34;}, &#34;.&#34;)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>        return &amp;startingState, &amp;endState
+</span></span><span style=display:flex><span> }
 </span></span></code></pre></div><p>And let&rsquo;s make a few changes so that our problem compiles.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // state.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span> func (s *State) firstMatchingTransition(input rune) *State {
@@ -111,7 +167,7 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+  startingState.addTransition(&amp;endState, Predicate{disallowedChars: &#34;\n&#34;}, &#34;.&#34;)  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   return &amp;startingState, &amp;endState  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>And now, let&rsquo;s build our generic <code>OrderedSet</code> struct. Our struct will need the following interface, where <code>T</code> is the generic type:</p><ul><li><code>add(t T)</code></li><li><code>has(t T) bool</code></li><li><code>list() []T</code></li><li><code>getIndex(t T) int</code></li></ul><p>Let&rsquo;s write that out.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// orderedset.go
+</span></span></code></pre></div><p>And now, let&rsquo;s build our generic <code>OrderedSet</code> struct. Our struct will need the following interface, where <code>T</code> is the generic type:</p><ul><li><code>add(ts ...T)</code></li><li><code>has(t T) bool</code></li><li><code>list() []T</code></li><li><code>getIndex(t T) int</code></li></ul><p>Let&rsquo;s write that out.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// orderedset.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// OrderedSet maintains an ordered set of unique items of type &lt;T&gt;type 
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>OrderedSet[T comparable] <span style=color:#000;font-weight:700>struct</span> {  
@@ -119,16 +175,18 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   nextIndex <span style=color:#458;font-weight:700>int</span>  
 </span></span><span style=display:flex><span>}  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>add</span>(t T) {  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>add</span>(ts <span style=color:#000;font-weight:700>...</span>T) {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> o.set <span style=color:#000;font-weight:700>==</span> <span style=color:#000;font-weight:700>nil</span> {  
 </span></span><span style=display:flex><span>      o.set = <span style=color:#0086b3>make</span>(<span style=color:#000;font-weight:700>map</span>[T]<span style=color:#458;font-weight:700>int</span>)  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> !o.<span style=color:#900;font-weight:700>has</span>(t) {  
-</span></span><span style=display:flex><span>      o.set[t] = o.nextIndex  
-</span></span><span style=display:flex><span>      o.nextIndex<span style=color:#000;font-weight:700>++</span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> ts {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> !o.<span style=color:#900;font-weight:700>has</span>(t) {  
+</span></span><span style=display:flex><span>         o.set[t] = o.nextIndex  
+</span></span><span style=display:flex><span>         o.nextIndex<span style=color:#000;font-weight:700>++</span>  
+</span></span><span style=display:flex><span>      }  
 </span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>} 
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>has</span>(t T) <span style=color:#458;font-weight:700>bool</span> {  
 </span></span><span style=display:flex><span>   _, hasItem <span style=color:#000;font-weight:700>:=</span> o.set[t]  
@@ -139,17 +197,25 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   size <span style=color:#000;font-weight:700>:=</span> <span style=color:#0086b3>len</span>(o.set)  
 </span></span><span style=display:flex><span>   list <span style=color:#000;font-weight:700>:=</span> <span style=color:#0086b3>make</span>([]T, size)  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> t, i <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> o.set {  
+</span></span><span style=display:flex><span>   i <span style=color:#000;font-weight:700>:=</span> <span style=color:#099>0</span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> o.set {  
 </span></span><span style=display:flex><span>      list[i] = t  
+</span></span><span style=display:flex><span>      i<span style=color:#000;font-weight:700>++</span>  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   sort.<span style=color:#900;font-weight:700>Slice</span>(list, <span style=color:#000;font-weight:700>func</span>(i, j <span style=color:#458;font-weight:700>int</span>) <span style=color:#458;font-weight:700>bool</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span> o.<span style=color:#900;font-weight:700>getIndex</span>(list[i]) &lt; o.<span style=color:#900;font-weight:700>getIndex</span>(list[j])  
+</span></span><span style=display:flex><span>   })  
+</span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> list  
-</span></span><span style=display:flex><span>}  
+</span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (o <span style=color:#000;font-weight:700>*</span>OrderedSet[T]) <span style=color:#900;font-weight:700>getIndex</span>(t T) <span style=color:#458;font-weight:700>int</span> {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> o.set[t]  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>We&rsquo;ve changed the implementation here slightly by storing the index in the <code>set</code> field. This makes our <code>list</code> method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.</p><p>Now we have all the pieces we need for our traversal algorithm.</p><h2 id=writing-the-node-traversal-algorithm>Writing the node traversal algorithm</h2><p>Because of the useful data structures we&rsquo;ve just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>visitNodes</span>(  
+</span></span></code></pre></div><p>We&rsquo;ve changed the implementation here slightly by storing the index in the <code>set</code> field. This makes our <code>list</code> method a little more awkward, but it makes it easier to get the index of any item in the set, which will be useful for finding the numbers of our nodes.</p><p>Now we have all the pieces we need for our traversal algorithm.</p><h2 id=writing-the-node-traversal-algorithm>Writing the node traversal algorithm</h2><p>Because of the useful data structures we&rsquo;ve just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>visitNodes</span>(  
 </span></span><span style=display:flex><span>   node <span style=color:#000;font-weight:700>*</span>State,  
 </span></span><span style=display:flex><span>   transitions <span style=color:#000;font-weight:700>*</span>OrderedSet[Transition],  
 </span></span><span style=display:flex><span>   visited <span style=color:#000;font-weight:700>*</span>OrderedSet[<span style=color:#000;font-weight:700>*</span>State],  
@@ -172,12 +238,10 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>      destinationNode <span style=color:#000;font-weight:700>:=</span> transition.to  
 </span></span><span style=display:flex><span>      <span style=color:#900;font-weight:700>visitNodes</span>(destinationNode, transitions, visited)  
 </span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 5. Recur on the source node of every incoming transition.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, sourceNode <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> node.incoming {  
-</span></span><span style=display:flex><span>      <span style=color:#900;font-weight:700>visitNodes</span>(sourceNode, transitions, visited)  
-</span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>It&rsquo;s important that the <code>transitions</code> and the <code>visited</code> <code>OrderedSets</code> are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect <code>Transitions</code> and mark <code>Nodes</code> as visited across the whole graph.</p><p>Once we have collected the <code>Transitions</code>, we now just have to draw them as lines in our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>Draw</span>() <span style=color:#458;font-weight:700>string</span> {  
+</span></span></code></pre></div><p>It&rsquo;s important that the <code>transitions</code> and the <code>visited</code> <code>OrderedSets</code> are passed by reference using pointers. They should be the same instance in every recursive call, as we want to collect <code>Transitions</code> and mark <code>Nodes</code> as visited across the whole graph.</p><p>Once we have collected the <code>Transitions</code>, we now just have to draw them as lines in our <code>mermaid</code> markdown.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>Draw</span>() <span style=color:#458;font-weight:700>string</span> {  
 </span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// initialize sets  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   transitionSet <span style=color:#000;font-weight:700>:=</span> OrderedSet[Transition]{}  
 </span></span><span style=display:flex><span>   nodeSet <span style=color:#000;font-weight:700>:=</span> OrderedSet[<span style=color:#000;font-weight:700>*</span>State]{}  
@@ -195,99 +259,26 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>      toId <span style=color:#000;font-weight:700>:=</span> nodeSet.<span style=color:#900;font-weight:700>getIndex</span>(t.to)  
 </span></span><span style=display:flex><span>      output = <span style=color:#0086b3>append</span>(output, fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;%d((%d)) --\&#34;%s\&#34;--&gt; %d((%d))&#34;</span>, fromId, fromId, t.debugSymbol, toId, toId))  
 </span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// draw outline around success nodes  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>	<span style=color:#000;font-weight:700>for</span> _, state <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> nodeSet.<span style=color:#900;font-weight:700>list</span>() {  
+</span></span><span style=display:flex><span>	   <span style=color:#000;font-weight:700>if</span> state.<span style=color:#900;font-weight:700>isSuccessState</span>() {  
+</span></span><span style=display:flex><span>	      output = <span style=color:#0086b3>append</span>(output, fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;style %d stroke:green,stroke-width:4px;&#34;</span>, nodeSet.<span style=color:#900;font-weight:700>getIndex</span>(state)))  
+</span></span><span style=display:flex><span>	   }  
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> strings.<span style=color:#900;font-weight:700>Join</span>(output, <span style=color:#d14>&#34;\n&#34;</span>)  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Once all the hard work of collecting the <code>Nodes</code> and <code>Transitions</code> is done, it&rsquo;s quite simple to concatenate the strings required to build the <code>mermaid.js</code> code. I won&rsquo;t go into much more detail here, as the code seems to speak for itself.</p><p>With all this in place, let&rsquo;s run our tests.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   <span style=color:teal>Test_DrawFSM</span>
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>===</span> RUN   Test_DrawFSM/abc
-</span></span><span style=display:flex><span>    draw_test.go:38: Expected drawing to be 
-</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
-</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))&#34;</span>, got
-</span></span><span style=display:flex><span>        <span style=color:#d14>&#34;graph LR
-</span></span></span><span style=display:flex><span><span style=color:#d14>        0((0)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        1((1)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        2((2)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        4((4)) --&#34;</span>c<span style=color:#d14>&#34;--&gt; 3((3))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        5((5)) --&#34;</span>b<span style=color:#d14>&#34;--&gt; 2((2))
-</span></span></span><span style=display:flex><span><span style=color:#d14>        6((6)) --&#34;</span>a<span style=color:#d14>&#34;--&gt; 1((1))&#34;</span>
-</span></span><span style=display:flex><span>--- FAIL: Test_Draw <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
-</span></span><span style=display:flex><span>    --- FAIL: Test_Draw/abc <span style=color:#000;font-weight:700>(</span>0.00s<span style=color:#000;font-weight:700>)</span>
-</span></span></code></pre></div><p>Hmm, interesting. Not quite what we were expecting. To see what&rsquo;s going on, let&rsquo;s plug the output graph of our <code>abc</code> test into <a href=https://mermaid.live/>mermaids live coding site</a> and see what we&rsquo;re looking at.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>graph LR
-</span></span><span style=display:flex><span>        0((0)) --&#34;a&#34;--&gt; 1((1))
-</span></span><span style=display:flex><span>        1((1)) --&#34;b&#34;--&gt; 2((2))
-</span></span><span style=display:flex><span>        2((2)) --&#34;c&#34;--&gt; 3((3))
-</span></span><span style=display:flex><span>        4((4)) --&#34;c&#34;--&gt; 3((3))
-</span></span><span style=display:flex><span>        5((5)) --&#34;b&#34;--&gt; 2((2))
-</span></span><span style=display:flex><span>        6((6)) --&#34;a&#34;--&gt; 1((1))
-</span></span></code></pre></div><div class=mermaid>graph LR
-0((0)) --"a"--> 1((1))
-1((1)) --"b"--> 2((2))
-2((2)) --"c"--> 3((3))
-4((4)) --"c"--> 3((3))
-5((5)) --"b"--> 2((2))
-6((6)) --"a"--> 1((1))</div><p>That&rsquo;s certainly not right. We seem to have dangling <code>Nodes</code> which still have <code>Transitions</code> to intermediary nodes. This should not affect the accuracy of our regex engine, as <code>States</code> <code>4</code>, <code>5</code>, and <code>6</code> cannot be reached, but it does make our drawing a bit distracting.</p><p>The error here is in our <code>state.Merge</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// adds the transitions of other State (s2) to this State (s).
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>//  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// warning: do not use if State s2 has any incoming transitions.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>merge</span>(s2 <span style=color:#000;font-weight:700>*</span>State) {  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> <span style=color:#0086b3>len</span>(s2.incoming) <span style=color:#000;font-weight:700>!=</span> <span style=color:#099>0</span> {  
-</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(fmt.<span style=color:#900;font-weight:700>Sprintf</span>(<span style=color:#d14>&#34;State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v&#34;</span>, <span style=color:#000;font-weight:700>*</span>s2, s.incoming))  
-</span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s2.transitions {  
-</span></span><span style=display:flex><span>      s.<span style=color:#900;font-weight:700>addTransition</span>(t.to, t.predicate, t.debugSymbol)  
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Let&rsquo;s see this in a simpler example, the regex <code>a</code>.</p><div class=mermaid>graph LR
-0((0)) --"a"--> 1((1))
-2((2)) --"a"--> 1((1))</div><p>Remember how the <code>compile</code> method of a <code>Group</code> node works? First we compile the <code>CharacterLiteral(a)</code> Node into a two-state FSM. We then create a new <code>State</code>, onto the tail of which we will merge all the children FSMs</p><div class=mermaid>graph LR
-0((0))
-1((1)) --"a"--> 2((2))</div><p>In this simple example, there is one merge operation, during which we copy all the transitions from <code>State 1</code> onto <code>State 0</code>. So&mldr;</p><div class=mermaid>graph LR
-0((0)) -."merge".-1((0))
-1((1)) --"a"--> 2((2))</div><p>Becomes&mldr;</p><div class=mermaid>graph LR
-10((0)) --"a"--> 20((2))
-30((1)) --"a"--> 20((2))</div><p>The problem is that the transition from <code>1</code> to <code>2</code> remains, which leads to the dangling <code>State</code> <code>1</code> remaining in our drawing.</p><p>Let&rsquo;s remove those dangling transitions. When merging transitions, we want to;</p><ol><li>copy the transitions from <code>State 1</code> to <code>State 0</code></li><li>delete <code>State 1</code></li></ol><p>Let&rsquo;s create a couple of methods on the <code>State</code> struct to delete a node. In our context, &lsquo;deleting&rsquo; means removing all the incoming and outgoing transitions<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#0086b3>delete</span>() {  
-</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 1. remove s from incoming of connected nodes.  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>for</span> _, t <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s.transitions {  
-</span></span><span style=display:flex><span>	  t.to.<span style=color:#900;font-weight:700>removeIncoming</span>(s)
-</span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// 2. remove the outgoing transitions  
-</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   s.transitions = <span style=color:#000;font-weight:700>nil</span>  
-</span></span><span style=display:flex><span>} 
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (s <span style=color:#000;font-weight:700>*</span>State) <span style=color:#900;font-weight:700>removeIncoming</span>(target <span style=color:#000;font-weight:700>*</span>State) {  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>var</span> newIncoming []<span style=color:#000;font-weight:700>*</span>State  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>for</span> _, state <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> s.incoming {  
-</span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> target <span style=color:#000;font-weight:700>!=</span> state {  
-</span></span><span style=display:flex><span>         newIncoming = <span style=color:#0086b3>append</span>(newIncoming, state)  
-</span></span><span style=display:flex><span>      }  
-</span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>   s.incoming = newIncoming  
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>And now let&rsquo;s delete our extra <code>State</code> after the merge is complete.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span>func (s *State) merge(s2 *State) {  
-</span></span><span style=display:flex><span>		// [...]  
-</span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>        for _, t := range s2.transitions {
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               // 1. copy s2 transitions to s
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>                s.addTransition(t.to, t.predicate, t.debugSymbol)
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       // 2. remove s2
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+       s2.delete()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>
-</span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>}  
-</span></span></code></pre></div><p>Now, running our tests should pass, and the output of our <code>abc</code> regex FSM should look correct.</p><div class=mermaid>graph LR
-0((0)) --"a"--> 1((1))
-1((1)) --"b"--> 2((2))
-2((2)) --"c"--> 3((3))</div><p>Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.</p><p>One more thing, let&rsquo;s add a quick method on the <code>myRegex</code> struct to call the root <code>State.Draw()</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// regex.go
+</span></span></code></pre></div><p>Once all the hard work of collecting the <code>Nodes</code> and <code>Transitions</code> is done, it&rsquo;s quite simple to concatenate the strings required to build the <code>mermaid.js</code> code. I won&rsquo;t go into much more detail here, as the code seems to speak for itself.</p><p>With all this in place, let&rsquo;s run our tests. Looks like we&rsquo;re green!</p><p>One more thing, let&rsquo;s add a quick method on the <code>myRegex</code> struct to call the root <code>State.Draw()</code> method.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// regex.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (m <span style=color:#000;font-weight:700>*</span>myRegex) <span style=color:#900;font-weight:700>DebugFSM</span>() <span style=color:#458;font-weight:700>string</span> {  
 </span></span><span style=display:flex><span>   graph <span style=color:#000;font-weight:700>:=</span> m.fsm.<span style=color:#900;font-weight:700>Draw</span>()  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> graph  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h2 id=a-quick-command-line-tool>A quick command line tool</h2><p>Let&rsquo;s add one more thing before we finish with our visualizer. We want to be able to use it, quickly and easily, so let&rsquo;s make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.</p><p>Let&rsquo;s set up a <code>main</code> function<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> main
+</span></span></code></pre></div><h2 id=a-quick-command-line-tool>A quick command line tool</h2><p>Let&rsquo;s add one more thing before we finish with our visualizer. We want to be able to use it, quickly and easily, so let&rsquo;s make a command that we can run which takes a regular expression and shows us what the compiled FSM looks like.</p><p>Let&rsquo;s set up a <code>main</code> function<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// main.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> main
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>main</span>() {  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>switch</span> os.Args[<span style=color:#099>1</span>] {  
@@ -296,7 +287,9 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>return</span>  
 </span></span><span style=display:flex><span>   }
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> v5
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// v5/main.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>package</span> v5
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// Main just used for linking up the main functions
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Main</span>(args []<span style=color:#458;font-weight:700>string</span>) {  
@@ -306,24 +299,31 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>         <span style=color:#900;font-weight:700>RenderFSM</span>(args[<span style=color:#099>1</span>])  
 </span></span><span style=display:flex><span>      }
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>default</span>:  
-</span></span><span style=display:flex><span>      fmt.<span style=color:#900;font-weight:700>Println</span>(<span style=color:#d14>&#34;command not recognized&#34;</span>)  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(<span style=color:#d14>&#34;command not recognized&#34;</span>)  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>With that, we can call <code>Draw</code> from our command. Let&rsquo;s test that things are set up correctly.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Draw</span>(input <span style=color:#458;font-weight:700>string</span>) {
+</span></span></code></pre></div><p>With that, we can call <code>Draw</code> from our command. Let&rsquo;s test that things are set up correctly.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// draw.go
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>Draw</span>(input <span style=color:#458;font-weight:700>string</span>) {
 </span></span><span style=display:flex><span>	fmt.<span style=color:#900;font-weight:700>Println</span>(<span style=color:#d14>&#34;Draw called with &#34;</span> <span style=color:#000;font-weight:700>+</span> input)
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>We can run the program with <code>go run ./.. v5 draw {input}</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-zsh data-lang=zsh><span style=display:flex><span>➜  search git:<span style=color:#000;font-weight:700>(</span>master<span style=color:#000;font-weight:700>)</span> ✗ go run ./... v5 draw <span style=color:#d14>&#34;abc&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>Draw called with abc
-</span></span></code></pre></div><p>Great, let&rsquo;s make <code>Draw()</code> open a browser and display our <code>mermaid</code> code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// main.go
+</span></span></code></pre></div><p>Great, let&rsquo;s make <code>Draw()</code> open a browser and display our <code>mermaid</code> code.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// main.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>RenderFSM</span>(input <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// RenderFSM will render just the finite state machine, and output the result to the browser
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>RenderFSM</span>(input <span style=color:#458;font-weight:700>string</span>) {  
 </span></span><span style=display:flex><span>   graph <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewMyRegex</span>(input).<span style=color:#900;font-weight:700>DebugFSM</span>()  
-</span></span><span style=display:flex><span>   <span style=color:#900;font-weight:700>renderTemplateToBrowser</span>(fsmTemplate, graph)  
+</span></span><span style=display:flex><span>   html <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>buildFsmHtml</span>(graph)  
+</span></span><span style=display:flex><span>   <span style=color:#900;font-weight:700>outputToBrowser</span>(html)  
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>renderTemplateToBrowser</span>(tmplt <span style=color:#458;font-weight:700>string</span>, data any) {  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>buildFsmHtml</span>(graph <span style=color:#458;font-weight:700>string</span>) <span style=color:#458;font-weight:700>string</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>renderWithTemplate</span>(fsmTemplate, graph)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>renderWithTemplate</span>(tmplt <span style=color:#458;font-weight:700>string</span>, data any) <span style=color:#458;font-weight:700>string</span> {  
 </span></span><span style=display:flex><span>   t, err <span style=color:#000;font-weight:700>:=</span> template.<span style=color:#900;font-weight:700>New</span>(<span style=color:#d14>&#34;graph&#34;</span>).<span style=color:#900;font-weight:700>Parse</span>(tmplt)  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
 </span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
@@ -333,23 +333,28 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
 </span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
 </span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> w.<span style=color:#900;font-weight:700>String</span>()  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   reader <span style=color:#000;font-weight:700>:=</span> strings.<span style=color:#900;font-weight:700>NewReader</span>(w.<span style=color:#900;font-weight:700>String</span>())  
-</span></span><span style=display:flex><span>   err = browser.<span style=color:#900;font-weight:700>OpenReader</span>(reader)  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>outputToBrowser</span>(html <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   reader <span style=color:#000;font-weight:700>:=</span> strings.<span style=color:#900;font-weight:700>NewReader</span>(html)  
+</span></span><span style=display:flex><span>   err <span style=color:#000;font-weight:700>:=</span> browser.<span style=color:#900;font-weight:700>OpenReader</span>(reader)  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
 </span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
 </span></span><span style=display:flex><span>   }  
-</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span>  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>The template we&rsquo;re using here in the constant <code>fsmTemplate</code> is defined in the following <a href=https://github.com/LeweyM/search/blob/c31ebe6066a6cabd74ef2afadaee20a81a875d2a/src/v5/templates.go#L14-L24>github link</a>. This is some dirty and ugly HTML. It gets the job done, but it&rsquo;s not something I want to focus on here - if you&rsquo;re following along with this guide, I suggest you copy it directly from github.</p><p>Let&rsquo;s try that again. It should now open a browser with a visualization of your compiled FSM!</p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
-2((2)) --"c"--> 3((3))</div><p>That&rsquo;s better. This tool is going to come in very handy as our program grows in complexity.</p><p>So, we can visualize what a compiled FSM looks like, but what would be great is if we could also see our <em>runner processing each of the characters</em>. This would give us a wonderful insight into the characteristics of our algorithm.</p><p>Let&rsquo;s do that now.</p><h2 id=visualizing-the-runner>Visualizing the Runner</h2><p>What I want is to be able to open up a browser with an animation that shows me;</p><ol><li>The compiled FSM (as we just showed)</li><li>Which character of the input I&rsquo;m currently processing.</li><li>Which is the current active state in the FSM.</li></ol><p>We already implemented (1), so now we need a way of showing (2) where we are in the input string and (3) which state is currently active for each step of the algorithm. To be clear, when I write &lsquo;step&rsquo;, I refer to the processing of a character via the <code>Next(input rune)</code> method in our <code>runner</code>.</p><p>In terms of displaying this information, we can do this by simply rendering every step of the algorithm in the browser, and then use JavaScript to reveal one of the steps and hide the others when the arrow keys are pressed. This will give the impression of stepping backwards and forwards through the algorithm<sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup>.</p><p>We need a way of drawing the graph each step in the algorithm. In this case, the algorithm in question is the <code>match</code> algorithm, so let&rsquo;s create a <code>DebugMatch()</code> function on our <code>myRegex</code> struct to handle this.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// regex.go
+2((2)) --"c"--> 3((3))</div><p>That&rsquo;s better. This tool is going to come in very handy as our program grows in complexity.</p><p>So, we can visualize what a compiled FSM looks like, but what would be great is if we could also see our <em>runner processing each of the characters</em>. This would give us a wonderful insight into the characteristics of our algorithm.</p><p>Let&rsquo;s do that now.</p><h2 id=visualizing-the-runner>Visualizing the Runner</h2><p>What I want is to be able to open up a browser with an animation that shows me;</p><ol><li>The compiled FSM (as we just showed)</li><li>Which character of the input I&rsquo;m currently processing.</li><li>Which is the current active state in the FSM.</li></ol><p>We already implemented (1), so now we need a way of showing (2) where we are in the input string and (3) which state is currently active for each step of the algorithm. To be clear, when I write &lsquo;step&rsquo;, I refer to the processing of a character via the <code>Next(input rune)</code> method in our <code>runner</code>.</p><p>In terms of displaying this information, we can do this by simply rendering every step of the algorithm in the browser, and then use JavaScript to reveal one of the steps and hide the others when the arrow keys are pressed. This will give the impression of stepping backwards and forwards through the algorithm<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>.</p><p>We need a way of drawing the graph each step in the algorithm. In this case, the algorithm in question is the <code>match</code> algorithm, so let&rsquo;s create a <code>DebugMatch()</code> function on our <code>myRegex</code> struct to handle this.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// regex.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> (m <span style=color:#000;font-weight:700>*</span>myRegex) <span style=color:#900;font-weight:700>DebugMatch</span>(input <span style=color:#458;font-weight:700>string</span>) []debugStep {
 </span></span><span style=display:flex><span>	<span style=color:#998;font-style:italic>// todo: implement me
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>}
-</span></span></code></pre></div><p>This returns a slice of <code>debugSteps</code>, which contains everything we need in order to render a single step in the algorithm. Namely, a drawing of the runner in the current moment, and the index of the character we&rsquo;re processing in the current moment.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> debugStep <span style=color:#000;font-weight:700>struct</span> {  
+</span></span></code></pre></div><p>This returns a slice of <code>debugSteps</code>, which contains everything we need in order to render a single step in the algorithm. Namely, a drawing of the runner in the current moment, and the index of the character we&rsquo;re processing in the current moment.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// regex.go 
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> debugStep <span style=color:#000;font-weight:700>struct</span> {  
 </span></span><span style=display:flex><span>   runnerDrawing         <span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>   currentCharacterIndex <span style=color:#458;font-weight:700>int</span>  
 </span></span><span style=display:flex><span>}
@@ -379,6 +384,7 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 stroke:green,stroke-width:4px;
 </span></span></span><span style=display:flex><span><span style=color:#d14>style 0 fill:#ff5555;`</span>,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>      {  
@@ -388,7 +394,8 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span><span style=display:flex><span>         expected: <span style=color:#d14>`graph LR  
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
-</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3)) 
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 stroke:green,stroke-width:4px;
 </span></span></span><span style=display:flex><span><span style=color:#d14>style 1 fill:#ff5555;`</span>,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>      {  
@@ -399,6 +406,7 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;a&#34;--&gt; 2((2))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;a&#34;--&gt; 3((3))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 stroke:green,stroke-width:4px;
 </span></span></span><span style=display:flex><span><span style=color:#d14>style 3 fill:#00ab41;`</span>,  
 </span></span><span style=display:flex><span>      },  
 </span></span><span style=display:flex><span>   }  
@@ -421,20 +429,24 @@ As a side note, I also think it&rsquo;s worth mentioning that an important part 
 </span></span></span><span style=display:flex><span><span style=color:#d14>0((0)) --&#34;a&#34;--&gt; 1((1))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>1((1)) --&#34;b&#34;--&gt; 2((2))  
 </span></span></span><span style=display:flex><span><span style=color:#d14>2((2)) --&#34;c&#34;--&gt; 3((3))  
+</span></span></span><span style=display:flex><span><span style=color:#d14>style 3 stroke:green,stroke-width:4px;
 </span></span></span><span style=display:flex><span><span style=color:#d14>style 0 fill:#ff5555;`</span>
 </span></span></code></pre></div><p>One thing that wasn&rsquo;t in the previous test is the last line.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>style 0 fill:#ff5555;
 </span></span></code></pre></div><p>This gives a color <code>#ff5555</code> to the node with the label &lsquo;<code>0</code>&rsquo;. Let&rsquo;s see what this looks like with <code>mermaid</code>.</p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
 2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 style 0 fill:#ff5555;</div><p>The red node means that the current state is <code>State</code> &lsquo;<code>0</code>&rsquo;. Let&rsquo;s change the last line to <code>style 1 fill:#ff5555</code></p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
 2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 style 1 fill:#ff5555</div><p>So, by changing which node we style, we can demonstrate the currently active state &lsquo;moving&rsquo; across our FSM.</p><p>Finally, some might notice that the last graph in our test has a different color.</p><div class=mermaid>graph LR
 0((0)) --"a"--> 1((1))
 1((1)) --"b"--> 2((2))
 2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in an end state, and so the match was successful.</p><p>Now we know what we&rsquo;re trying to build, let&rsquo;s start implementing the <code>runner.drawSnapshot</code> function.</p><h3 id=draw-snapshot>Draw Snapshot</h3><p>Drawing a snapshot of the runner is actually quite simple.</p><p>First, we&rsquo;re going to need to modify the <code>Draw</code> function to return the <code>nodeSet</code> object. This is because we&rsquo;ll need to know the labels of the nodes in order to highlight them.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // draw.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>- func (s *State) Draw() string {  
@@ -456,6 +468,14 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span><span style=display:flex><span>      toId := nodeSet.getIndex(t.to)  
 </span></span><span style=display:flex><span>      output = append(output, fmt.Sprintf(&#34;%d((%d)) --\&#34;%s\&#34;--&gt; %d((%d))&#34;, fromId, fromId, t.debugSymbol, toId, toId))  
 </span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	// draw outline around success nodes  
+</span></span><span style=display:flex><span>	for _, state := range nodeSet.list() {  
+</span></span><span style=display:flex><span>	   if state.isSuccessState() {  
+</span></span><span style=display:flex><span>	      output = append(output, fmt.Sprintf(&#34;style %d stroke:green,stroke-width:4px;&#34;, nodeSet.getIndex(state)))  
+</span></span><span style=display:flex><span>	   }  
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-   return strings.Join(output, &#34;\n&#34;)  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+   return strings.Join(output, &#34;\n&#34;), nodeSet
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>}
@@ -585,13 +605,20 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+        RenderRunner(args[1], args[2])  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+     }  
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   default:  
-</span></span><span style=display:flex><span>      fmt.Println(&#34;command not recognized&#34;)  
+</span></span><span style=display:flex><span>      panic(&#34;command not recognized&#34;)  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>This means that if we call our method with a single string, such as <code>go run ./... v5 cat</code>, we display the compiled FSM for the regular expression <code>"cat"</code>, but if we call with two strings, such as <code>go run ./... v5 cat "I love cats"</code>, we get a representation of our algorithm for the regular expression <code>"cat"</code> being applied to the input string <code>"I love cats"</code>.</p><p>Let&rsquo;s implement <code>RenderRunner</code>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// main.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
-</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// RenderRunner will render every step of the runner until it fails or succeeds. The template will then take care// of hiding all but one of the steps to give the illusion of stepping through the input characters.  
+</span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// RenderRunner will render every step of the runner until it fails or succeeds. The template will then take care// of hiding all but one of the steps to give the illusion of stepping through the input characters. It will  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// then output the result to the browser.  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>RenderRunner</span>(regex, input <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   data <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>buildRunnerTemplateData</span>(regex, input)  
+</span></span><span style=display:flex><span>   htmlRunner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>buildRunnerHTML</span>(data)  
+</span></span><span style=display:flex><span>   <span style=color:#900;font-weight:700>outputToBrowser</span>(htmlRunner)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>buildRunnerTemplateData</span>(regex <span style=color:#458;font-weight:700>string</span>, input <span style=color:#458;font-weight:700>string</span>) TemplateData {  
 </span></span><span style=display:flex><span>   newMyRegex <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewMyRegex</span>(regex)  
 </span></span><span style=display:flex><span>   debugSteps <span style=color:#000;font-weight:700>:=</span> newMyRegex.<span style=color:#900;font-weight:700>DebugMatch</span>(input)  
 </span></span><span style=display:flex><span>  
@@ -603,13 +630,17 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span><span style=display:flex><span>      })  
 </span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>   <span style=color:#900;font-weight:700>renderTemplateToBrowser</span>(runnerTemplate, TemplateData{  
+</span></span><span style=display:flex><span>   data <span style=color:#000;font-weight:700>:=</span> TemplateData{  
 </span></span><span style=display:flex><span>      Steps: steps,  
 </span></span><span style=display:flex><span>      Regex: regex,  
-</span></span><span style=display:flex><span>   })  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> data  
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>buildRunnerHTML</span>(data TemplateData) <span style=color:#458;font-weight:700>string</span> {  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> <span style=color:#900;font-weight:700>renderWithTemplate</span>(runnerTemplate, data)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// threeSplitString divides a string into three pieces on a given indexfunc threeSplitString(s string, i int) []string {  
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>   <span style=color:#000;font-weight:700>var</span> left, middle, right <span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>  
@@ -621,7 +652,7 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>return</span> []<span style=color:#458;font-weight:700>string</span>{left, middle, right}  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>All we&rsquo;re doing here is parsing the <code>debugSteps</code> from <code>DebugMatch</code> into data structures which our templates know what to do with. This includes breaking the input string into three pieces so that we can render the characters before the current character, the current character, and remaining characters in different ways.</p><p>To make this work, we just need a few template data structures, as well as the template itself.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// templates.go
+</span></span></code></pre></div><p>All we&rsquo;re doing here is parsing the <code>debugSteps</code> from <code>DebugMatch</code> into data structures which our templates know what to do with. This includes breaking the input string into three pieces so that we can render the characters before the current character, the current character, and remaining characters in different ways.</p><p>To make this work, we just need a few template data structures, as well as the template itself, which also be found on <a href=https://github.com/LeweyM/search/blob/c31ebe6066a6cabd74ef2afadaee20a81a875d2a/src/v5/templates.go#L26-L99>github</a>.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// templates.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>  
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>type</span> TemplateData <span style=color:#000;font-weight:700>struct</span> {  
 </span></span><span style=display:flex><span>   Steps []Step  
@@ -633,49 +664,67 @@ style 3 fill:#00ab41;</div><p>The green node means that the runner has landed in
 </span></span><span style=display:flex><span>   Graph      <span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>   InputSplit []<span style=color:#458;font-weight:700>string</span>  
 </span></span><span style=display:flex><span>}  
+</span></span></code></pre></div><p>Again, I won&rsquo;t explain this because it&rsquo;s nasty Javascript and it&rsquo;s not too interesting. Let&rsquo;s just try it out and see what happens!</p><script>function loadIFrame(e,t){let n=document.getElementById(t);if(n.src==="about:blank"){e.firstElementChild.style="visibility:hidden",e.innerHTML+=`
+<span class="sr-only">Loading...</span>
+<span class="spinner-border spinner-border-sm position-absolute" style="left:50%;top:50%;translate:-50% -50%" role="status" aria-hidden="true"></span>
+`,n.style.visibility="hidden",n.style.display="block",n.src=t;const s=n.onload.bind(n);n.onload=()=>{s(),e.remove(),n.style.visibility="unset"}}}</script><figure><button class="btn btn-primary position-relative" type=button onclick='loadIFrame(this,"/html/e7f3dc672824a71d4b9995391b558f01.html")'>
+<span>load</span></button>
+<iframe src=about:blank id=/html/e7f3dc672824a71d4b9995391b558f01.html class=w-100 style=display:none onload=resizeIFrameToFitContent(this)></iframe><figcaption class="font-italic p-2"><span><code>v5 draw "abc" "abc"</code></span></figcaption></figure><p>Nice! The underlined character shows which character we&rsquo;re going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.</p><p>So, we can look at the red state, ask ourselves &ldquo;is there a transition which matches the character that&rsquo;s about to be processed?&rdquo;, and then we can predict which state will be active next!</p><p>Let&rsquo;s try another example.</p><script>function loadIFrame(e,t){let n=document.getElementById(t);if(n.src==="about:blank"){e.firstElementChild.style="visibility:hidden",e.innerHTML+=`
+<span class="sr-only">Loading...</span>
+<span class="spinner-border spinner-border-sm position-absolute" style="left:50%;top:50%;translate:-50% -50%" role="status" aria-hidden="true"></span>
+`,n.style.visibility="hidden",n.style.display="block",n.src=t;const s=n.onload.bind(n);n.onload=()=>{s(),e.remove(),n.style.visibility="unset"}}}</script><figure><button class="btn btn-primary position-relative" type=button onclick='loadIFrame(this,"/html/d9eae559dbbe94884d6f6314cb66ce74.html")'>
+<span>load</span></button>
+<iframe src=about:blank id=/html/d9eae559dbbe94884d6f6314cb66ce74.html class=w-100 style=display:none onload=resizeIFrameToFitContent(this)></iframe><figcaption class="font-italic p-2"><span><code>v5 draw "cat" "I love cats"</code></span></figcaption></figure><p>We can see that most of the characters make our FSM fail immediately. We know that the <code>runner</code> has failed because there is no active state for one step. It&rsquo;s at this point that our algorithm resets the runner and starts the search again from the next substring.</p><p>It&rsquo;s only until we reach the <code>cats</code> substring that we begin to start matching <code>States</code> and can finally progress to the final end state and declare the match a success.</p><p>Let&rsquo;s take a look at one more example, this time with the regular expression <code>aab</code> with the input search string <code>"aaaab"</code></p><script>function loadIFrame(e,t){let n=document.getElementById(t);if(n.src==="about:blank"){e.firstElementChild.style="visibility:hidden",e.innerHTML+=`
+<span class="sr-only">Loading...</span>
+<span class="spinner-border spinner-border-sm position-absolute" style="left:50%;top:50%;translate:-50% -50%" role="status" aria-hidden="true"></span>
+`,n.style.visibility="hidden",n.style.display="block",n.src=t;const s=n.onload.bind(n);n.onload=()=>{s(),e.remove(),n.style.visibility="unset"}}}</script><figure><button class="btn btn-primary position-relative" type=button onclick='loadIFrame(this,"/html/9f22c0249c3a870b51b2c781a1fbb1b7.html")'>
+<span>load</span></button>
+<iframe src=about:blank id=/html/9f22c0249c3a870b51b2c781a1fbb1b7.html class=w-100 style=display:none onload=resizeIFrameToFitContent(this)></iframe><figcaption class="font-italic p-2"><span><code>v5 draw "aab" "aaaab"</code></span></figcaption></figure><p><img src=/img/backtracking-regex-demo.gif alt=backtracking-regex-demo.gif></p><p>Notice what happens when we get from <code>State 0</code> to <code>State 2</code> and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called &lsquo;backtracking&rsquo;. It&rsquo;s the result of the recursion in our <code>match()</code> function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.</p><p>I invite you to play around with different combinations and see what you can find. I found that this was of vizualising the algorithms we&rsquo;re using was very helpful in internalizing the characteristics. This becomes especially useful when our FSMs become more complex.</p><p>Before we finish here, I want to add one more command to save the generated HTML to a file. We&rsquo;ll call this command <code>out</code>.<sup id=fnref:4><a href=#fn:4 class=footnote-ref role=doc-noteref>4</a></sup></p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // main.go
+</span></span></span><span style=display:flex><span><span style=color:#aaa></span>
+</span></span><span style=display:flex><span>// Main just used for linking up the main functions
+</span></span><span style=display:flex><span>func Main(args []string) {  
+</span></span><span style=display:flex><span>   switch args[0] {  
+</span></span><span style=display:flex><span>   case &#34;draw&#34;:  
+</span></span><span style=display:flex><span>      if len(args) == 2 {  
+</span></span><span style=display:flex><span>         RenderFSM(args[1])  
+</span></span><span style=display:flex><span>      } else if len(args) == 3 {  
+</span></span><span style=display:flex><span>         RenderRunner(args[1], args[2])  
+</span></span><span style=display:flex><span>      }  
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+   case &#34;out&#34;:  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      if len(args) == 4 {  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+         OutputRunnerToFile(args[1], args[2], args[3])  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+      }  
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>   default:  
+</span></span><span style=display:flex><span>      panic(&#34;command not recognized&#34;)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>And a couple of functions to implement the file writing functionality.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// OutputRunnerToFile will render every step of the runner, the same as RenderRunner, and then write the html to  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic>// a file.  
+</span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>OutputRunnerToFile</span>(regex, input, filePath <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   data <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>buildRunnerTemplateData</span>(regex, input)  
+</span></span><span style=display:flex><span>   htmlRunner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>buildRunnerHTML</span>(data)  
+</span></span><span style=display:flex><span>   <span style=color:#900;font-weight:700>outputToFile</span>(htmlRunner, filePath)  
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>outputToFile</span>(html, path <span style=color:#458;font-weight:700>string</span>) {  
+</span></span><span style=display:flex><span>   containingDir <span style=color:#000;font-weight:700>:=</span> filepath.<span style=color:#900;font-weight:700>Dir</span>(path)  
+</span></span><span style=display:flex><span>   err <span style=color:#000;font-weight:700>:=</span> os.<span style=color:#900;font-weight:700>MkdirAll</span>(containingDir, <span style=color:#099>0750</span>)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
+</span></span><span style=display:flex><span>   }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span><span style=color:#000;font-weight:700>const</span> runnerTemplate = <span style=color:#d14>`  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script src=&#34;https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js&#34;&gt;&lt;/script&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script&gt;mermaid.initialize({startOnLoad:true});&lt;/script&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;body onload=&#34;prev()&#34;&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;h1&gt;Regex: (</span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:teal>.Regex</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>)&lt;/h1&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;div class=&#34;nav-buttons&#34;&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>   &lt;button id=&#34;prev&#34; onClick=&#34;prev()&#34;&gt;      prev   &lt;/button&gt;   &lt;button id=&#34;next&#34; onClick=&#34;next()&#34;&gt;      next   &lt;/button&gt;   &lt;p&gt;Or use the arrow keys to Step through the FSM&lt;/p&gt;&lt;/div&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14></span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>range</span><span style=color:#bbb> </span>$i<span style=color:#000;font-weight:700>,</span><span style=color:#bbb> </span>$s<span style=color:#bbb> </span><span style=color:#000;font-weight:700>:=</span><span style=color:#bbb> </span><span style=color:teal>.Steps</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;div class=&#34;graph&#34; </span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>if</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>ne</span><span style=color:#bbb> </span>$i<span style=color:#bbb> </span>0<span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14> style=&#34;visibility:hidden;&#34; </span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>else</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14> style=&#34;visibility:visible&#34; </span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>end</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>   &lt;p style=&#39;font-size:64px&#39;&gt;      &lt;span style=&#39;color:red&#39;&gt;</span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>index</span><span style=color:#bbb> </span><span style=color:teal>.InputSplit</span><span style=color:#bbb> </span>0<span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&lt;/span&gt;&lt;span style=&#39;text-decoration-color:red;text-decoration-line:underline;&#39;&gt;</span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>index</span><span style=color:#bbb> </span><span style=color:teal>.InputSplit</span><span style=color:#bbb> </span>1<span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&lt;/span&gt;&lt;span&gt;</span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>index</span><span style=color:#bbb> </span><span style=color:teal>.InputSplit</span><span style=color:#bbb> </span>2<span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>&lt;/span&gt;   &lt;/p&gt;   &lt;div class=&#34;mermaid&#34;&gt;      </span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:teal>.Graph</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>   &lt;/div&gt;&lt;/div&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14></span><span style=color:#999;font-weight:700;font-style:italic>{{</span><span style=color:#bbb> </span><span style=color:#000;font-weight:700>end</span><span style=color:#bbb> </span><span style=color:#999;font-weight:700;font-style:italic>}}</span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script type=&#34;text/javascript&#34;&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>let i = 1  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>function next() {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  const c = document.getElementsByClassName(&#39;graph&#39;)  if (i &gt;= c.length - 1) return   
-</span></span></span><span style=display:flex><span><span style=color:#d14>   i++  
-</span></span></span><span style=display:flex><span><span style=color:#d14>   for (let j = 0; j &lt; c.length; j++) {      if (i != j)    {        c[j].style.display = &#39;none&#39;        c[j].style.visibility = &#39;hidden&#39;   
-</span></span></span><span style=display:flex><span><span style=color:#d14>      } else {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>        c[j].style.display = &#39;block&#39;        c[j].style.visibility = &#39;visible&#39;      }    
-</span></span></span><span style=display:flex><span><span style=color:#d14>   }  
-</span></span></span><span style=display:flex><span><span style=color:#d14>}  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>function prev() {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>   if (i &lt;= 0) return   i--   const c = document.getElementsByClassName(&#39;graph&#39;)   for (let j = 0; j &lt; c.length; j++) {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>      if (i != j)    {        c[j].style.display = &#39;none&#39;        c[j].style.visibility = &#39;hidden&#39;   
-</span></span></span><span style=display:flex><span><span style=color:#d14>      } else {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>        c[j].style.display = &#39;block&#39;        c[j].style.visibility = &#39;visible&#39;      }    
-</span></span></span><span style=display:flex><span><span style=color:#d14>   }  
-</span></span></span><span style=display:flex><span><span style=color:#d14>}  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>function checkKey(e) {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>   if (e.which === 37 || e.which === 40) {      prev()   } else if (e.which === 39 || e.which === 38) {      next()   }  }  
-</span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;/script&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;script&gt;document.onkeydown = checkKey;&lt;/script&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;div&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>&lt;/div&gt;  
-</span></span></span><span style=display:flex><span><span style=color:#d14>`</span>
-</span></span></code></pre></div><p>Again, I won&rsquo;t explain this because it&rsquo;s nasty Javascript and it&rsquo;s not too interesting. Let&rsquo;s just try it out and see what happens!</p><p><img src=/img/abc-regex-demo.gif alt=abc-regex-demo.gif></p><p>Nice! The underlined character shows which character we&rsquo;re going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.</p><p>So, we can look at the red state, ask ourselves &ldquo;is there a transition which matches the character that&rsquo;s about to be processed?&rdquo;, and then we can predict which state will be active next!</p><p>Let&rsquo;s try another example.</p><p><img src=/img/i-love-cats-regex-demo-fast.gif alt=i-love-cats-regex-demo-fast.gif></p><p>We can see that most of the characters make our FSM fail immediately. We know that the <code>runner</code> has failed because there is no active state for one step. It&rsquo;s at this point that our algorithm resets the runner and starts the search again from the next substring.</p><p>It&rsquo;s only until we reach the <code>cats</code> substring that we begin to start matching <code>States</code> and can finally progress to the final end state and declare the match a success.</p><p>Let&rsquo;s take a look at one more example, this time with the regular expression <code>aab</code> with the input search string <code>"aaaab"</code></p><p><img src=/img/backtracking-regex-demo.gif alt=backtracking-regex-demo.gif></p><p>Notice what happens when we get from <code>State 0</code> to <code>State 2</code> and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called &lsquo;backtracking&rsquo;. It&rsquo;s the result of the recursion in our <code>match()</code> function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.</p><p>I invite you to play around with different combinations and see what you can find. I found that this was of vizualising the algorithms we&rsquo;re using was very helpful in internalizing the characteristics. This becomes especially useful when our FSMs become more complex.</p><p>That&rsquo;s enough for visualizations for now, we can now move onto adding new features to our regex engine.</p><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v5>here</a></p></div><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the <code>comparable</code> interface. So far, generics are still tricky to make work in Go, but it&rsquo;s still early days.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p>Technically it&rsquo;s not really being deleted as it will still exist in memory. However, as we have removed all pointers to and from the <code>State</code>, it will not have any effect on our program, and it will eventually be removed by the garbage collector.&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3><p>I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call <code>Draw</code> from the <code>main</code> package.&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:4><p>If for some reason you&rsquo;re interested in the hacky javascript involved in this, take a look at the <code>templates.go</code> file in <a href=https://github.com/LeweyM/search/blob/master/src/v5/templates.go>github</a>.&#160;<a href=#fnref:4 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><p>Previous: <a href=/series/making-regex-from-scratch-in-go/05-wildcards/>05 Wildcards</a><span class=meta></span></p><p>Next: <a href=/series/making-regex-from-scratch-in-go/07-branches/>07 Branches</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> filepath.<span style=color:#900;font-weight:700>Ext</span>(path) <span style=color:#000;font-weight:700>==</span> <span style=color:#d14>&#34;&#34;</span> {  
+</span></span><span style=display:flex><span>      path <span style=color:#000;font-weight:700>+=</span> <span style=color:#d14>&#34;.html&#34;</span>  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> filepath.<span style=color:#900;font-weight:700>Ext</span>(path) <span style=color:#000;font-weight:700>!=</span> <span style=color:#d14>&#34;.html&#34;</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(<span style=color:#d14>&#34;only .html extension permitted&#34;</span>)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>  
+</span></span><span style=display:flex><span>   err = os.<span style=color:#900;font-weight:700>WriteFile</span>(path, []<span style=color:#0086b3>byte</span>(html), <span style=color:#099>0750</span>)  
+</span></span><span style=display:flex><span>   <span style=color:#000;font-weight:700>if</span> err <span style=color:#000;font-weight:700>!=</span> <span style=color:#000;font-weight:700>nil</span> {  
+</span></span><span style=display:flex><span>      <span style=color:#0086b3>panic</span>(err)  
+</span></span><span style=display:flex><span>   }  
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>That&rsquo;s enough of visualizations for now, let&rsquo;s move onto adding new features to our regex engine.</p><div class="notices tip"><p>Check out this part of the project on GitHub <a href=https://github.com/LeweyM/search/tree/master/src/v5>here</a></p></div><div class=footnotes role=doc-endnotes><hr><ol><li id=fn:1><p>This feels pretty clunky. I would have preferred a dynamic type which implements an interface, but interface fields on structs also have problems implementing the <code>comparable</code> interface. So far, generics are still tricky to make work in Go, but it&rsquo;s still early days.&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2><p>I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call <code>Draw</code> from the <code>main</code> package.&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3><p>If for some reason you&rsquo;re interested in the hacky javascript involved in this, take a look at the <code>templates.go</code> file in <a href=https://github.com/LeweyM/search/blob/master/src/v5/templates.go>github</a>.&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:4><p>This is actually the command I use to generate the HTML used in the demos in this very blog!&#160;<a href=#fnref:4 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></div></div><p>Previous: <a href=/series/making-regex-from-scratch-in-go/05-wildcards/>05 Wildcards</a><span class=meta></span></p><p>Next: <a href=/series/making-regex-from-scratch-in-go/07-branches/>07 Branches</a><span class=meta></span></p><div class=post-tags></div></div><div class="footer wrapper"><nav class=nav><div><a href=https://github.com/vividvilla/ezhil>Ezhil theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></nav></div><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script>
 <script>mermaid.initialize({startOnLoad:!0})</script></body></html>
