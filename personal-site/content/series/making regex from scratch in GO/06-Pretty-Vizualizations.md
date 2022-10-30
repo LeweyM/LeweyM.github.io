@@ -79,7 +79,8 @@ func Test_DrawFSM(t *testing.T) {
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))`,  
+2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;`,  
       },  
    }  
   
@@ -96,6 +97,8 @@ func Test_DrawFSM(t *testing.T) {
 ```
 
 This test is pretty straight forward, let's just zoom in on a couple of things.
+
+We're expecting to build a simple `mermaid` graph with numbered nodes and arrow transitions labeled with letters, such as `0((0)) --"a"--> 1((1))`. We also want our success node (in this case it's node 3) to look different, so we're giving it a thicker green outline with `style 3 stroke:green,stroke-width:4px`.
 
 The first thing to note here is that we're building our FSMs by hand here in the helper function `abcBuilder()`. This is because we don't want changes in our compiler or parser to break these tests - they should only be concerned with how FSMs are drawn.
 
@@ -118,14 +121,11 @@ Our algorithm for collecting all the `Transitions` of the FSM should look someth
 2. Add the transitions from this node to a set of transitions.
 3. Mark the current node as visited.
 4. Recur on the destination node of every outgoing transition.
-5. Recur on the source node of every incoming transition.
 ```
 
-The order of the recursions is important here. We want to first collect the outgoing transitions of all the nodes, and then, starting from the last node and going backwards, collect the transitions of any unvisited nodes connected by incoming transitions.
+In this algorithm, we have a common need - we need to maintain a set of `Transitions` and `States`, as well as maintain their insertion order. The insertion order will be necessary for printing the `Transitions` in the correct order, as well as numbering the `State` nodes correctly.
 
 I won't labor the point here, as it's tricky to visualize what's going on and distracts from what we're trying to do here. If this is mysterious to you, try walking step by step through the call stack and see where you end up.
-
-In this algorithm, we have a common need - we need to maintain a set of `Transitions` and `States`, as well as maintain their insertion order. The insertion order will be necessary for printing the `Transitions` in the correct order, as well as numbering the `State` nodes correctly.
 
 Let's build a generic `OrderedSet` data structure to manage this for us.
 
@@ -144,6 +144,8 @@ Before we get into the generic implementation, we need to do some refactoring of
 In go, an object is `comparable` when all of its fields are also `comparable`, and currently the `predicate` field of a `Transition` is a function type. Let's change that now.
 
 ```diff
+@@ // transition.go
+
 - type Predicate func(input rune) bool
 ```
 
@@ -172,6 +174,72 @@ func (p Predicate) test(input rune) bool {
    }  
    return false  
 }
+```
+
+Also, let's add a handy symbol for drawing our transitions.
+
+```diff
+@@ // transition.go
+
+type Transition struct {  
++   debugSymbol string  
+   // to: a pointer to the next state   
+   to        *State  
+   from      *State  
+   predicate Predicate  
+}
+```
+
+```diff
+@@ // state.go
+
+-func (s *State) addTransition(destination *State, predicate Predicate) {
++func (s *State) addTransition(destination *State, predicate Predicate, debugSymbol string) {
+        t := Transition{
+-               to:        destination,
+-               predicate: predicate,
++               debugSymbol: debugSymbol,
++               to:          destination,
++               from:        s,
++               predicate:   predicate,
+        }
+        s.transitions = append(s.transitions, t)
+ }
+
+
+func (s *State) merge(s2 *State) {
+        for _, t := range s2.transitions {
+                // 1. copy s2 transitions to s
+-               s.addTransition(t.to, t.predicate)
++               s.addTransition(t.to, t.predicate, t.debugSymbol)
+        }
+ 
+        // 2. remove s2
+		s2.delete()
+}
+```
+
+```diff
+@@ // ast.go
+
+func (l CharacterLiteral) compile() (head *State, tail *State) {
+        startingState := State{}
+        endState := State{}
+ 
+-       startingState.addTransition(&endState, func(input rune) bool { return input == l.Character })
++       startingState.addTransition(&endState, Predicate{allowedChars: string(l.Character)}, string(l.Character))
+        return &startingState, &endState
+ }
+ 
+func (w WildcardLiteral) compile() (head *State, tail *State) {
+        startingState := State{}
+        endState := State{}
+ 
+-       startingState.addTransition(&endState, func(input rune) bool { return input != '\n' })
++       startingState.addTransition(&endState, Predicate{disallowedChars: "\n"}, ".")
+        return &startingState, &endState
+ }
+
 ```
 
 And let's make a few changes so that our problem compiles.
@@ -213,7 +281,7 @@ func (w WildcardLiteral) compile() (head *State, tail *State) {
 ```
 
 And now, let's build our generic `OrderedSet` struct. Our struct will need the following interface, where `T` is the generic type:
-- `add(t T)`
+- `add(ts ...T)`
 - `has(t T) bool`
 - `list() []T`
 - `getIndex(t T) int`
@@ -229,16 +297,18 @@ OrderedSet[T comparable] struct {
    nextIndex int  
 }  
   
-func (o *OrderedSet[T]) add(t T) {  
+func (o *OrderedSet[T]) add(ts ...T) {  
    if o.set == nil {  
       o.set = make(map[T]int)  
    }  
   
-   if !o.has(t) {  
-      o.set[t] = o.nextIndex  
-      o.nextIndex++  
+   for _, t := range ts {  
+      if !o.has(t) {  
+         o.set[t] = o.nextIndex  
+         o.nextIndex++  
+      }  
    }  
-}  
+} 
   
 func (o *OrderedSet[T]) has(t T) bool {  
    _, hasItem := o.set[t]  
@@ -249,12 +319,18 @@ func (o *OrderedSet[T]) list() []T {
    size := len(o.set)  
    list := make([]T, size)  
   
-   for t, i := range o.set {  
+   i := 0  
+   for t := range o.set {  
       list[i] = t  
+      i++  
    }  
   
+   sort.Slice(list, func(i, j int) bool {  
+      return o.getIndex(list[i]) < o.getIndex(list[j])  
+   })  
+  
    return list  
-}  
+}
   
 func (o *OrderedSet[T]) getIndex(t T) int {  
    return o.set[t]  
@@ -270,6 +346,8 @@ Now we have all the pieces we need for our traversal algorithm.
 Because of the useful data structures we've just dreamed up, writing the traversal algorithm maps pretty simply to the pseudocode we described earlier.
 
 ```go
+// draw.go
+
 func visitNodes(  
    node *State,  
    transitions *OrderedSet[Transition],  
@@ -293,10 +371,6 @@ func visitNodes(
       destinationNode := transition.to  
       visitNodes(destinationNode, transitions, visited)  
    }  
-   // 5. Recur on the source node of every incoming transition.  
-   for _, sourceNode := range node.incoming {  
-      visitNodes(sourceNode, transitions, visited)  
-   }  
 }
 ```
 
@@ -305,6 +379,8 @@ It's important that the `transitions` and the `visited` `OrderedSets` are passed
 Once we have collected the `Transitions`, we now just have to draw them as lines in our `mermaid` markdown.
 
 ```go
+// draw.go
+
 func (s *State) Draw() string {  
    // initialize sets  
    transitionSet := OrderedSet[Transition]{}  
@@ -323,164 +399,22 @@ func (s *State) Draw() string {
       toId := nodeSet.getIndex(t.to)  
       output = append(output, fmt.Sprintf("%d((%d)) --\"%s\"--> %d((%d))", fromId, fromId, t.debugSymbol, toId, toId))  
    }  
+
+  
+	// draw outline around success nodes  
+	for _, state := range nodeSet.list() {  
+	   if state.isSuccessState() {  
+	      output = append(output, fmt.Sprintf("style %d stroke:green,stroke-width:4px;", nodeSet.getIndex(state)))  
+	   }  
+	}
+
    return strings.Join(output, "\n")  
 }
 ```
 
 Once all the hard work of collecting the `Nodes` and `Transitions` is done, it's quite simple to concatenate the strings required to build the `mermaid.js` code. I won't go into much more detail here, as the code seems to speak for itself.
 
-With all this in place, let's run our tests.
-
-```zsh
-=== RUN   Test_DrawFSM
-=== RUN   Test_DrawFSM/abc
-    draw_test.go:38: Expected drawing to be 
-        "graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --"b"--> 2((2))
-        2((2)) --"c"--> 3((3))", got
-        "graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --"b"--> 2((2))
-        2((2)) --"c"--> 3((3))
-        4((4)) --"c"--> 3((3))
-        5((5)) --"b"--> 2((2))
-        6((6)) --"a"--> 1((1))"
---- FAIL: Test_Draw (0.00s)
-    --- FAIL: Test_Draw/abc (0.00s)
-```
-
-Hmm, interesting. Not quite what we were expecting. To see what's going on, let's plug the output graph of our `abc` test into [mermaids live coding site](https://mermaid.live/) and see what we're looking at.
-
-```markdown
-graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --"b"--> 2((2))
-        2((2)) --"c"--> 3((3))
-        4((4)) --"c"--> 3((3))
-        5((5)) --"b"--> 2((2))
-        6((6)) --"a"--> 1((1))
-```
-
-```mermaid
-graph LR
-        0((0)) --"a"--> 1((1))
-        1((1)) --"b"--> 2((2))
-        2((2)) --"c"--> 3((3))
-        4((4)) --"c"--> 3((3))
-        5((5)) --"b"--> 2((2))
-        6((6)) --"a"--> 1((1))
-```
-
-That's certainly not right. We seem to have dangling `Nodes` which still have `Transitions` to intermediary nodes. This should not affect the accuracy of our regex engine, as `States` `4`, `5`, and `6` cannot be reached, but it does make our drawing a bit distracting.
-
-The error here is in our `state.Merge` method.
-
-```go
-// adds the transitions of other State (s2) to this State (s).
-//  
-// warning: do not use if State s2 has any incoming transitions.  
-func (s *State) merge(s2 *State) {  
-   if len(s2.incoming) != 0 {  
-      panic(fmt.Sprintf("State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v", *s2, s.incoming))  
-   }  
-  
-   for _, t := range s2.transitions {  
-      s.addTransition(t.to, t.predicate, t.debugSymbol)  
-	}
-}
-```
-
-Let's see this in a simpler example, the regex `a`.
-
-```mermaid
-graph LR 
-0((0)) --"a"--> 1((1)) 
-2((2)) --"a"--> 1((1))
-```
-
-Remember how the `compile` method of a `Group` node works? First we compile the `CharacterLiteral(a)` Node into a two-state FSM. We then create a new `State`, onto the tail of which we will merge all the children FSMs
-
-```mermaid
-graph LR
-0((0))
-1((1)) --"a"--> 2((2))
-```
-
-In this simple example, there is one merge operation, during which we copy all the transitions from ` State 1` onto `State 0`. So...
-
-```mermaid
-graph LR
-0((0)) -."merge".-1((0))
-1((1)) --"a"--> 2((2))
-```
-
-Becomes...
-
-```mermaid
-graph LR
-10((0)) --"a"--> 20((2))
-30((1)) --"a"--> 20((2))
-```
-
-The problem is that the transition from `1` to `2` remains, which leads to the dangling `State` `1` remaining in our drawing.
-
-Let's remove those dangling transitions. When merging transitions, we want to;
-1. copy the transitions from `State 1` to `State 0`
-2. delete `State 1`
-
-Let's create a couple of methods on the `State` struct to delete a node. In our context, 'deleting' means removing all the incoming and outgoing transitions[^gc].
-[^gc]: Technically it's not really being deleted as it will still exist in memory. However, as we have removed all pointers to and from the `State`, it will not have any effect on our program, and it will eventually be removed by the garbage collector.
-
-```go
-func (s *State) delete() {  
-   // 1. remove s from incoming of connected nodes.  
-   for _, t := range s.transitions {  
-	  t.to.removeIncoming(s)
-   }  
-  
-   // 2. remove the outgoing transitions  
-   s.transitions = nil  
-} 
-
-func (s *State) removeIncoming(target *State) {  
-   var newIncoming []*State  
-   for _, state := range s.incoming {  
-      if target != state {  
-         newIncoming = append(newIncoming, state)  
-      }  
-   }  
-   s.incoming = newIncoming  
-}
-```
-
-And now let's delete our extra `State` after the merge is complete.
-
-```diff 
-func (s *State) merge(s2 *State) {  
-		// [...]  
-  
-        for _, t := range s2.transitions {
-+               // 1. copy s2 transitions to s
-                s.addTransition(t.to, t.predicate, t.debugSymbol)
-        }
-+
-+       // 2. remove s2
-+       s2.delete()
-
-   }  
-}  
-```
-
-Now, running our tests should pass, and the output of our `abc` regex FSM should look correct.
-
-```mermaid
-graph LR 
-0((0)) --"a"--> 1((1)) 
-1((1)) --"b"--> 2((2)) 
-2((2)) --"c"--> 3((3))
-```
-Although nothing was strictly broken in our system, I hope that this demonstrates how useful it is to have tools like this for debugging a complex system.
+With all this in place, let's run our tests. Looks like we're green!
 
 One more thing, let's add a quick method on the `myRegex` struct to call the root `State.Draw()` method.
 
@@ -502,6 +436,8 @@ Let's set up a `main` function[^2].
 [^2]: I prefer some misdirection between the main function in order to strip away unnecessary command arguments. You might prefer to simply call `Draw` from the `main` package.
 
 ```go
+// main.go
+
 package main
 
 func main() {  
@@ -514,6 +450,8 @@ func main() {
 ```
 
 ```go
+// v5/main.go
+
 package v5
 
 // Main just used for linking up the main functions
@@ -524,7 +462,7 @@ func Main(args []string) {
          RenderFSM(args[1])  
       }
    default:  
-      fmt.Println("command not recognized")  
+      panic("command not recognized")  
    }  
 }
 ```
@@ -532,6 +470,8 @@ func Main(args []string) {
 With that, we can call `Draw` from our command. Let's test that things are set up correctly.
 
 ```go
+// draw.go
+
 func Draw(input string) {
 	fmt.Println("Draw called with " + input)
 }
@@ -548,15 +488,20 @@ Draw called with abc
 Great, let's make `Draw()` open a browser and display our `mermaid` code. 
 
 ```go
-
 // main.go
 
+// RenderFSM will render just the finite state machine, and output the result to the browser
 func RenderFSM(input string) {  
    graph := NewMyRegex(input).DebugFSM()  
-   renderTemplateToBrowser(fsmTemplate, graph)  
+   html := buildFsmHtml(graph)  
+   outputToBrowser(html)  
 }
 
-func renderTemplateToBrowser(tmplt string, data any) {  
+func buildFsmHtml(graph string) string {  
+   return renderWithTemplate(fsmTemplate, graph)  
+}
+
+func renderWithTemplate(tmplt string, data any) string {  
    t, err := template.New("graph").Parse(tmplt)  
    if err != nil {  
       panic(err)  
@@ -566,13 +511,16 @@ func renderTemplateToBrowser(tmplt string, data any) {
    if err != nil {  
       panic(err)  
    }  
+   return w.String()  
+}
+
   
-   reader := strings.NewReader(w.String())  
-   err = browser.OpenReader(reader)  
+func outputToBrowser(html string) {  
+   reader := strings.NewReader(html)  
+   err := browser.OpenReader(reader)  
    if err != nil {  
       panic(err)  
    }  
-   return  
 }
 ```
 
@@ -618,6 +566,8 @@ func (m *myRegex) DebugMatch(input string) []debugStep {
 This returns a slice of `debugSteps`, which contains everything we need in order to render a single step in the algorithm. Namely, a drawing of the runner in the current moment, and the index of the character we're processing in the current moment.
 
 ```go
+// regex.go 
+
 type debugStep struct {  
    runnerDrawing         string  
    currentCharacterIndex int  
@@ -653,6 +603,7 @@ func Test_DrawSnapshot(t *testing.T) {
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 0 fill:#ff5555;`,  
       },  
       {  
@@ -662,7 +613,8 @@ style 0 fill:#ff5555;`,
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))  
+2((2)) --"c"--> 3((3)) 
+style 3 stroke:green,stroke-width:4px;
 style 1 fill:#ff5555;`,  
       },  
       {  
@@ -673,6 +625,7 @@ style 1 fill:#ff5555;`,
 0((0)) --"a"--> 1((1))  
 1((1)) --"a"--> 2((2))  
 2((2)) --"a"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 3 fill:#00ab41;`,  
       },  
    }  
@@ -702,6 +655,7 @@ Zoom in on the first test, which is after having processed the string `"a"` for 
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 0 fill:#ff5555;`
 ```
 
@@ -718,6 +672,7 @@ graph LR
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 0 fill:#ff5555;
 ```
 The red node means that the current state is `State` '`0`'. Let's change the last line to `style 1 fill:#ff5555`
@@ -727,6 +682,7 @@ graph LR
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 1 fill:#ff5555
 ```
 So, by changing which node we style, we can demonstrate the currently active state 'moving' across our FSM.
@@ -738,6 +694,7 @@ graph LR
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 3 fill:#00ab41;
 ```
 
@@ -773,6 +730,14 @@ First, we're going to need to modify the `Draw` function to return the `nodeSet`
       toId := nodeSet.getIndex(t.to)  
       output = append(output, fmt.Sprintf("%d((%d)) --\"%s\"--> %d((%d))", fromId, fromId, t.debugSymbol, toId, toId))  
    }  
+
+	// draw outline around success nodes  
+	for _, state := range nodeSet.list() {  
+	   if state.isSuccessState() {  
+	      output = append(output, fmt.Sprintf("style %d stroke:green,stroke-width:4px;", nodeSet.getIndex(state)))  
+	   }  
+	}
+
 -   return strings.Join(output, "\n")  
 +   return strings.Join(output, "\n"), nodeSet
 }
@@ -991,7 +956,7 @@ We now want to be able to use this by calling something from the command line, a
 +        RenderRunner(args[1], args[2])  
 +     }  
    default:  
-      fmt.Println("command not recognized")  
+      panic("command not recognized")  
    }  
 }
 ```
@@ -1003,8 +968,15 @@ Let's implement `RenderRunner`.
 ```go
 // main.go
 
-// RenderRunner will render every step of the runner until it fails or succeeds. The template will then take care// of hiding all but one of the steps to give the illusion of stepping through the input characters.  
+// RenderRunner will render every step of the runner until it fails or succeeds. The template will then take care// of hiding all but one of the steps to give the illusion of stepping through the input characters. It will  
+// then output the result to the browser.  
 func RenderRunner(regex, input string) {  
+   data := buildRunnerTemplateData(regex, input)  
+   htmlRunner := buildRunnerHTML(data)  
+   outputToBrowser(htmlRunner)  
+}
+
+func buildRunnerTemplateData(regex string, input string) TemplateData {  
    newMyRegex := NewMyRegex(regex)  
    debugSteps := newMyRegex.DebugMatch(input)  
   
@@ -1016,13 +988,17 @@ func RenderRunner(regex, input string) {
       })  
    }  
   
-   renderTemplateToBrowser(runnerTemplate, TemplateData{  
+   data := TemplateData{  
       Steps: steps,  
       Regex: regex,  
-   })  
+   }  
+   return data  
 }
 
-  
+func buildRunnerHTML(data TemplateData) string {  
+   return renderWithTemplate(runnerTemplate, data)  
+}
+
 // threeSplitString divides a string into three pieces on a given indexfunc threeSplitString(s string, i int) []string {  
    var left, middle, right string  
   
@@ -1038,7 +1014,7 @@ func RenderRunner(regex, input string) {
 
 All we're doing here is parsing the `debugSteps` from `DebugMatch` into data structures which our templates know what to do with. This includes breaking the input string into three pieces so that we can render the characters before the current character, the current character, and remaining characters in different ways.
 
-To make this work, we just need a few template data structures, as well as the template itself.
+To make this work, we just need a few template data structures, as well as the template itself, which also be found on [github](https://github.com/LeweyM/search/blob/c31ebe6066a6cabd74ef2afadaee20a81a875d2a/src/v5/templates.go#L26-L99).
 
 ```go
 // templates.go
@@ -1053,55 +1029,11 @@ type Step struct {
    Graph      string  
    InputSplit []string  
 }  
-  
-const runnerTemplate = `  
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>  
-<script>mermaid.initialize({startOnLoad:true});</script>  
-<body onload="prev()">  
-  
-<h1>Regex: ({{ .Regex }})</h1>  
-  
-<div class="nav-buttons">  
-   <button id="prev" onClick="prev()">      prev   </button>   <button id="next" onClick="next()">      next   </button>   <p>Or use the arrow keys to Step through the FSM</p></div>  
-  
-{{ range $i, $s := .Steps }}  
-<div class="graph" {{ if ne $i 0 }} style="visibility:hidden;" {{ else }} style="visibility:visible" {{ end }}>  
-   <p style='font-size:64px'>      <span style='color:red'>{{ index .InputSplit 0 }}</span><span style='text-decoration-color:red;text-decoration-line:underline;'>{{ index .InputSplit 1 }}</span><span>{{ index .InputSplit 2 }}</span>   </p>   <div class="mermaid">      {{ .Graph }}   </div></div>  
-{{ end }}  
-  
-<script type="text/javascript">  
-let i = 1  
-  
-function next() {  
-  const c = document.getElementsByClassName('graph')  if (i >= c.length - 1) return   
-   i++  
-   for (let j = 0; j < c.length; j++) {      if (i != j)    {        c[j].style.display = 'none'        c[j].style.visibility = 'hidden'   
-      } else {  
-        c[j].style.display = 'block'        c[j].style.visibility = 'visible'      }    
-   }  
-}  
-  
-function prev() {  
-   if (i <= 0) return   i--   const c = document.getElementsByClassName('graph')   for (let j = 0; j < c.length; j++) {  
-      if (i != j)    {        c[j].style.display = 'none'        c[j].style.visibility = 'hidden'   
-      } else {  
-        c[j].style.display = 'block'        c[j].style.visibility = 'visible'      }    
-   }  
-}  
-  
-function checkKey(e) {  
-   if (e.which === 37 || e.which === 40) {      prev()   } else if (e.which === 39 || e.which === 38) {      next()   }  }  
-  
-</script>  
-<script>document.onkeydown = checkKey;</script>  
-<div>  
-</div>  
-`
 ```
 
 Again, I won't explain this because it's nasty Javascript and it's not too interesting. Let's just try it out and see what happens!
 
-![abc-regex-demo.gif](/img/abc-regex-demo.gif)
+{{< iframe src="/html/e7f3dc672824a71d4b9995391b558f01.html" caption="v5 draw \"abc\" \"abc\"">}}
 
 Nice! The underlined character shows which character we're going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.
 
@@ -1109,8 +1041,7 @@ So, we can look at the red state, ask ourselves "is there a transition which mat
 
 Let's try another example.
 
-
-![i-love-cats-regex-demo-fast.gif](/img/i-love-cats-regex-demo-fast.gif)
+{{< iframe src="/html/d9eae559dbbe94884d6f6314cb66ce74.html" caption="v5 draw \"cat\" \"I love cats\"">}}
 
 We can see that most of the characters make our FSM fail immediately. We know that the `runner` has failed because there is no active state for one step. It's at this point that our algorithm resets the runner and starts the search again from the next substring. 
 
@@ -1118,13 +1049,73 @@ It's only until we reach the `cats` substring that we begin to start matching `S
 
 Let's take a look at one more example, this time with the regular expression `aab` with the input search string `"aaaab"`
 
+{{< iframe src="/html/9f22c0249c3a870b51b2c781a1fbb1b7.html" caption="v5 draw \"aab\" \"aaaab\"">}}
+
 ![backtracking-regex-demo.gif](/img/backtracking-regex-demo.gif)
 
 Notice what happens when we get from `State 0` to `State 2` and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called 'backtracking'. It's the result of the recursion in our  `match()` function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.
 
 I invite you to play around with different combinations and see what you can find. I found that this was of vizualising the algorithms we're using was very helpful in internalizing the characteristics. This becomes especially useful when our FSMs become more complex.
 
-That's enough for visualizations for now, we can now move onto adding new features to our regex engine.
+Before we finish here, I want to add one more command to save the generated HTML to a file. We'll call this command `out`.[^out]
+[^out]: This is actually the command I use to generate the HTML used in the demos in this very blog!
+
+```diff
+@@ // main.go
+
+// Main just used for linking up the main functions
+func Main(args []string) {  
+   switch args[0] {  
+   case "draw":  
+      if len(args) == 2 {  
+         RenderFSM(args[1])  
+      } else if len(args) == 3 {  
+         RenderRunner(args[1], args[2])  
+      }  
++   case "out":  
++      if len(args) == 4 {  
++         OutputRunnerToFile(args[1], args[2], args[3])  
++      }  
+   default:  
+      panic("command not recognized")  
+   }  
+}
+```
+
+And a couple of functions to implement the file writing functionality.
+
+```go
+// OutputRunnerToFile will render every step of the runner, the same as RenderRunner, and then write the html to  
+// a file.  
+func OutputRunnerToFile(regex, input, filePath string) {  
+   data := buildRunnerTemplateData(regex, input)  
+   htmlRunner := buildRunnerHTML(data)  
+   outputToFile(htmlRunner, filePath)  
+}
+
+func outputToFile(html, path string) {  
+   containingDir := filepath.Dir(path)  
+   err := os.MkdirAll(containingDir, 0750)  
+   if err != nil {  
+      panic(err)  
+   }  
+  
+   if filepath.Ext(path) == "" {  
+      path += ".html"  
+   }  
+  
+   if filepath.Ext(path) != ".html" {  
+      panic("only .html extension permitted")  
+   }  
+  
+   err = os.WriteFile(path, []byte(html), 0750)  
+   if err != nil {  
+      panic(err)  
+   }  
+}
+```
+
+That's enough of visualizations for now, let's move onto adding new features to our regex engine.
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v5)

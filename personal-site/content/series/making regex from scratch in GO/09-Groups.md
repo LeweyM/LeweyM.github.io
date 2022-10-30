@@ -507,13 +507,8 @@ Let's take a look at our merge function code.
 ```go
 // state.go
 
-// adds the transitions of other State (s2) to this State (s).//  
-// warning: do not use if State s2 has any incoming transitions.  
+// adds the transitions of other State (s2) to this State (s).  
 func (s *State) merge(s2 *State) {  
-   if len(s2.incoming) != 0 {  
-      panic(fmt.Sprintf("State (%+v) cannot be merged if it has any incoming transitions. It has incoming transitions from the following states; %+v", *s2, s.incoming))  
-   }  
-  
    for _, t := range s2.transitions {  
       // 1. copy s2 transitions to s  
       s.addTransition(t.to, t.predicate, t.debugSymbol)  

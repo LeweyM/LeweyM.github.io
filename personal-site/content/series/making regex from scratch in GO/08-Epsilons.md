@@ -123,12 +123,6 @@ We'll also need to change the success criteria of a state to include epsilons.
 @@ // state.go
 
 func (s *State) delete() {  
-   // 1. remove s from incoming of connected nodes.  
-   for _, t := range s.transitions {  
-      t.to.removeIncoming(s)  
-   }  
-  
-   // 2. remove the outgoing transitions  
    s.transitions = nil  
 +  s.epsilons = nil  
 }
@@ -217,15 +211,17 @@ Let's start with adding a new test case to our `Test_drawFSM` test function whic
 		  expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))`,  
+2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;`,  
 	   },  
 +      {  
 +         name:       "graph with epsilon",  
 +         fsmBuilder: aεbBuilder,  
 +         expected: `graph LR  
-+0((0)) --"a"--> 1((1))  
-+1((1)) -."ε".-> 2((2))  
-+2((2)) --"b"--> 3((3))`,  
++ 0((0)) --"a"--> 1((1))  
++ 1((1)) -."ε".-> 2((2))  
++ 2((2)) --"b"--> 3((3))
++ style 3 stroke:green,stroke-width:4px;`,  
 +      },  
 +   }
 

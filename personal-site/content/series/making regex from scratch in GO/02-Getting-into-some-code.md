@@ -23,14 +23,13 @@ The `Transition` struct contains two things:
 2. the predicate that determines whether we can go to the next state
 
 ```go
-// state.go
+// transition.go
 
 type Transition struct {  
-   // to: a pointer to the next state   
-   to *State  
-   // predicate: a function to determine if we should move to the next state
-   predicate func(input rune) bool  
-}  
+   to        *State  
+   from      *State  
+   predicate Predicate  
+}
 ```
 
 The `Predicate` is a simple function that takes in a character. 
@@ -40,25 +39,19 @@ here we're using [`rune`](https://go.dev/blog/strings) to avoid [multi-byte char
 {{% /notice %}}
 
 ```go
-// state.go
+// transition.go
 
 type Predicate func(input rune) bool
 ```
 
 To put this all together, let's make some changes to our `State` struct definition in order to use our `Predicate` and `Transition` types.
 
-```go
-// state.go
+```diff
+@@ // state.go
 
-type Predicate func(input rune) bool
-  
-type Transition struct {  
-   to          *State  
-   predicate   Predicate  
-}  
-  
 type State struct {  
-   transitions []Transition  
+-   connectedStates []*State  
++   transitions []Transition  
 }
 
 ```

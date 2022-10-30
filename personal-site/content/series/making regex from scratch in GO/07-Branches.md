@@ -823,6 +823,7 @@ And then let's change our test expectations so that the previous `States` are al
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
 2((2)) --"c"--> 3((3))  
+style 3 stroke:green,stroke-width:4px;
 style 0 fill:#ff5555;`,  
       },  
       {  
@@ -832,7 +833,8 @@ style 0 fill:#ff5555;`,
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"b"--> 2((2))  
-2((2)) --"c"--> 3((3))  
+2((2)) --"c"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 +style 0 fill:#ff5555;  
 style 1 fill:#ff5555;`,  
       },  
@@ -844,7 +846,8 @@ style 1 fill:#ff5555;`,
          expected: `graph LR  
 0((0)) --"a"--> 1((1))  
 1((1)) --"a"--> 2((2))  
-2((2)) --"a"--> 3((3))  
+2((2)) --"a"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 +style 0 fill:#ff5555;  
 +style 1 fill:#ff5555;  
 +style 2 fill:#ff5555;  

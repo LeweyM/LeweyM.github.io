@@ -398,6 +398,30 @@ Next, we want to loop over the child nodes and do the following;
 2. merge the tail of the first node with the head of the second node
 3. mark the tail of the second node as the new tail
 
+Let's add a function to the `*State`  struct to handle the merging of one `State` to another. 
+
+```go
+// state.go
+
+// adds the transitions of other State (s2) to this State (s).
+func (s *State) merge(s2 *State) {  
+   for _, t := range s2.transitions {  
+      // 1. copy s2 transitions to s  
+      s.addTransition(t.to, t.predicate)  
+   }  
+  
+   // 2. remove s2  
+   s2.delete()  
+}  
+  
+func (s *State) delete() {  
+   s.transitions = nil  
+}
+```
+
+There's not much to explain here. Merging one `State` to another simply means applying the transitions from one to the other. We then call `delete` on the second `State`, which simply means removing its transitions[^del].
+[^del]: While the delete step is not strictly necessary, it does mean that unused links between states are removed and that gos garbage collector will have an easier time removing unused objects from memory. 
+
 The third step is important as it tells us which state we need to merge next in the iteration, and allows the FSM to grow to the right, as in the diagrams.
 
 Putting this all together, we have the following `Compile` function;
@@ -418,6 +442,8 @@ func (g *Group) compile() (head *State, tail *State) {
    return &startState, currentTail  
 }
 ```
+
+
 
 ## The power of structure
 
