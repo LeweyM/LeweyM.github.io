@@ -487,7 +487,7 @@ func (b *Branch) compile() (head *State, tail *State) {
 
 That should be enough to successfully compile a `Branch` node. Our tests should now be green, so let's see what we've created by using our visualizer tools.
 
-Let's see what happens when we run the `draw "ab|cd|ef" "aaccef"` command. We should get something like the following in the browser.
+Let's see what happens when we run the `draw "ab|cd|ef" "aaccef"` command. We should get something like the following in the browser. 
 
 {{< iframe src="/html/fc8854d9268e26cab8078d26371187c0.html" caption="v6 draw \"ab|cd|ef\" \"aaccef\"">}}
 
