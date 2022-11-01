@@ -58,6 +58,8 @@ graph LR
 3((0))
 3 -."ε".-> 0
 3 -."ε".-> 1
+	style 2 stroke:green,stroke-width:4px;
+		style 0 stroke:green,stroke-width:4px;
 ```
 
 These epsilon transitions mean that starting at `State 0` is **equivalent** to starting at `State 1` and `State 2`.
@@ -189,7 +191,7 @@ It's a shame that we can't verify it yet, so let's now fix our `draw` functions 
 
 ### 3. Drawing epsilon transitions
 
-Let's start with adding a new test case to our `Test_drawFSM` test function which uses a branch regex. This will let us define what we want our `mermaid` graph to look like for FSMs with epsilon transitions.
+Let's start with adding a new test case to our `Test_drawFSM` test function which uses an epsilon transition.
 
 ```diff
 @@ // draw_test.go
@@ -231,10 +233,10 @@ This would render the following `mermaid` graph.
 
 ```mermaid
 graph LR
-0((0)) -."ε".-> 1((1))
-0((0)) -."ε".-> 3((3))
-1((1)) --"a"--> 2((2))
-3((3)) --"b"--> 4((4))
+0((0)) --"a"--> 1((1))  
+1((1)) -."ε".-> 2((2))  
+2((2)) --"b"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
 ```
 
 This looks great, the epsilon transitions are denoted with dotted lines and a `'ε'` symbol. It's also notable that the epsilon lines are drawn before the transition lines. This is not relevant now, but might have an effect later on when we have arrows going in different directions.
@@ -305,6 +307,8 @@ graph LR
 5((5)) --"d"--> 6((6)) 
 6((6)) --"o"--> 7((7)) 
 7((7)) --"g"--> 8((8))
+style 4 stroke:green,stroke-width:4px;
+style 8 stroke:green,stroke-width:4px;
 ```
 
 Great! Let's also look at the FSM we create for our problematic `'|1'` case:
@@ -314,6 +318,8 @@ graph LR
 0((0)) -."ε".-> 1((1)) 
 0((0)) -."ε".-> 2((2)) 
 2((2)) --"1"--> 3((3))
+style 3 stroke:green,stroke-width:4px;
+style 1 stroke:green,stroke-width:4px;
 ```
 
 That's better. Now, before we've processed any character, we should already be in `State 0`, `State 1` and `State 2`. `State 1` represents an FSM for an empty string, and, as we can see, it has no outgoing transitions, so it always has a `success` status.
@@ -455,6 +461,8 @@ graph LR
 0((0)) -."ε".-> 1((1)) 
 0((0)) -."ε".-> 3((3)) 
 1((1)) --"1"--> 2((2))
+style 3 stroke:green,stroke-width:4px;
+style 2 stroke:green,stroke-width:4px;
 ```
 
 Ok, we can see the problem here. This FSM does not respect the `'('` and `')'` characters in the regular expression, and is instead compiling the regular expression `1|`. This is not surprising, as haven't taught our program how to handle parentheses yet! 
