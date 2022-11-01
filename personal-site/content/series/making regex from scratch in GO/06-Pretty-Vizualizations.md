@@ -19,15 +19,11 @@ We're going to produce something like this:
 
 ```mermaid
 graph LR
-10((1)) --a-->
-
-20((2)) --b-->
-
-30((3)) --c-->
-
-40((4)) --d--> 50((5))
-
-40((4)) --e--> 60((6))
+	0((0)) --a--> 1((1))
+	1((1)) --b--> 2((2))
+	2((2)) --c--> 3((3))
+	
+	style 3 stroke:green,stroke-width:4px;
 ```
 This visual representation of our FSM will give us a quick insight into whether we've compiled the regular expression correctly, and let us run through the steps ourselves to check when things go wrong.
 
@@ -38,12 +34,11 @@ This was created using `mermaid.js`.
 `mermaid.js` is a fantastic tool which allows us to write graphs in standard markdown which can be then rendered in the browser. The markdown for the above graph is the following;
 
 ```markdown
-Graph LR
-	1((1)) --a-->
-	2((2)) --b-->
-	3((3)) --c-->
-	4((4)) --d--> 5((5))
-	4((4)) --e--> 6((6))
+graph LR
+	0((0)) --a--> 1((1))
+	1((1)) --b--> 2((2))
+	2((2)) --c--> 3((3))
+	style 3 stroke:green,stroke-width:4px;
 ```
 
 {{% notice info %}} 

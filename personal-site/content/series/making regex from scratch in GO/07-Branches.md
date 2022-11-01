@@ -489,7 +489,7 @@ That should be enough to successfully compile a `Branch` node. Our tests should 
 
 Let's see what happens when we run the `draw "ab|cd|ef" "aaccef"` command. We should get something like the following in the browser. 
 
-{{< iframe src="/html/fc8854d9268e26cab8078d26371187c0.html" caption="v6 draw \"ab|cd|ef\" \"aaccef\"">}}
+{{< iframe src="/html/d508da38260a57918a8e51926e0d646b.html" caption="v6-branching-incomplete draw \"ab|cd|ef\" \"aaccef\"">}}
 
 ![branch-regex-demo.gif](/img/branch-regex-demo.gif)
 
