@@ -776,7 +776,7 @@ Look at that! We now 'split' our `State` processing and traverse all possible `S
 
 We could leave it there, but this is a nice opportunity to make an optimization. Before we carry out that optimization, let's look at one more example.
 
-%%{{< iframe src="/html/2141ae1d80a924df6ee2c05656d2f8ea.html" caption="v6 draw \"aab|aac|aad\" \"aaaab\"">}}%%
+{{< iframe src="/html/7e24563dd69fd1d9e7856163d6f81cd9.html" caption="v6-parallel-incomplete draw \"aab|aac|aad\" \"aaaab\"">}}
 
 ![branch-with-backtracking-demo-1.gif](/img/branch-with-backtracking-demo-1.gif)
 
@@ -895,6 +895,8 @@ func match(runner *runner, input []rune, debugChan chan debugStep, offset int) b
 ```
 
 With all that in place, let's try it again.
+
+{{< iframe src="/html/2141ae1d80a924df6ee2c05656d2f8ea.html" caption="v6 draw \"aab|aac|aad\" \"aaaab\"">}}
 
 ![parallel-state-demo.gif](/img/parallel-state-demo.gif)
 
