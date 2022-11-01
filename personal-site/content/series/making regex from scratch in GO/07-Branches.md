@@ -550,9 +550,13 @@ First, let's add a test which illustrates our issue.
 
 So, from our tests we can see that we will find `dog`, but not `dot`. Let's take a look at our visualizer to understand why.
 
+{{< iframe src="/html/893556d62aae76985d13cb82b4607b30.html" caption="v6-branching-incomplete draw \"dog|dot\" \"dog\"">}}
+
 ![dog-branch-regex-demo-1.gif](/img/dog-branch-regex-demo-1.gif)
 
 So, when searching for `"dog"`, we travel through the upper branch and successfully find a match. Nothing surprising here. Let's look at `"dot"`.
+
+{{< iframe src="/html/3e97bc38fab515bfdb35ec6471bd3906.html" caption="v6-branching-incomplete draw \"dog|dot\" \"dot\"">}}
 
 ![dot-branch-regex-demo-2.gif](/img/dot-branch-regex-demo-2.gif)
 
@@ -764,11 +768,15 @@ While not strictly necessary, it's useful to sort the `States` by their label to
 
 With those changes, let's take a look at our previous example in our visualizer.
 
+{{< iframe src="/html/9eb261dd933176f7c31fb5bfb0ca105b.html" caption="v6 draw \"dog|dot\" \"dot\"">}}
+
 ![dog-dot-multi-state-demo.gif](/img/dog-dot-multi-state-demo.gif)
 
 Look at that! We now 'split' our `State` processing and traverse all possible `States` at the same time. 
 
 We could leave it there, but this is a nice opportunity to make an optimization. Before we carry out that optimization, let's look at one more example.
+
+%%{{< iframe src="/html/2141ae1d80a924df6ee2c05656d2f8ea.html" caption="v6 draw \"aab|aac|aad\" \"aaaab\"">}}%%
 
 ![branch-with-backtracking-demo-1.gif](/img/branch-with-backtracking-demo-1.gif)
 
