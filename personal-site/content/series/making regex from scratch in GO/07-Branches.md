@@ -762,7 +762,7 @@ While not strictly necessary, it's useful to sort the `States` by their label to
 
 With those changes, let's take a look at our previous example in our visualizer.
 
-{{< iframe src="/html/9eb261dd933176f7c31fb5bfb0ca105b.html" caption="v6 draw \"dog|dot\" \"dot\"">}}
+{{< iframe src="/html/99b410fd405ddbbad151171488173e80.html" caption="v6-parallel-incomplete draw \"dog|dot\" \"dot\"">}}
 
 Look at that! We now 'split' our `State` processing and traverse all possible `States` at the same time. 
 
