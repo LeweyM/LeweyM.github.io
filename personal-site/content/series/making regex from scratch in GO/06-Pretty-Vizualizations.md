@@ -521,7 +521,7 @@ func outputToBrowser(html string) {
 
 The template we're using here in the constant `fsmTemplate` is defined in the following [github link](https://github.com/LeweyM/search/blob/c31ebe6066a6cabd74ef2afadaee20a81a875d2a/src/v5/templates.go#L14-L24). This is some dirty and ugly HTML. It gets the job done, but it's not something I want to focus on here - if you're following along with this guide, I suggest you copy it directly from github.
 
-Let's try that again. It should now open a browser with a visualization of your compiled FSM!
+Let's try that again. It should now open a browser with a visualisation of your compiled FSM!
 
 ```mermaid
 graph LR 
@@ -1115,7 +1115,7 @@ func outputToFile(html, path string) {
 }
 ```
 
-That's enough of visualizations for now, let's move onto adding new features to our regex engine.
+That's enough of visualisations for now, let's move onto adding new features to our regex engine.
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v5)

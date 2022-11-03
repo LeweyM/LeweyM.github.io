@@ -574,6 +574,8 @@ This works because it says "The end of `childNode` A is equivalent to the beginn
 go run ./... v8 draw "abc" "abc"  
 ```
 
+{{< iframe src="/html/149e745baca36282e725b5e00f441864.html" caption="v8-with-epsilon-concatenation draw \"abc\" \"abc\"">}}
+
 ![doubled-with-epsilon-demo.gif](/img/doubled-with-epsilon-demo.gif)
 
 We can see the compiled `childNodes` in our simple example. 
@@ -587,7 +589,7 @@ When these are chained together using epsilon transitions, the effect is the equ
 
 This is an **excellent tool for state machine composition**, because **it allows us to chain together any two state machines, regardless of how they work internally**. We can have two arbitrarily complex state machines, and, as long as the last state of one is joined to the first state of the other with an epsilon transition, we can consider them as one concatenated state machine.
 
-It does, however, mess up our visualizations for simple string concatenations such as `'abc'`, so I think it's worth making a small exception for chaining together strings of `CharacterLiteral` nodes.
+It does, however, mess up our visualisations for simple string concatenations such as `'abc'`, so I think it's worth making a small exception for chaining together strings of `CharacterLiteral` nodes.
 
 ```diff
 @@ // ast.go
@@ -611,7 +613,6 @@ It does, however, mess up our visualizations for simple string concatenations su
 This gives us a clearer picture for simple string concatenation, but our tests still pass!
 
 {{< iframe src="/html/a8e13f1cd1ad18d57ac936ddda197d41.html" caption="v8 draw \"abc\" \"abc\"">}}
-![abc-regex-demo-2.gif](/img/abc-regex-demo-2.gif)
 
 So our tests are now passing, let's go back to our fuzzer.
 
@@ -660,6 +661,9 @@ graph LR
 1((1)) -."ε".-> 2((2)) 
 1((1)) -."ε".-> 3((3)) 
 1((1)) --"1"--> 4((4))
+	style 2 stroke:green,stroke-width:4px;
+		style 3 stroke:green,stroke-width:4px;
+			style 4 stroke:green,stroke-width:4px;
 ```
 
 Well, that's clearly not correct. It seems that the compiled `CharacterLiteral` node for `'1'` is being added as a third branch to the compiled `Branch` node `'(|)'`. 
@@ -686,6 +690,9 @@ graph LR
 0((0)) --"a"--> 1((1)) 
 0((0)) --"b"--> 2((2))
 0((0)) --"c"--> 3((3))
+	style 1 stroke:green,stroke-width:4px;
+		style 2 stroke:green,stroke-width:4px;
+			style 3 stroke:green,stroke-width:4px;
 ```
 
 Both `States` 1, 2 and 3 could all be considered the last `State`, how can we decide? The answer, again, is epsilon transitions. Using epsilons, we can say that `State 1,2 ` and `3` are all equivalent to a new `State`, `State 4`, which is the last `State` of the FSM!
@@ -699,6 +706,7 @@ graph LR
 1((1)) -."ε".-> 4((4))
 2((2)) -."ε".-> 4((4))
 3((3)) -."ε".-> 4((4))
+	style 4 stroke:green,stroke-width:4px;
 ```
 
 The behaviour is exactly the same, only the composition becomes easier.
@@ -736,6 +744,7 @@ graph LR
 2((2)) -."ε".-> 3((3)) 
 3((3)) --"1"--> 4((4)) 
 5((5)) -."ε".-> 3((3))
+	style 4 stroke:green,stroke-width:4px;
 ```
 
 That's better, and our tests should now be green!
@@ -750,7 +759,7 @@ Running our fuzzer again confirms that all is well! I think it's worth taking so
 go run ./... v8 draw "(a(b|c|d|e)((f)|g)" "acg"
 ```
 
-We get the following visualization.
+We get the following visualisation.
 
 {{< iframe src="/html/dc935b0c1f121d4bab232ff5c6abd749.html" caption="v8 draw \"(a(b|c|d|e)((f)|g)\" \"acg\"">}}
 

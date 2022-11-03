@@ -491,8 +491,6 @@ Let's see what happens when we run the `draw "ab|cd|ef" "aaccef"` command. We sh
 
 {{< iframe src="/html/d508da38260a57918a8e51926e0d646b.html" caption="v6-branching-incomplete draw \"ab|cd|ef\" \"aaccef\"">}}
 
-![branch-regex-demo.gif](/img/branch-regex-demo.gif)
-
 Looks great! Our FSM looks exactly as we'd expect, and our algorithm (after quite a bit of backtracking) eventually finds the correct match. 
 
 There is one deep dark problem here though which we've been conveniently ignoring, and it goes right to the heart of finite state machines.
@@ -552,13 +550,9 @@ So, from our tests we can see that we will find `dog`, but not `dot`. Let's take
 
 {{< iframe src="/html/893556d62aae76985d13cb82b4607b30.html" caption="v6-branching-incomplete draw \"dog|dot\" \"dog\"">}}
 
-![dog-branch-regex-demo-1.gif](/img/dog-branch-regex-demo-1.gif)
-
 So, when searching for `"dog"`, we travel through the upper branch and successfully find a match. Nothing surprising here. Let's look at `"dot"`.
 
 {{< iframe src="/html/3e97bc38fab515bfdb35ec6471bd3906.html" caption="v6-branching-incomplete draw \"dog|dot\" \"dot\"">}}
-
-![dot-branch-regex-demo-2.gif](/img/dot-branch-regex-demo-2.gif)
 
 Ah... when matching the first `'d'` character, we go up the same branch as before. How can the program know which branch it should follow? As it can't see into the future, there are two possibilities.
 1. Backtracking
@@ -572,7 +566,7 @@ We're going to be exploring the second option in our program.
 
 ## Parallel States
 
-We're introducing a large change into how our algorithm works. Instead of simply tracking a single `State`, we will now track a set of `States`. Processing a character will now mean looking at all active `States` and their valid `Transitions`, and using those as the next active `States`. We'll also need to modify our visualization code to color multiple active `States`.
+We're introducing a large change into how our algorithm works. Instead of simply tracking a single `State`, we will now track a set of `States`. Processing a character will now mean looking at all active `States` and their valid `Transitions`, and using those as the next active `States`. We'll also need to modify our visualisation code to color multiple active `States`.
 
 As tracking the active `State` is the responsibility of the `runner`, let's start there.
 
@@ -728,7 +722,7 @@ Going back to our `runner`, we also need a new way of determining if the `runner
 
 That should be enough to solve our current problem and bring our tests back to green!
 
-It's useful at this point to go back and revisit our visualization tools. We no longer draw a single active state, so let's update our `drawSnapshot` function to draw each of the active `States`.
+It's useful at this point to go back and revisit our visualisation tools. We no longer draw a single active state, so let's update our `drawSnapshot` function to draw each of the active `States`.
 
 ```diff
 @@ // draw.go
@@ -770,15 +764,11 @@ With those changes, let's take a look at our previous example in our visualizer.
 
 {{< iframe src="/html/9eb261dd933176f7c31fb5bfb0ca105b.html" caption="v6 draw \"dog|dot\" \"dot\"">}}
 
-![dog-dot-multi-state-demo.gif](/img/dog-dot-multi-state-demo.gif)
-
 Look at that! We now 'split' our `State` processing and traverse all possible `States` at the same time. 
 
 We could leave it there, but this is a nice opportunity to make an optimization. Before we carry out that optimization, let's look at one more example.
 
 {{< iframe src="/html/7e24563dd69fd1d9e7856163d6f81cd9.html" caption="v6-parallel-incomplete draw \"aab|aac|aad\" \"aaaab\"">}}
-
-![branch-with-backtracking-demo-1.gif](/img/branch-with-backtracking-demo-1.gif)
 
 We end up in with the right answer here because we're backtracking across every substring of the search string `"aaaab"`. This was necessary when we were an DFA, and we could only track one `State` at a time. However, now we're a NFA there's no need to backtrack and reprocess the input once we hit a failure - we can instead do the same processing in parallel.
 
@@ -794,7 +784,7 @@ func (r *runner) Start() {
 }
 ```
 
-As we're going to change our algorithm, we expect that our visualizations will change also, so let's modify those tests to verify the behaviour. First, let's change our test to use the `Start` method after every character.
+As we're going to change our algorithm, we expect that our visualisations will change also, so let's modify those tests to verify the behaviour. First, let's change our test to use the `Start` method after every character.
 
 ```diff
 @@ // draw_test.go
@@ -898,8 +888,6 @@ With all that in place, let's try it again.
 
 {{< iframe src="/html/2141ae1d80a924df6ee2c05656d2f8ea.html" caption="v6 draw \"aab|aac|aad\" \"aaaab\"">}}
 
-![parallel-state-demo.gif](/img/parallel-state-demo.gif)
-
 Now, all `States` are active most of the time because the initial state is being activated on every new character, meaning that each substring is being processed through the FSM. This means that no backtracking is necessary.
 
 It looks like we're pretty close to a full implementation of the`'|'` character in regular expressions. Let's fire up our fuzzer and see if it can find what we're missing.
@@ -937,6 +925,7 @@ Our compiled FSM looks as follows;
 ```mermaid
 graph LR 
 0((0)) --"1"--> 1((1))
+	style 1 stroke:green,stroke-width:4px;
 ```
 
 Well, that's clearly not correct. We actually need an FSM which instantly matches, because we're saying that it should match the regex `'1'` OR match the regex `''` (the empty string), which everything should match.
