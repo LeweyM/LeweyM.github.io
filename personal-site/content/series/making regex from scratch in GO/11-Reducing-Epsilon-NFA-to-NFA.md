@@ -433,7 +433,83 @@ end
 
 The key to reducing epsilon transitions is by treating all the states in an epsilon closure as a single state. This means collecting all the transitions of each state in the closure and creating a new state that contains all of those transitions.
 
-pic
+The algorithm for reducing the epsilons of a state is as follows:
+1. Collect the states of the epsilon closure.
+2. Collect the transitions of all states within the closure.
+3. Remove any epsilon transitions from the state.
+4. Replace the transitions of the state with the closure transitions.
+5. Recur on connected states.
+
+In the previous example, reducing the epsilons of state 1 would mean collecting the transitions of all the states in the closure of states `{1, 2, 3}`. There are two transitions in that closure: 
+ 1. `(2) --e--> (5)` 
+ 2. `(3) --b--> (4)`
+
+So, we just need to replace the transitions of state 1 with the transitions:
+
+ 1. `(1) --e--> (5)` 
+ 2. `(1) --b--> (4)`
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+3((3)) --"b"--> 4((4))
+
+2((2)) --"e"--> 5((5))
+
+4((4)) --"c"--> 5((5))
+
+1((1)) --"e"--> 5((5))
+
+1((1)) --"b"--> 4((4))
+
+2((2)) -."ε".-> 3((3))
+
+3((3)) -."ε".-> 2((2))
+
+
+```
+This can be further simplified, because states 2 and 3 are not reachable from our starting state, so they can be ignored.
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+4((4)) --"c"--> 5((5))
+
+1((1)) --"e"--> 5((5))
+
+1((1)) --"b"--> 4((4))
+
+
+```
+
+If you compare this to our original FSM, you'll find they are functionally identical! It's worth stepping through them in your head a few times to convince yourself of this.
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+3((3)) --"b"--> 4((4))
+
+2((2)) --"e"--> 5((5))
+
+4((4)) --"c"--> 5((5))
+
+  1((1)) -."ε".-> 2((2))
+
+2((2)) -."ε".-> 3((3))
+
+3((3)) -."ε".-> 2((2))
+
+
+```
+
+Now that we understand the theory, let's start coding.
+
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v10)
