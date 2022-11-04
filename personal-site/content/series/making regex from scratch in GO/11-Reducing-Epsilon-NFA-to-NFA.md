@@ -238,7 +238,202 @@ We now simply have to apply one or more Reducer to our FSM.
  }
 ```
 
+Using this patterns means that we can easily add more reducers to our system. 
 
+Let's go ahead and define our first reducer, the epsilon-reducer.
+
+## The Epsilon Reducer
+
+First, our data structure.
+
+```go
+// epsilon-reducer.go
+
+// epsilonReducer will turn an epsilon-NFA into an NFA. It does this by collecting the transitions
+// of all the states in a given state's epsilon closure (the set of states connected by epsilons)  
+// and applying those to state.  
+type epsilonReducer struct{}
+```
+
+Before we get into how this works, let's modify our tests to include this reducer.
+
+```diff
+@@ // fsm_test.go
+
+@@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
+        for _, tt := range tests {
+-               t.Run(tt.name, func(t *testing.T) {
++               t.Run(fmt.Sprintf("without reducers - %s", tt.name), func(t *testing.T) {
+                        compareWithGoStdLib(t, NewMyRegex(tt.regex), tt.regex, tt.input)
+                })
+        }
++
++       for _, tt := range tests {
++               t.Run(fmt.Sprintf("with epsilon reducer - %s", tt.name), func(t *testing.T) {
++                       compareWithGoStdLib(t, NewMyRegex(tt.regex, &epsilonReducer{}), tt.regex, tt.input)
++               })
++       }
+ }
+
+@@ func FuzzFSM(f *testing.F) {
+                if err != nil {
+                        t.Skip()
+                }
+-               compareWithGoStdLib(t, NewMyRegex(regex), regex, input)
++               compareWithGoStdLib(t, NewMyRegex(regex, &epsilonReducer{}), regex, input)
+        })
+ }
+```
+
+
+{{% notice info %}}
+It's worth noting here that these tests only check that the result of the regex match is correct, not that the FSM has been correctly reduced.
+{{% /notice %}} 
+
+And let's also change our CLI commands to make use of this reducer.
+
+```diff
+@@ // main.go
+
+-func RenderFSM(input string) {
+-       graph := NewMyRegex(input).DebugFSM()
++func RenderFSM(input string, flags Set[CmdFlag]) {
++       reducers := getReducersFromFlags(flags)
++       graph := NewMyRegex(input, reducers...).DebugFSM()
+        html := buildFsmHtml(graph)
+        outputToBrowser(html)
+ }
+ 
+@@ func RenderRunner(regex, input string, flags Set[CmdFlag]) {
++       data := buildRunnerTemplateData(regex, input, getReducersFromFlags(flags))
+        htmlRunner := buildRunnerHTML(data)
+        outputToBrowser(htmlRunner)
+ }
+
+@@ func OutputRunnerToFile(regex, input, filePath string, flags Set[CmdFlag])
+ {
++       data := buildRunnerTemplateData(regex, input, getReducersFromFlags(flags))
+        htmlRunner := buildRunnerHTML(data)
+        outputToFile(htmlRunner, filePath)
+ }
+
+-func buildRunnerTemplateData(regex string, input string) TemplateData {
+-       newMyRegex := NewMyRegex(regex)
++func buildRunnerTemplateData(regex string, input string, reducers []Reduce
+r) TemplateData {
++       newMyRegex := NewMyRegex(regex, reducers...)
+        debugSteps := newMyRegex.DebugMatch(input)
+```
+
+And let's also add our helper method to extract reducers from our set of flags.
+
+```go
+// main.go
+
+func getReducersFromFlags(flags Set[CmdFlag]) []Reducer {  
+   var reducers []Reducer  
+  
+   for flag := range flags {  
+      switch flag {  
+      case reduceEpsilon:  
+         reducers = append(reducers, &epsilonReducer{})  
+      }  
+   }  
+   return reducers  
+}
+```
+
+Now, let's look at how it works.
+
+## The Epsilon Reduction Algorithm
+
+When a state is connected to other states via an epsilon transition, we call this set of states the **epsilon closure of the state**. When we transition to a state within an epsilon closure, it's as though we transition to every state within the closure. 
+
+As an example, this is a visualisation of the epsilon closure of state 1. In this system, the closure of state 1 is `{1, 2, 3}`.
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+3((3)) --"b"--> 4((4))
+
+2((2)) --"e"--> 5((5))
+
+4((4)) --"c"--> 5((5))
+
+  
+  
+
+subgraph "closure of state (1)"
+
+  1((1)) -."ε".-> 2((2))
+
+2((2)) -."ε".-> 3((3))
+
+3((3)) -."ε".-> 2((2))
+
+end
+```
+Notice that the closure of state 2 and 3 would be different, because state 1 cannot be reached from those states. Therefore, the closure of state 2 and 3 is `{2, 3}`.
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+3((3)) --"b"--> 4((4))
+
+2((2)) --"e"--> 5((5))
+
+4((4)) --"c"--> 5((5))
+
+1((1)) -."ε".-> 2((2))
+
+  
+  
+
+subgraph "closure of state (2)"
+
+  
+
+2((2)) -."ε".-> 3((3))
+
+3((3)) -."ε".-> 2((2))
+
+end
+```
+
+```mermaid
+graph LR
+
+0((0)) --"a"--> 1((1))
+
+3((3)) --"b"--> 4((4))
+
+2((2)) --"e"--> 5((5))
+
+4((4)) --"c"--> 5((5))
+
+1((1)) -."ε".-> 2((2))
+
+  
+  
+
+subgraph "closure of state (3)"
+
+  
+
+2((2)) -."ε".-> 3((3))
+
+3((3)) -."ε".-> 2((2))
+
+end
+```
+
+The key to reducing epsilon transitions is by treating all the states in an epsilon closure as a single state. This means collecting all the transitions of each state in the closure and creating a new state that contains all of those transitions.
+
+pic
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v10)
