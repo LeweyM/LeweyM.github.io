@@ -217,6 +217,7 @@ We can implement this as an interface. [^packages]
 type Reducer interface {  
    reduce(s *State)  
 }
+
 ```
 
 We now simply have to apply one or more Reducer to our FSM.
@@ -253,7 +254,14 @@ First, our data structure.
 // of all the states in a given state's epsilon closure (the set of states connected by epsilons)  
 // and applying those to state.  
 type epsilonReducer struct{}
+
+func (e *epsilonReducer) reduce(s *State) {
+	// todo: implement me
+    return
+}
 ```
+
+We'll also add a stand-in `reduce()` function just to appease the compiler.
 
 Before we get into how this works, let's modify our tests to include this reducer.
 
@@ -362,6 +370,8 @@ graph LR
 
 4((4)) --"c"--> 5((5))
 
+	style 5 stroke:green,stroke-width:4px;
+
   
   
 
@@ -390,6 +400,8 @@ graph LR
 
 1((1)) -."ε".-> 2((2))
 
+style 5 stroke:green,stroke-width:4px;
+
   
   
 
@@ -417,6 +429,8 @@ graph LR
 
 1((1)) -."ε".-> 2((2))
 
+style 5 stroke:green,stroke-width:4px;
+
   
   
 
@@ -431,14 +445,15 @@ subgraph "closure of state (3)"
 end
 ```
 
-The key to reducing epsilon transitions is by treating all the states in an epsilon closure as a single state. This means collecting all the transitions of each state in the closure and creating a new state that contains all of those transitions.
+The key to reducing epsilon transitions is by treating all the states in an epsilon closure as a single state. This means collecting all the transitions of each state in the closure and creating a new state that contains all of those transitions. It also means that if any of the states in the closure are a success state, the new state should be a success state also.
 
 The algorithm for reducing the epsilons of a state is as follows:
 1. Collect the states of the epsilon closure.
 2. Collect the transitions of all states within the closure.
 3. Remove any epsilon transitions from the state.
 4. Replace the transitions of the state with the closure transitions.
-5. Recur on connected states.
+5. If any state in the closure is a success state, make the state a success state.
+6. Recur on connected states.
 
 In the previous example, reducing the epsilons of state 1 would mean collecting the transitions of all the states in the closure of state 1, which is `{1, 2, 3}`. There are two transitions in that closure: 
  1. `(2) --e--> (5)` 
@@ -467,7 +482,7 @@ graph LR
 2((2)) -."ε".-> 3((3))
 
 3((3)) -."ε".-> 2((2))
-
+style 5 stroke:green,stroke-width:4px;
 
 ```
 This can be further simplified, because states 2 and 3 are not reachable from our starting state, so they can be ignored.
@@ -483,10 +498,10 @@ graph LR
 
 1((1)) --"b"--> 4((4))
 
-
+style 5 stroke:green,stroke-width:4px;
 ```
 {{% notice info %}} 
-According to step 5 in our algorithm, we now recur on the connected states, which are states 4 and 5. Because they have no epsilon transitions, we can consider their epsilon closures to be a set of 1, their own state. These would be `{4}` and `{5}` respectively. As a result, the reduction would have no effect. We do, however, have to be careful that we haven't already visited this state during the reduction, otherwise we could enter into an infinite loop if there are circular dependencies in our node graph.
+According to the last step in our algorithm, we now recur on the connected states, which are states 4 and 5. Because they have no epsilon transitions, we can consider their epsilon closures to be a set of 1, their own state. These would be `{4}` and `{5}` respectively. As a result, the reduction would have no effect. We do, however, have to be careful that we haven't already visited this state during the reduction, otherwise we could enter into an infinite loop if there are circular dependencies in our node graph.
 {{% /notice %}} 
 
 If you compare this to our original FSM, you'll find they are functionally identical! It's worth stepping through them in your head a few times to convince yourself of this.
@@ -508,11 +523,106 @@ graph LR
 
 3((3)) -."ε".-> 2((2))
 
-
+style 5 stroke:green,stroke-width:4px;
 ```
 
 Now that we understand the theory, let's start coding.
 
+## Implementing the Algorithm
+
+First, we'll need a way to gather the epsilon closure of a state. Let's add this as a method of the `State` struct.
+
+```go
+// state.go
+
+func (s *State) getEpsilonClosure() Set[*State] {  
+   set := NewSet[*State](s)  
+  
+   s.traverseEpsilons(set)  
+  
+   return set  
+}  
+  
+func (s *State) traverseEpsilons(states Set[*State]) {  
+   for _, state := range s.epsilons {  
+      if !states.has(state) {  
+         states.add(state)  
+         state.traverseEpsilons(states)  
+      }  
+   }  
+}
+```
+
+Here, we're using our `Set` data structure to represent an epsilon closure as a `Set[*State]`. The traversal is very similar to how we've previously done it, so I won't go into more details here.
+
+Now, let's code up the algorithm in the `epsilonReducer.reduce()` method.
+
+```go
+// epsilon-reducer.go
+
+func (e *epsilonReducer) reduce(s *State) {
+    states := NewSet[*State]()
+    e.reduceEpsilons(s, &states)
+}
+
+func (e *epsilonReducer) reduceEpsilons(s *State, visited *Set[*State]) {
+    // 0. if this state has already been reduced, return to avoid infinite recursive loops.
+    if visited.has(s) {
+        return
+    }
+    visited.add(s)
+
+    // 1. Collect the states of the epsilon closure.
+    closure := s.getEpsilonClosure()
+
+    // 2. Collect the transitions of all states within the closure.
+    closureTransitions := collectTransitions(closure)
+
+    // 3. Remove any epsilon transitions from the state.
+    s.epsilons = nil
+
+    // 4. Replace the transitions of the state with the closure transitions.
+    s.transitions = nil
+    for _, t := range closureTransitions {
+        s.addTransition(t.to, t.predicate, t.debugSymbol)
+    }
+
+    // 5.  If any state in the closure is a success state, make the state a success state.
+    for state := range closure {
+        if state.isSuccessState() {
+            s.SetSuccess()
+            break
+        }
+    }
+
+    // 6. Recur on connected states.
+    for _, transition := range s.transitions {
+        e.reduceEpsilons(transition.to, visited)
+    }
+}
+
+func collectTransitions(states Set[*State]) []Transition {
+    var transitions []Transition
+    for state := range states {
+        transitions = append(transitions, state.transitions...)
+    }
+    return transitions
+}
+```
+
+As we've already explained the algorithm, the implementation is actually quite straight forward. The only clarification I'll make is for step 0, which is a simple check that we haven't already visited this state in order to prevent any infinite loops.
+
+Now that that's working, let's try it out!
+
+## A few examples
+
+First, let's see an example without epsilon reduction.
+
+{{< iframe src="/html/73186dfbd25608507f3ab6d62d5580ee.html" caption="v10 draw \"cat|dog\" \"cat\"">}}
+
+And then let's compare it to with the epsilon reduction.
+
+{{< iframe src="/html/cb75f27b23abb7e3d1732b9d13664cc4.html" caption="v10 draw \"cat|dog\" \"cat\" \"--reduce-epsilons\"">}}
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v10)
