@@ -349,7 +349,7 @@ Now, let's look at how it works.
 
 When a state is connected to other states via an epsilon transition, we call this set of states the **epsilon closure of the state**. When we transition to a state within an epsilon closure, it's as though we transition to every state within the closure. 
 
-As an example, this is a visualisation of the epsilon closure of state 1. In this system, the closure of state 1 is `{1, 2, 3}`.
+As an example, this is a visualisation of the epsilon closure of state 1. In this system, the closure of state 1 is `{1, 2, 3}`, that is, states 1, 2 and 3.
 
 ```mermaid
 graph LR
@@ -440,7 +440,7 @@ The algorithm for reducing the epsilons of a state is as follows:
 4. Replace the transitions of the state with the closure transitions.
 5. Recur on connected states.
 
-In the previous example, reducing the epsilons of state 1 would mean collecting the transitions of all the states in the closure of states `{1, 2, 3}`. There are two transitions in that closure: 
+In the previous example, reducing the epsilons of state 1 would mean collecting the transitions of all the states in the closure of state 1, which is `{1, 2, 3}`. There are two transitions in that closure: 
  1. `(2) --e--> (5)` 
  2. `(3) --b--> (4)`
 
@@ -485,6 +485,9 @@ graph LR
 
 
 ```
+{{% notice info %}} 
+According to step 5 in our algorithm, we now recur on the connected states, which are states 4 and 5. Because they have no epsilon transitions, we can consider their epsilon closures to be a set of 1, their own state. These would be `{4}` and `{5}` respectively. As a result, the reduction would have no effect. We do, however, have to be careful that we haven't already visited this state during the reduction, otherwise we could enter into an infinite loop if there are circular dependencies in our node graph.
+{{% /notice %}} 
 
 If you compare this to our original FSM, you'll find they are functionally identical! It's worth stepping through them in your head a few times to convince yourself of this.
 
