@@ -878,9 +878,9 @@ The compiler should be moaning at us to fix what we've broken, so let's fix that
 @@ // regex.go
 
  func (m *myRegex) MatchString(input string) bool {
-        testRunner := NewRunner(m.fsm)
--       return match(testRunner, []rune(input))
-+       return match(testRunner, []rune(input), nil, 0)
+        runner := NewRunner(m.fsm)
+-       return match(runner, []rune(input))
++       return match(runner, []rune(input), nil, 0)
  }
 ```
 
@@ -890,10 +890,10 @@ That should be enough. We now have some failing tests to fix, so let's implement
 // regex.go
 
 func (m *myRegex) DebugMatch(input string) []debugStep {  
-   testRunner := NewRunner(m.fsm)  
+   runner := NewRunner(m.fsm)  
    debugStepChan := make(chan debugStep)  
    go func() {  
-      match(testRunner, []rune(input), debugStepChan, 0)  
+      match(runner, []rune(input), debugStepChan, 0)  
       close(debugStepChan)  
    }()  
    var debugSteps []debugStep  
@@ -909,7 +909,7 @@ Again, if you're not familiar with Go `channels` this might look odd, so let's s
 
 First, we create a runner and a new `chan debugStep` 
 ```go
-   testRunner := NewRunner(m.fsm)  
+   runner := NewRunner(m.fsm)  
    debugStepChan := make(chan debugStep)
 ```
 
@@ -917,7 +917,7 @@ Then, we start a new `Go routine` which will call `match` and use our previously
 
 ```go
    go func() {  
-      match(testRunner, []rune(input), debugStepChan, 0)  
+      match(runner, []rune(input), debugStepChan, 0)  
       close(debugStepChan)  
    }()  
 ```

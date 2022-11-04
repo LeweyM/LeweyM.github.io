@@ -199,13 +199,13 @@ The actual tests should simply create a runner using our hand-made FSM, iterate 
 
 for _, tt := range tests {  
    t.Run(tt.name, func(t *testing.T) {  
-      testRunner := NewRunner(&startState)  
+      runner := NewRunner(&startState)  
   
       for _, character := range tt.input {  
-         testRunner.Next(character)  
+         runner.Next(character)  
       }  
   
-      result := testRunner.getStatus()  
+      result := runner.getStatus()  
       if tt.expectedStatus != result {  
          t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
       }  
@@ -213,7 +213,7 @@ for _, tt := range tests {
 }
 ```
 
-Notice that we had to invent a couple of methods to make this work, such as the `NewRunner`, `testRunner.Next` and `testRunner.getStatus`. This is fine, as we'll come back to implementing these in a moment. 
+Notice that we had to invent a couple of methods to make this work, such as the `NewRunner`, `runner.Next` and `runner.getStatus`. This is fine, as we'll come back to implementing these in a moment. 
 
 All together, our first test looks like this;
 
@@ -257,13 +257,13 @@ func TestHandmadeFSM(t *testing.T) {
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
-         testRunner := NewRunner(&startState)  
+         runner := NewRunner(&startState)  
   
          for _, character := range tt.input {  
-            testRunner.Next(character)  
+            runner.Next(character)  
          }  
   
-         result := testRunner.getStatus()  
+         result := runner.getStatus()  
          if tt.expectedStatus != result {  
             t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
          }  

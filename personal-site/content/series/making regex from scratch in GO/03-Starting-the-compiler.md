@@ -501,14 +501,14 @@ Before we get ahead of ourselves, let's modify our tests to use our new lexer, p
   
    for _, tt := range tests {  
       t.Run(tt.name, func(t *testing.T) {  
--        testRunner := NewRunner(&startState)
-+        testRunner := NewRunner(startState)
+-        runner := NewRunner(&startState)
++        runner := NewRunner(startState)
   
          for _, character := range tt.input {  
-            testRunner.Next(character)  
+            runner.Next(character)  
          }  
   
-         result := testRunner.GetStatus()  
+         result := runner.GetStatus()  
          if tt.expectedStatus != result {  
             t.Fatalf("Expected FSM to have final state of '%v', got '%v'", tt.expectedStatus, result)  
          }  

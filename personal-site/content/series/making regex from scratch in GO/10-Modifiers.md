@@ -518,9 +518,6 @@ Let's make sure that everything is working as expected by running our fuzzer. Fi
         f.Fuzz(func(t *testing.T, regex, input string) {
 -               if strings.ContainsAny(regex, "[]{}$^*+?\\") {
 +               if strings.ContainsAny(regex, "[]{}$^\\") {
-+                       t.Skip()
-+               }
-
 ```
 
 Then, we'll also need to check for regular expressions where `?` is used on its own, as this is used for group constructions which we're not implementing in this project.

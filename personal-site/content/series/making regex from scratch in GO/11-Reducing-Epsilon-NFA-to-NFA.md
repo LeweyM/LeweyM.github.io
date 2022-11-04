@@ -206,7 +206,7 @@ Now we're ready to add to start reducing.
 
 ## Reducers
 
-We're going to add a new concept to our program; a **Reducer**. A Reducer is an object which takes an FSM and returns an FSM. The returned FSM will have been reduced in some way which is opaque to the outside - our components will know how to use a reducer, but not how it works.
+We're going to add a new concept to our program; a **Reducer**. A Reducer is an object which takes an FSM and modifies it. The modified FSM will have been reduced in some way which is opaque to the outside - our components will know how to use a reducer, but not how it works.
 
 We can implement this as an interface. [^packages]
 [^packages]: In Go, unlike most languages which use interfaces, the interface is defined by the consumer, rather than the implementer. Because of this, I've chosen to define this interface in the `regex.go` file. In the project repository, all of the examples are defined in the same package, so only one definition of the interface is required. If we were spreading our program across different packages, as most Go projects do, we would write this interface everywhere that it is consumed. Although this seems like unnecessary repetition, it's actually very useful, as it allows the consumer to only define the parts of the required object necessary to carry out its specific task. If the interface were centrally defined by the implementer, the consumer would be obliged to know everything about the whole interface.  
@@ -237,6 +237,8 @@ We now simply have to apply one or more Reducer to our FSM.
         return &myRegex{fsm: state}
  }
 ```
+
+
 
 {{% notice tip %}} 
 Check out this part of the project on GitHub [here](https://github.com/LeweyM/search/tree/master/src/v10)

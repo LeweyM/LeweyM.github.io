@@ -896,9 +896,6 @@ It looks like we're pretty close to a full implementation of the`'|'` character 
 @@ // fsm_test.go
 
 @@ func FuzzFSM(f *testing.F) {
-
-        f.Add("ca(t)(s)", "dog")
- 
         f.Fuzz(func(t *testing.T, regex, input string) {
 -               if strings.ContainsAny(regex, "[]{}$^|*+?\\") {
 +               if strings.ContainsAny(regex, "[]{}$^*+?\\") {

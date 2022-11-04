@@ -7,7 +7,39 @@ series: ["making regex from scratch in GO"]
 
 ## Testing against the Go regex package
 
-As Go includes its own `regex` package, we can use this to validate our own implementation. Let's add a test which compares the results from our own FSM and the Go regex library.
+As Go includes its own `regex` package, we can use this to validate our own implementation by providing them with the same input and comparing the results.
+
+First, let's create our own `regex` package with the same method as the Go package, `MatchString()`. We'll call this package `myRegex` to differentiate it.
+
+```go
+// regex.go
+
+type myRegex struct {
+    fsm *State
+}
+
+func NewMyRegex(re string) *myRegex {
+    tokens := lex(re)
+    parser := NewParser(tokens)
+    ast := parser.Parse()
+    state, _ := ast.compile()
+    return &myRegex{fsm: state}
+}
+
+func (m *myRegex) MatchString(input string) bool {
+    runner := NewRunner(m.fsm)
+
+   for _, character := range input {  
+      runner.Next(character)  
+   }  
+  
+   return runner.GetStatus() == Success 
+}
+```
+
+All we're doing here is setting up our Lexer, Parser, Compiler and Runner, then running through each character in the input. After running through the input string, we return the status.
+
+Now, let's add a test which compares the results from our own FSM and the Go regex library.
 
 ```go
 // fsm_test.go
@@ -27,47 +59,41 @@ func TestFSMAgainstGoRegexPkg(t *testing.T) {
    }  
   
    for _, tt := range tests {  
-      t.Run(tt.name, func(t *testing.T) {  
-         result := matchRegex(tt.regex, tt.input)  
-  
-         goRegexMatch := regexp.MustCompile(tt.regex).MatchString(tt.input)  
-  
-         if result != goRegexMatch {  
-		   t.Fatalf(  
-			  "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-			  regex,  
-			  input,  
-			  goRegexMatch,  
-			  result)  
-		   } 
-      })  
-   }  
+		t.Run(tt.name, func(t *testing.T) {
+            compareWithGoStdLib(t, NewMyRegex(tt.regex), tt.regex, tt.input)
+        })  
+    }  
+}
+
+func compareWithGoStdLib(t *testing.T, myRegex *myRegex, regex, input strin
+g) {
+    t.Helper()
+
+    result := myRegex.MatchString(input)
+    goRegexMatch := regexp.MustCompile(regex).MatchString(input)
+
+    if result != goRegexMatch {
+        t.Fatalf(
+            "Mismatch - \nRegex: '%s' (as bytes: %x), \nInput: '%s' (as byt
+es: %x) \n-> \nGo Regex Pkg: '%t', \nOur regex result: '%v'",
+            regex,
+            []byte(regex),
+            input,
+            []byte(input),
+            goRegexMatch,
+            result,
+        )
+    }
 }
 ```
 
-Most of the testing logic is in the `matchRegex` function, so let's define that also.
+Our tests should still be green. We can now remove our old tests.
 
-```Go
-// fsm_test.go
+```diff
+@@ // fsm_test.go
 
-func matchRegex(regex, input string) bool {    
-   tokens := lex(regex)  
-   parser := NewParser(tokens)
-   ast := parser.Parse()  
-   startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)  
-  
-   for _, character := range input {  
-      testRunner.Next(character)  
-   }  
-  
-   return testRunner.GetStatus() == Success 
-}
+-func TestCompiledFSM(t *testing.T) {
 ```
-
-All we're doing here is setting up our lexer, parser, compiler and runner, then running through each character in the input. After running through the input string, we return the status.
-
-Our tests should still be green. 
 
 Let's compare the test structs between this and our previous tests.
 
@@ -115,29 +141,19 @@ Let's write a simple fuzz test.
 // fsm_test.go
 
 func FuzzFSM(f *testing.F) {  
-   f.Add("abc", "abc")  
-   f.Add("abc", "")  
-   f.Add("abc", "xxx")  
-   f.Add("ca(t)(s)", "dog")  
-  
-   f.Fuzz(func(t *testing.T, regex, input string) {  
-      compiledGoRegex, err := regexp.Compile(regex)  
-      if err != nil {  
-         t.Skip()  
-      }  
-  
-      result := matchRegex(regex, input)  
-      goRegexMatch := compiledGoRegex.MatchString(input)  
-  
-	  if result != goRegexMatch {  
-	   t.Fatalf(  
-		  "Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-		  regex,  
-		  input,  
-		  goRegexMatch,  
-		  result)  
-	   }  
-   })  
+	f.Add("abc", "abc")  
+	f.Add("abc", "")  
+	f.Add("abc", "xxx")  
+	f.Add("ca(t)(s)", "dog")  
+	
+	f.Fuzz(func(t *testing.T, regex, input string) {  
+		_, err := regexp.Compile(regex)
+		if err != nil {
+			t.Skip()
+		}
+		
+		compareWithGoStdLib(t, NewMyRegex(regex), regex, input)
+	})  
 }
 ```
 
@@ -158,23 +174,13 @@ Now for the test function;
 // fsm_test.go
 
 f.Fuzz(func(t *testing.T, regex, input string) {  
-      compiledGoRegex, err := regexp.Compile(regex)  
-      if err != nil {  
-         t.Skip()  
-      }  
-  
-      result := matchRegex(regex, input)  
-      goRegexMatch := compiledGoRegex.MatchString(input)  
-  
-      if result != goRegexMatch {  
-		t.Fatalf(  
-			"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-			regex,  
-			input,  
-			goRegexMatch,  
-			result)  
-	  } 
-   })  
+	_, err := regexp.Compile(regex)
+	if err != nil {
+		t.Skip()
+	}
+	
+	compareWithGoStdLib(t, NewMyRegex(regex), regex, input)
+})  
 ```
 
 First, we only want to test valid regex statements, so any invalid statements we can simply ignore.
@@ -182,30 +188,14 @@ First, we only want to test valid regex statements, so any invalid statements we
 ```Go
 // fsm_test.go
 
-compiledGoRegex, err := regexp.Compile(regex)  
-if err != nil {  
-	t.Skip()  
-}  
+_, err := regexp.Compile(regex)
+if err != nil {
+	t.Skip()
+}
 ```
 
-After that, we can simply test in the same way as in our previous test.
-
-```Go
-// fsm_test.go
-
-result := matchRegex(regex, input)  
-goRegexMatch := compiledGoRegex.MatchString(input)  
-
-if result != goRegexMatch {  
-	t.Fatalf(  
-		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-		regex,  
-		input,  
-		goRegexMatch,  
-		result)  
-} 
-```
-
+After that, we can simply test in the same way as in our previous test using `compareWithGoStdLib()`.
+ 
 Let's see what happens when we run this fuzz test. Use the following command line instruction;
 
 ```
@@ -221,7 +211,7 @@ We found an error!
 ## Let's get a'fixing
 
 {{% notice info %}} 
-Your mileage may vary. Go fuzzing uses randomized input, so there's no guarantee that errors will show up in the same order as I show here. 
+Your mileage may vary. Go fuzzing uses randomised input, so there's no guarantee that errors will show up in the same order as I show here. 
 {{% /notice %}} 
 
 ```zsh
@@ -232,7 +222,12 @@ failure while testing seed corpus entry: FuzzFSM/08fa440d20a250cf53d6090f036f159
 fuzz: elapsed: 0s, gathering baseline coverage: 3/1110 completed
 --- FAIL: FuzzFSM (0.21s)
     --- FAIL: FuzzFSM (0.00s)
-        v3_test.go:106: Mismatch - Regex: 'aA', Input: 'aaA' -> Go Regex Pkg: 'true', Our regex result: 'fail'
+        v3_test.go:106: Mismatch - 
+Regex: 'aA' (as bytes: 6141), 
+Input: '̇aaA' (as bytes: 616141) 
+-> 
+Go Regex Pkg: 'true', 
+Our regex result: 'false'
 
 ```
 
@@ -255,41 +250,42 @@ Before we fix this, let's add a test for this case.
 Now let's modify our test function to reset our FSM if there is a failure. That way, we will find matches at any point in the string, not just the beginning.
 
 ```diff
-@@ // fsm_test.go
+@@ // regex.go
 
-func matchRegex(regex, input string) Status {  
-   tokens := lex(regex)  
-   parser := NewParser(tokens)
-   ast := parser.Parse()  
-   startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)  
-  
+func (m *myRegex) MatchString(input string) bool {
+    runner := NewRunner(m.fsm)
+
    for _, character := range input {  
-      testRunner.Next(character)  
-+     status := testRunner.GetStatus()  
+      runner.Next(character) 
++     status := runner.GetStatus()  
 +	  if status == Fail {  
-+	    testRunner.Reset()  
-+		testRunner.Next(character)
++	    runner.Reset()  
++		runner.Next(character)
 +       continue  
 +     }  
 +  
 +	  if status != Normal {  
 +	     return status  
-+	  }
++	  } 
    }  
   
-   return testRunner.GetStatus()  
+   return runner.GetStatus() == Success 
 }
 ```
 
-Notice that we need to run `testRunner.Next(character)` after the reset because the second `a` in the input string needs to be used in the second attempt. More on that later.
+Notice that we need to run `runner.Next(character)` after the reset because the second `a` in the input string needs to be used in the second attempt. More on that later.
 
 Let's run the fuzzer again.
 
 ### Problem 2
 
 ```zsh
-v3_test.go:126: Mismatch - Regex: '', Input: 'A' -> Go Regex Pkg: 'true', Our regex result: 'false'
+v3_test.go:126: Mismatch - 
+	Regex: '' (as bytes: ), 
+	Input: '̇A' (as bytes: 41) 
+	-> 
+	Go Regex Pkg: 'true', 
+	Our regex result: 'false'
 ```
 
 This time the issue is when the regex is an empty string. In these cases, any input should match. Let's write a test case.
@@ -305,19 +301,31 @@ This time the issue is when the regex is an empty string. In these cases, any in
 And now we can solve this by adding a check in our `matchRegex` function;
 
 ```diff
-@@ // fsm_test.go
+@@ // regex.go
 
-func matchRegex(regex, input string) bool {  
-   tokens := lex(regex)  
-   parser := NewParser(tokens)
-   ast := parser.Parse()  
-   startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)  
-  
+func (m *myRegex) MatchString(input string) bool {
+	runner := NewRunner(m.fsm)
 +   // for empty regex  
-+   if testRunner.GetStatus() == Success {  
++   if runner.GetStatus() == Success {  
 +      return true  
 +   }
+
+	for _, character := range input {  
+		runner.Next(character) 
+		status := runner.GetStatus()  
+		if status == Fail {  
+			runner.Reset()  
+			runner.Next(character)
+			continue  
+		}  
+	
+		if status != Normal {  
+			 return status  
+		} 
+	}  
+	
+	return runner.GetStatus() == Success 
+}
 ```
 
 Why does this work? In the case of an empty regex, the compiler would produce a single state FSM. As the FSM will have no outbound transitions, this will function as an end state. So, for an empty regex, we just need to check the status before we do any processing.
@@ -340,23 +348,14 @@ f.Fuzz(func(t *testing.T, regex, input string) {
 +        t.Skip()  
 +     }  
   
-      compiledGoRegex, err := regexp.Compile(regex)  
-      if err != nil {  
-         t.Skip()  
-      }  
-  
-      result := matchRegex(regex, input)  
-      goRegexMatch := compiledGoRegex.MatchString(input)  
-  
-      if result != goRegexMatch {  
-	t.Fatalf(  
-		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
-		regex,  
-		input,  
-		goRegexMatch,  
-		result)  
-}   
-   })  
+      _, err := regexp.Compile(regex)
+        if err != nil {
+            t.Skip()
+        }
+
+        compareWithGoStdLib(t, NewMyRegex(regex), regex, input)
+	})
+}
 ```
 
 Rinse. Repeat
@@ -364,7 +363,12 @@ Rinse. Repeat
 ### Problem 4
 
 ```zsh
-v3_test.go:127: Mismatch - Regex: 'Ȥ', Input: 'Ȥ' -> Go Regex Pkg: 'true', Our regex result: 'false'
+v3_test.go:94: Mismatch - 
+	Regex: 'Ȥ' (as bytes: c8a4), 
+	Input: 'Ȥ' (as bytes: c8a4) 
+	-> 
+	Go Regex Pkg: 'true', 
+	Our regex result: 'false'
 ```
 
 Now things are getting interesting. It seems that our regex matcher is having trouble with the non-alphanumeric character `Ȥ`. Let's start with a test and go from there.
@@ -375,39 +379,7 @@ Now things are getting interesting. It seems that our regex matcher is having tr
 {"multibyte characters", "Ȥ", "Ȥ"},
 ```
 
-I've called this test `multibyte characters` because these characters are represented as more than one byte. Let's change our error message to show this more clearly.
-
-```diff
-@@ // fsm_test.go
-
-if result != goRegexMatch {  
--	t.Fatalf(  
--		"Mismatch - Regex: '%s', Input: '%s' -> Go Regex Pkg: '%t', Our regex result: '%v'",  
--		regex,  
--		input,  
--		goRegexMatch,
--	it’s 	result)  
-+   t.Fatalf(  
-+      "Mismatch - \nRegex: '%s' (as bytes: %x), \nInput: '%s' (as bytes: %x) \n-> \nGo Regex Pkg: '%t', \nOur regex result: '%v'",  
-+      regex,  
-+      []byte(regex),  
-+      input,  
-+      []byte(input),  
-+      goRegexMatch,  
-+      result)  
-}
-```
-
-Running the fuzzer again we now get this;
-
-```zsh
-v3_test.go:94: Mismatch - 
-	Regex: 'Ȥ' (as bytes: c8a4), 
-	Input: 'Ȥ' (as bytes: c8a4) 
-	-> 
-	Go Regex Pkg: 'true', 
-	Our regex result: 'false'
-```
+I've called this test `multibyte characters` because these characters are represented as more than one byte. 
 
 As we can see here, the character `Ȥ` is made up of the two bytes `c8` and `a4`. If we look up `c8a4` in the [ASCII value table](https://design215.com/toolbox/ascii-utf8.php#:~:text=%C8%A4-,c8%20a4,-%C8%A5%0Ac8%20a5) we see that it represents `Ȥ`. So what could be going wrong with our program?
 
@@ -458,11 +430,12 @@ func lex(input string) []token {
 ### Problem 5
 
 ```zsh
-Regex: 'B' (as bytes: 42), 
-Input: 'ABA' (as bytes: 414241) 
--> 
-Go Regex Pkg: 'true', 
-Our regex result: 'false'
+Mismatch - 
+	Regex: 'B' (as bytes: 42), 
+	Input: '̇ABA' (as bytes: 414241) 
+	-> 
+	Go Regex Pkg: 'true', 
+	Our regex result: 'false'
 
 ```
 
@@ -480,12 +453,30 @@ With the test;
 We can solve this by removing the extra call to `Next` from before;
 
 ```diff
-@@ // fsm_test.go
+@@ // regex.go
 
-if status == Fail {  
-   testRunner.Reset()  
--   testRunner.Next(character)  
-   continue  
+func (m *myRegex) MatchString(input string) bool {
+	runner := NewRunner(m.fsm)
+    // for empty regex  
+    if runner.GetStatus() == Success {
+	    return true  
+	}
+
+	for _, character := range input {  
+		runner.Next(character) 
+		status := runner.GetStatus()  
+		if status == Fail {  
+			runner.Reset()  
+-			runner.Next(character)
+			continue  
+		}  
+	
+		if status != Normal {  
+			 return status  
+		} 
+	}  
+	
+	return runner.GetStatus() == Success 
 }
 ```
 
@@ -494,43 +485,38 @@ But doing so will break the previous test. We need to reprocess the string in so
 Actually, there's a better way of looking at this problem. What we actually need to do, is to *check for a match against every substring of the input*. We can do this by changing our `matchRegex` method like so;
 
 ```diff
-@@ // fsm_test.go
+@@ // regex.go
 
-func matchRegex(regex, input string) bool {  
-   tokens := lex(regex)  
-   parser := NewParser(tokens)
-   ast := parser.Parse()  
-   startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)  
-  
--   // for empty regex  
--   if testRunner.GetStatus() == Success {  
--      return true  
--   }  
-  
--   for _, character := range input {  
--      testRunner.Next(character)  
--      status := testRunner.GetStatus()  
--      if status == Fail {  
--         testRunner.Reset()  
--         //testRunner.Next(character)  
--         continue  
--      }  
--  
--      if status == Success {  
--         return true  
--      }  
--   }  
--  
--   return testRunner.GetStatus() == Success
-+   match(testRunner, input)
+func (m *myRegex) MatchString(input string) bool {
+	runner := NewRunner(m.fsm)
+-    // for empty regex  
+-    if runner.GetStatus() == Success {
+-	    return true  
+-	}
+-
+-	for _, character := range input {  
+-		runner.Next(character) 
+-		status := runner.GetStatus()  
+-		if status == Fail {  
+-			runner.Reset()  
+-			runner.Next(character)
+-			continue  
+-		}  
+-	
+-		if status != Normal {  
+-			 return status  
+-		} 
+-	}  
+-	
+-	return runner.GetStatus() == Success 
++   match(runner, input)
 }
 ```
 
 Ok, so far we've just piled everything into a new private method `match`, let's build that now
 
 ```go
-// fsm_test.go
+// regex.go
 
 func match(runner *runner, input string) bool {  
    runner.Reset()  
@@ -555,24 +541,24 @@ func match(runner *runner, input string) bool {
 This is similar to our previous implementation with one major difference: In the case of a failure, we attempt to match again on a substring of `input`.
 
 ```go
-// fsm_test.go
+// regex.go
 
 if status == Fail {    
 	return match(runner, input[1:])  
 } 
 ```
 
-This means that we will test for a match on every substring of input.
+This means that we will test for a match on every substring of the input.
 
 {{% notice info %}} 
-This also means it will be a lot slower, as we now need to test for matches N times where N is the length of the input string. For now we're just concerned with correctness, we can go back and optimize later, but it's something to bear in mind.
+This also means it will be a lot slower, as we now need to test for matches N times, where N is the length of the input string. For now, we're just concerned with correctness, we can go back and optimise later, but it's something to bear in mind.
 {{% /notice %}} 
 
 ### Problem 6
 
 Ok, we're starting to make progress now. Let's see our next issue.
 
-```diff
+```sh
 v3_test.go:128: Mismatch - 
 	Regex: '�0' (as bytes: efbfbd30), 
 	Input: '̇0' (as bytes: cc8730) 
@@ -594,7 +580,7 @@ This looks like an extension of the multibyte problem, so let's add an additiona
 +},
 ```
 
-This time, the problem is in our `match` function, which takes a string and recurses on a substring.
+This time, the problem is in our `match` function, which takes a string and recurs on a substring.
 
 ```go
 // fsm_test.go
@@ -602,20 +588,41 @@ This time, the problem is in our `match` function, which takes a string and recu
 return match(runner, input[1:])
 ```
 
-See the problem? We're recursing on a substring of *bytes*, not a substring of *runes*. Let's fix this by having the function accept a rune slice instead of a string.
+See the problem? `input` is a string (in other words, a slice of bytes), so we're recurring on a substring of *bytes*. This is fine when each character is a single byte, but not for multibyte characters. We can illustrate this with a visualisation of the word `"eclair"`, structured as a slice of bytes.
+
+![Pasted-image-20221104084857.png](/img/Pasted-image-20221104084857.png)
+
+When we take the substring `[1:]` of this string, we get what we expect because we get each byte after `0x65`, and so we get each letter after `'e'`.
+
+![Pasted-image-20221104085034.png](/img/Pasted-image-20221104085034.png)
+
+Now, let's use the word `éclair`. The letter `'é'` is represented in ASCII with two bytes; `0xc3`, `0x19`.
+
+![Pasted-image-20221104085211.png](/img/Pasted-image-20221104085211.png)
+
+Now what happens if we use `[1:]` on this string...
+
+![Pasted-image-20221104085250.png](/img/Pasted-image-20221104085250.png)
+
+Not good. Our `'é'` character has been cut in half. This is because we've asked for everything after the first *byte*, `0xc3`. Go doesn't know that this byte is in the middle of a special character.
+
+We can solve this using runes. Let's see what `"éclair"` looks like when represented as a slice of runes.
+
+![Pasted-image-20221104085611.png](/img/Pasted-image-20221104085611.png)
+
+Now, the underlying data of the characters are hidden from us. We can simply interact with them as though they are characters. So when we get the `[1:]` substring of this slice of runes we get:
+
+![Pasted-image-20221104085734.png](/img/Pasted-image-20221104085734.png)
+
+Much better. Let's fix this by having the function accept a rune slice instead of a string.
 
 ```diff
-@@ // fsm_test.go
+@@ // regex.go
 
-func matchRegex(regex, input string) bool {  
-   tokens := lex(regex)  
-   parser := NewParser(tokens)
-   ast := parser.Parse()  
-   startState, _ := ast.compile()  
-   testRunner := NewRunner(startState)   
-  
--   return match(testRunner, input)  
-+   return match(testRunner, []rune(input))  
+func (m *myRegex) MatchString(input string) bool {
+    runner := NewRunner(m.fsm)
+-    return match(runner, input)
++    return match(runner, []rune(input))
 }
 
 -func match(runner *runner, input string) bool {  
@@ -659,62 +666,7 @@ fuzz: elapsed: 21s, execs: 3654537 (178003/sec), new interesting: 2 (total: 1112
 
 Fuzzing won't give us a green light like tests will. Fuzzing is an [infinite space problem](https://www.synopsys.com/blogs/software-security/fuzzing-test-cases-not-all-random/#:~:text=Fuzzing%20is%20an%20infinite%20space%20problem.%20For%20any%20piece%20of%20software%2C%20you%20can%20create%20an%20infinite%20number%20of%20malformed%20inputs.%20To%20get%20useful%20results%20in%20a%20reasonable%20amount%20of%20time%2C%20the%20trick%20is%20to%20select%20inputs%20that%20are%20most%20likely%20to%20cause%20failures%20in%20the%20target%20software.), meaning that it will never 'finish', but if we run it long enough we can be fairly confident that our algorithm is pretty error-proof. I let it run for a few minutes before I declared it a success. 
 
-I hope that the power of techniques like fuzzing is clear here. We've managed to uncover lots of subtle (and some not so subtle) bugs and issues with our code, and we're now pretty confident that we're providing the same behavior as the Go regex package!
-
-## Some clean up
-
-Let's refactor a bit before we move on. 
-
-The `matchRegex` function in our tests is doing a lot of work. I think it makes sense here to move it out of a test file and into the actual logic of our regex. Let's create a `myRegex` struct with some methods we can expose to handle finding a match in a string.
-
-```go
-// regex.go
-
-type myRegex struct {  
-   fsm *State  
-}  
-  
-func NewMyRegex(re string) *myRegex {  
-	tokens := lex(re)  
-	parser := NewParser(tokens)  
-	ast := parser.Parse()  
-	state, _ := ast.compile()
-	return &myRegex{fsm: state}  
-}  
-  
-func (m *myRegex) MatchString(input string) bool {  
-   testRunner := NewRunner(m.fsm)  
-   return match(testRunner, []rune(input))  
-}  
-  
-func match(runner *runner, input []rune) bool {  
-   runner.Reset()  
-  
-   for _, character := range input {  
-      runner.Next(character)  
-      status := runner.GetStatus()  
-  
-      if status == Fail {  
-         return match(runner, input[1:])  
-      }  
-  
-      if status == Success {  
-         return true  
-      }  
-   }  
-  
-   return runner.GetStatus() == Success  
-}
-```
-
-And then let's call these from our tests.
-
-```diff
-@@ // fsm_test.go
-
-+ result := NewMyRegex(regex).MatchString(input)  
-- result := matchRegex(regex, input)
-```
+I hope that the power of techniques like fuzzing is clear here. We've managed to uncover lots of subtle (and some not so subtle) bugs and issues with our code, and we're now pretty confident that we're providing the same behaviour as the Go regex package!
 
 ## Onwards and upwards
 
