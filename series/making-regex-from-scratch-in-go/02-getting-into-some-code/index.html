@@ -102,19 +102,19 @@ The FSM data structure We can first think about our core data structures to repr
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>for</span> _, tt <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> tests {  
 </span></span><span style=display:flex><span>   t.<span style=color:#900;font-weight:700>Run</span>(tt.name, <span style=color:#000;font-weight:700>func</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
-</span></span><span style=display:flex><span>      testRunner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewRunner</span>(<span style=color:#000;font-weight:700>&amp;</span>startState)  
+</span></span><span style=display:flex><span>      runner <span style=color:#000;font-weight:700>:=</span> <span style=color:#900;font-weight:700>NewRunner</span>(<span style=color:#000;font-weight:700>&amp;</span>startState)  
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>for</span> _, character <span style=color:#000;font-weight:700>:=</span> <span style=color:#000;font-weight:700>range</span> tt.input {  
-</span></span><span style=display:flex><span>         testRunner.<span style=color:#900;font-weight:700>Next</span>(character)  
+</span></span><span style=display:flex><span>         runner.<span style=color:#900;font-weight:700>Next</span>(character)  
 </span></span><span style=display:flex><span>      }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>      result <span style=color:#000;font-weight:700>:=</span> testRunner.<span style=color:#900;font-weight:700>getStatus</span>()  
+</span></span><span style=display:flex><span>      result <span style=color:#000;font-weight:700>:=</span> runner.<span style=color:#900;font-weight:700>getStatus</span>()  
 </span></span><span style=display:flex><span>      <span style=color:#000;font-weight:700>if</span> tt.expectedStatus <span style=color:#000;font-weight:700>!=</span> result {  
 </span></span><span style=display:flex><span>         t.<span style=color:#900;font-weight:700>Fatalf</span>(<span style=color:#d14>&#34;Expected FSM to have final state of &#39;%v&#39;, got &#39;%v&#39;&#34;</span>, tt.expectedStatus, result)  
 </span></span><span style=display:flex><span>      }  
 </span></span><span style=display:flex><span>   })  
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Notice that we had to invent a couple of methods to make this work, such as the <code>NewRunner</code>, <code>testRunner.Next</code> and <code>testRunner.getStatus</code>. This is fine, as we&rsquo;ll come back to implementing these in a moment.</p><p>All together, our first test looks like this;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// fsm_test.go
+</span></span></code></pre></div><p>Notice that we had to invent a couple of methods to make this work, such as the <code>NewRunner</code>, <code>runner.Next</code> and <code>runner.getStatus</code>. This is fine, as we&rsquo;ll come back to implementing these in a moment.</p><p>All together, our first test looks like this;</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#998;font-style:italic>// fsm_test.go
 </span></span></span><span style=display:flex><span><span style=color:#998;font-style:italic></span>
 </span></span><span style=display:flex><span><span style=color:#000;font-weight:700>func</span> <span style=color:#900;font-weight:700>TestHandmadeFSM</span>(t <span style=color:#000;font-weight:700>*</span>testing.T) {  
 </span></span><span style=display:flex><span>   <span style=color:#998;font-style:italic>// hand-made FSM
@@ -153,13 +153,13 @@ The FSM data structure We can first think about our core data structures to repr
 </span></span></span><span style=display:flex><span><span style=color:#d14>  
 </span></span></span><span style=display:flex><span><span style=color:#d14>   for _, tt := range tests {  
 </span></span></span><span style=display:flex><span><span style=color:#d14>      t.Run(tt.name, func(t *testing.T) {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>         testRunner := NewRunner(&amp;startState)  
+</span></span></span><span style=display:flex><span><span style=color:#d14>         runner := NewRunner(&amp;startState)  
 </span></span></span><span style=display:flex><span><span style=color:#d14>  
 </span></span></span><span style=display:flex><span><span style=color:#d14>         for _, character := range tt.input {  
-</span></span></span><span style=display:flex><span><span style=color:#d14>            testRunner.Next(character)  
+</span></span></span><span style=display:flex><span><span style=color:#d14>            runner.Next(character)  
 </span></span></span><span style=display:flex><span><span style=color:#d14>         }  
 </span></span></span><span style=display:flex><span><span style=color:#d14>  
-</span></span></span><span style=display:flex><span><span style=color:#d14>         result := testRunner.getStatus()  
+</span></span></span><span style=display:flex><span><span style=color:#d14>         result := runner.getStatus()  
 </span></span></span><span style=display:flex><span><span style=color:#d14>         if tt.expectedStatus != result {  
 </span></span></span><span style=display:flex><span><span style=color:#d14>            t.Fatalf(&#34;</span>Expected FSM to have final state of <span style=color:#a61717;background-color:#e3d2d2>&#39;</span><span style=color:#000;font-weight:700>%</span>v<span style=color:#a61717;background-color:#e3d2d2>&#39;</span>, got <span style=color:#a61717;background-color:#e3d2d2>&#39;</span><span style=color:#000;font-weight:700>%</span>v<span style=color:#a61717;background-color:#e3d2d2>&#39;&#34;</span>, tt.expectedStatus, result)  
 </span></span><span style=display:flex><span>         }  

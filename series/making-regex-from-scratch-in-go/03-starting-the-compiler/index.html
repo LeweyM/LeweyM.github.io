@@ -263,14 +263,14 @@ Take the string abc and create a linked list of 'states' with conditional transi
 </span></span><span style=display:flex><span>  
 </span></span><span style=display:flex><span>   for _, tt := range tests {  
 </span></span><span style=display:flex><span>      t.Run(tt.name, func(t *testing.T) {  
-</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-        testRunner := NewRunner(&amp;startState)
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+        testRunner := NewRunner(startState)
+</span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-        runner := NewRunner(&amp;startState)
+</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+        runner := NewRunner(startState)
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd></span>  
 </span></span><span style=display:flex><span>         for _, character := range tt.input {  
-</span></span><span style=display:flex><span>            testRunner.Next(character)  
+</span></span><span style=display:flex><span>            runner.Next(character)  
 </span></span><span style=display:flex><span>         }  
 </span></span><span style=display:flex><span>  
-</span></span><span style=display:flex><span>         result := testRunner.GetStatus()  
+</span></span><span style=display:flex><span>         result := runner.GetStatus()  
 </span></span><span style=display:flex><span>         if tt.expectedStatus != result {  
 </span></span><span style=display:flex><span>            t.Fatalf(&#34;Expected FSM to have final state of &#39;%v&#39;, got &#39;%v&#39;&#34;, tt.expectedStatus, result)  
 </span></span><span style=display:flex><span>         }  

@@ -291,8 +291,6 @@ Expected Behavior of Modifiers Zero or One The '?' symbol is the &lsquo;Zero or 
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>        f.Fuzz(func(t *testing.T, regex, input string) {
 </span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd>-               if strings.ContainsAny(regex, &#34;[]{}$^*+?\\&#34;) {
 </span></span></span><span style=display:flex><span><span style=color:#000;background-color:#fdd></span><span style=color:#000;background-color:#dfd>+               if strings.ContainsAny(regex, &#34;[]{}$^\\&#34;) {
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+                       t.Skip()
-</span></span></span><span style=display:flex><span><span style=color:#000;background-color:#dfd>+               }
 </span></span></span></code></pre></div><p>Then, we&rsquo;ll also need to check for regular expressions where <code>?</code> is used on its own, as this is used for group constructions which we&rsquo;re not implementing in this project.</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff><span style=display:flex><span><span style=color:#aaa>@@ // fsm_test.go
 </span></span></span><span style=display:flex><span><span style=color:#aaa></span>
 </span></span><span style=display:flex><span><span style=color:#aaa>@@ func FuzzFSM(f *testing.F) {
