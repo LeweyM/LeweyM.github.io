@@ -3,7 +3,8 @@ title: 06 Pretty Vizualizations
 draft: false
 series: ["making regex from scratch in GO"]
 ---
-Now that we have a few features working, this is a good time to take a step back and build some things to help us see what we're working with. The tools we're going to build now will help with debugging as our features become more complex, and will give us a clearer picture of the logic of the systems we're working with.
+
+Now that we have a few features working, this is a good time to take a step back and build some things to help us see what we're working with. The tools we're going to build now will help with debugging as our features become more complex, and will give us a clearer picture of the logic of the systems we're working with.
 
 As a side note, I also think it's worth mentioning that an important part of building a (kinda) sophisticated system is maintaining the developer infrastructure around it. That can be anything from tests, build tools, debugging tools - anything that helps you get your head around the system and manage that complexity.
 
@@ -1030,8 +1031,6 @@ Again, I won't explain this because it's nasty Javascript and it's not too inter
 
 {{< iframe src="/html/e7f3dc672824a71d4b9995391b558f01.html" caption="v5 draw \"abc\" \"abc\"">}}
 
-![abc-regex-demo.gif](/img/abc-regex-demo.gif)
-
 Nice! The underlined character shows which character we're going to process next, and the letters in red are those already processed. The state in red shows the active state at any given moment.
 
 So, we can look at the red state, ask ourselves "is there a transition which matches the character that's about to be processed?", and then we can predict which state will be active next!
@@ -1040,9 +1039,6 @@ Let's try another example.
 
 {{< iframe src="/html/d9eae559dbbe94884d6f6314cb66ce74.html" caption="v5 draw \"cat\" \"I love cats\"">}}
 
-
-![i-love-cats-regex-demo-fast.gif](/img/i-love-cats-regex-demo-fast.gif)
-
 We can see that most of the characters make our FSM fail immediately. We know that the `runner` has failed because there is no active state for one step. It's at this point that our algorithm resets the runner and starts the search again from the next substring. 
 
 It's only until we reach the `cats` substring that we begin to start matching `States` and can finally progress to the final end state and declare the match a success.
@@ -1050,8 +1046,6 @@ It's only until we reach the `cats` substring that we begin to start matching `S
 Let's take a look at one more example, this time with the regular expression `aab` with the input search string `"aaaab"`
 
 {{< iframe src="/html/9f22c0249c3a870b51b2c781a1fbb1b7.html" caption="v5 draw \"aab\" \"aaaab\"">}}
-
-![backtracking-regex-demo.gif](/img/backtracking-regex-demo.gif)
 
 Notice what happens when we get from `State 0` to `State 2` and then fail? We have to go back a few steps in our input search string in order to search for other potential matches. This is called 'backtracking'. It's the result of the recursion in our  `match()` function, and it has serious performance implications for regex/search string combinations such as these. In these cases we have to backtrack the length of the regex on every failure. Not ideal.
 

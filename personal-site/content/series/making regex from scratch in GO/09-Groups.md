@@ -576,8 +576,6 @@ go run ./... v8 draw "abc" "abc"
 
 {{< iframe src="/html/149e745baca36282e725b5e00f441864.html" caption="v8-with-epsilon-concatenation draw \"abc\" \"abc\"">}}
 
-![doubled-with-epsilon-demo.gif](/img/doubled-with-epsilon-demo.gif)
-
 We can see the compiled `childNodes` in our simple example. 
 
 - `State 0` → starting state
